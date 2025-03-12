@@ -37,9 +37,16 @@
       border-radius: 5px;
       background-color: #007bff;
       color: white;
+      margin: 5px;
     }
     button:hover {
       background-color: #0056b3;
+    }
+    #stopButton {
+      background-color: #dc3545;
+    }
+    #stopButton:hover {
+      background-color: #a71d2a;
     }
   </style>
 </head>
@@ -49,6 +56,7 @@
   <div id="status">Obteniendo ubicación...</div>
   <div id="distance">Distancia total recorrida: 0 km</div>
   <button id="clearButton">Limpiar historial</button>
+  <button id="stopButton">Detener captura</button>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
@@ -58,6 +66,7 @@
     let coordinates = []; // Array para almacenar las coordenadas
     let totalDistance = 0; // Distancia total recorrida en kilómetros
     const MAX_COORDINATES = 1000; // Límite de coordenadas almacenadas
+    let watchId; // ID del seguimiento de la ubicación
 
     // Inicializar el mapa
     function initMap() {
@@ -72,7 +81,7 @@
     // Obtener la ubicación del usuario
     function getLocation() {
       if (navigator.geolocation) {
-        navigator.geolocation.watchPosition(
+        watchId = navigator.geolocation.watchPosition(
           (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
@@ -88,6 +97,14 @@
         );
       } else {
         updateStatus("Tu navegador no soporta geolocalización.");
+      }
+    }
+
+    // Detener la captura de coordenadas
+    function stopCapture() {
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        updateStatus("Captura de coordenadas detenida.");
       }
     }
 
@@ -189,6 +206,9 @@
 
       // Configurar el botón para limpiar el historial
       document.getElementById('clearButton').addEventListener('click', clearHistory);
+
+      // Configurar el botón para detener la captura
+      document.getElementById('stopButton').addEventListener('click', stopCapture);
     });
   </script>
 </body>
