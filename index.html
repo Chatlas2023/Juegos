@@ -108,6 +108,13 @@
       }
     }
 
+    // Reiniciar la captura de coordenadas
+    function restartCapture() {
+      stopCapture(); // Detener la captura actual (si está activa)
+      getLocation(); // Reiniciar la captura
+      updateStatus("Captura de coordenadas reiniciada.");
+    }
+
     // Agregar una nueva coordenada
     function addCoordinate(lat, lng) {
       if (coordinates.length >= MAX_COORDINATES) {
@@ -209,6 +216,13 @@
 
       // Configurar el botón para detener la captura
       document.getElementById('stopButton').addEventListener('click', stopCapture);
+
+      // Reiniciar la captura cuando la página recupera el foco
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          restartCapture();
+        }
+      });
     });
   </script>
 </body>
