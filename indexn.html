@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seguime - Recorrido GPS</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    #map {
+      width: 100%;
+      height: 400px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    #status {
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    #distance {
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      margin: 5px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #stopButton {
+      background-color: #dc3545;
+    }
+    #stopButton:hover {
+      background-color: #a71d2a;
+    }
+  </style>
+</head>
+<body>
+  <h1>Seguime - Recorrido GPS</h1>
+  <div id="map"></div>
+  <div id="status">Obteniendo ubicación...</div>
+  <div id="distance">Distancia total recorrida: 0 km</div>
+  <button id="clearButton">Limpiar historial</button>
+  <button id="stopButton">Detener captura</button>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Variables globales
+    let map;
+    let polyline;
+    let coordinates = []; // Array para almacenar las coordenadas
+    let totalDistance = 0; // Distancia total recorrida en kilómetros
+    const MAX_COORDINATES = 1000; // Límite de coordenadas almacenadas
+    let watchId; // ID del seguimiento de la ubicación
+
+    // Inicializar el mapa
+    function initMap() {
+      map = L.map('map').setView([0, 0], 13); // Centrar en (0, 0) inicialmente
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      polyline = L.polyline([], { color: 'blue' }).addTo(map); // Línea para el recorrido
+    }
+            // Definir el control de versión
+            L.Control.Version = L.Control.extend({
+                options: {
+                    position: 'bottomleft'
+                },
+                onAdd: function(map) {
+                    let div = L.DomUtil.create('div', 'leaflet-control-version');
+                    div.style.position = "absolute";
+                    div.style.left = "0"; // Pegado al borde izquierdo
+                    div.style.bottom = "0"; // Pegado al borde inferior
+                    div.innerHTML = " Ver: 1.4.14 ";
+                    div.style.padding = "0px"; // Eliminar padding
+                    div.style.margin = "0"; // Eliminar margen
+                    div.style.background = "rgba(255, 255, 255, 0.8)";
+                    div.style.fontSize = "12px"; // Tamaño de fuente más pequeño
+                    div.style.borderRadius = "0px"; // Eliminar bordes redondeados
+                    div.style.border = "none"; // Eliminar borde
+                    div.style.whiteSpace = "nowrap"; // Mantener en una sola línea
+                    div.style.lineHeight = "normal"; // Ajustar altura de línea
+                    return div;
+                }
+            });
+    // Obtener la ubicación del usuario
+    function getLocation() {
+      if (navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            addCoordinate(lat, lng); // Agregar coordenada
+            updateMap(lat, lng); // Actualizar el mapa
+            updateStatus(`Ubicación obtenida: Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`);
+          },
+          (error) => {
+            console.error("Error al obtener la ubicación:", error);
+            updateStatus("Error al obtener la ubicación.");
+          },
+          { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+        );
+      } else {
+        updateStatus("Tu navegador no soporta geolocalización.");
+      }
+    }
+
+    // Detener la captura de coordenadas
+    function stopCapture() {
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        updateStatus("Captura de coordenadas detenida.");
+      }
+    }
+
+    // Reiniciar la captura de coordenadas
+    function restartCapture() {
+      stopCapture(); // Detener la captura actual (si está activa)
+      getLocation(); // Reiniciar la captura
+      updateStatus("Captura de coordenadas reiniciada.");
+    }
+
+    // Agregar una nueva coordenada
+    function addCoordinate(lat, lng) {
+      if (coordinates.length >= MAX_COORDINATES) {
+        coordinates.shift(); // Eliminar la coordenada más antigua si se supera el límite
+      }
+
+      if (coordinates.length > 0) {
+        const lastCoord = coordinates[coordinates.length - 1];
+        totalDistance += calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng); // Calcular distancia
+      }
+
+      coordinates.push({ lat, lng }); // Guardar coordenada
+      saveCoordinates(); // Guardar en localStorage
+      updateDistance(); // Actualizar la distancia total
+    }
+
+    // Calcular la distancia entre dos coordenadas (en kilómetros)
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371; // Radio de la Tierra en km
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLng = (lng2 - lng1) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // Distancia en km
+    }
+
+    // Actualizar el mapa con nuevas coordenadas
+    function updateMap(lat, lng) {
+      if (!map) return;
+
+      const newLatLng = [lat, lng];
+      map.setView(newLatLng, 13); // Centrar el mapa en la nueva ubicación
+      polyline.addLatLng(newLatLng); // Agregar punto a la línea
+    }
+
+    // Guardar coordenadas en localStorage
+    function saveCoordinates() {
+      localStorage.setItem("coordinates", JSON.stringify(coordinates));
+      localStorage.setItem("totalDistance", totalDistance.toString());
+    }
+
+    // Cargar coordenadas desde localStorage
+    function loadCoordinates() {
+      const savedCoordinates = localStorage.getItem("coordinates");
+      const savedDistance = localStorage.getItem("totalDistance");
+      if (savedCoordinates) {
+        coordinates = JSON.parse(savedCoordinates);
+      }
+      if (savedDistance) {
+        totalDistance = parseFloat(savedDistance);
+      }
+    }
+
+    // Cargar coordenadas guardadas y mostrarlas en el mapa
+    function loadMapWithSavedCoordinates() {
+      coordinates.forEach(coord => {
+        polyline.addLatLng([coord.lat, coord.lng]);
+      });
+      if (coordinates.length > 0) {
+        const lastCoord = coordinates[coordinates.length - 1];
+        map.setView([lastCoord.lat, lastCoord.lng], 13);
+      }
+    }
+
+    // Actualizar la distancia total en la interfaz
+    function updateDistance() {
+      document.getElementById('distance').textContent =
+        `Distancia total recorrida: ${totalDistance.toFixed(2)} km`;
+    }
+
+    // Actualizar el estado en la interfaz
+    function updateStatus(message) {
+      document.getElementById('status').textContent = message;
+    }
+
+    // Limpiar el historial de coordenadas
+    function clearHistory() {
+      coordinates = [];
+      totalDistance = 0;
+      polyline.setLatLngs([]); // Limpiar la línea del mapa
+      saveCoordinates();
+      updateDistance();
+      updateStatus("Historial limpiado.");
+    }
+
+    // Inicializar la aplicación
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      loadCoordinates();
+      loadMapWithSavedCoordinates();
+      updateDistance();
+      getLocation();
+
+      // Configurar el botón para limpiar el historial
+      document.getElementById('clearButton').addEventListener('click', clearHistory);
+
+      // Configurar el botón para detener la captura
+      document.getElementById('stopButton').addEventListener('click', stopCapture);
+
+      // Reiniciar la captura cuando la página recupera el foco
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          restartCapture();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
