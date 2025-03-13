@@ -288,17 +288,20 @@ body.dark-mode #altitudeLabel {
     };
 
     // Inicializar el mapa
-    function initMap() {
-      map = L.map('map').setView([0, 0], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
+function initMap() {
+  map = L.map('map', {
+    zoomControl: false // Desactiva los controles de zoom
+  }).setView([0, 0], 13);
 
-      polyline = L.polyline([], { color: 'blue' }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
 
-      // Añadir el control de versión
-      L.control.version().addTo(map);
-    }
+  polyline = L.polyline([], { color: 'blue' }).addTo(map);
+
+  // Añadir el control de versión
+  L.control.version().addTo(map);
+}
 
     // Función para solicitar el Wake Lock
     async function acquireWakeLock() {
