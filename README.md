@@ -7,3 +7,4 @@ Aplicación de registro de localizaciones
 1.0.9 Para minimizar la cantidad de puntos guardados se define que solo se almacenen en localstorage las coordenadas cuando el gps detecta una distancia mayor a 45 metros de la última posición
 1.0.11 Agrega un velocímetro al mapa
 1.0.12 Agrega la funcionalidad de continuar captura botón rojo/verde
+1.0.15 Opción modo oscuro
