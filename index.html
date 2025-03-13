@@ -6,7 +6,89 @@
   <title>Seguime - GPS</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    /* Estilos anteriores (sin cambios) */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 85vh; /* Ocupar toda la altura de la pantalla */
+    }
+    h1 {
+      margin: 5px 0; /* Menor margen superior e inferior */
+      font-size: 16px; /* Tamaño de fuente más pequeño */
+      text-align: center;
+      padding: 0 10px; /* Pequeño padding para evitar que el texto toque los bordes */
+    }
+    #map {
+      width: 100%;
+      flex-grow: 1; /* El mapa ocupa el espacio restante */
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 5px; /* Menor margen inferior */
+    }
+    #status {
+      margin-bottom: 5px; /* Menor margen inferior */
+      font-weight: bold;
+      font-size: 12px; /* Tamaño de fuente más pequeño para el estado */
+      text-align: center;
+    }
+    #distance {
+      margin-bottom: 10px;
+      font-size: 12px; /* Tamaño de fuente más pequeño para la distancia */
+      text-align: center;
+    }
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px; /* Espacio entre botones */
+      flex-wrap: wrap; /* Permitir que los botones se envuelvan en pantallas pequeñas */
+      padding: 0 10px; /* Pequeño padding para evitar que los botones toquen los bordes */
+      margin-bottom: 10px; /* Margen inferior para separar del borde */
+    }
+    button {
+      padding: 6px 12px; /* Padding más pequeño */
+      font-size: 12px; /* Tamaño de fuente más pequeño */
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      flex: 1; /* Los botones ocupan el espacio disponible */
+      max-width: 150px; /* Ancho máximo para los botones */
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #stopButton {
+      background-color: #dc3545;
+    }
+    #stopButton:hover {
+      background-color: #a71d2a;
+    }
+
+    /* Estilos para pantallas pequeñas (orientación vertical) */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 14px; /* Tamaño de fuente más pequeño para pantallas pequeñas */
+      }
+      #map {
+        height: calc(45vh - 37.8px); /* Reducir 1 cm (37.8px) en orientación vertical */
+      }
+      .buttons {
+        flex-direction: column; /* Botones en columna en pantallas pequeñas */
+      }
+      button {
+        max-width: 100%; /* Botones ocupan todo el ancho en pantallas pequeñas */
+      }
+    }
+
+    /* Estilos para pantallas grandes (orientación horizontal) */
+    @media (min-width: 601px) {
+      #map {
+        height: calc(55vh - 37.8px); /* Reducir 1 cm (37.8px) en orientación horizontal */
+      }
+    }
   </style>
 </head>
 <body>
@@ -31,7 +113,7 @@
     let watchId;
     let wakeLockSentinel = null;
 
-    // Definir el control de versión (sin cambios)
+    // Definir el control de versión
     L.Control.Version = L.Control.extend({
       options: {
         position: 'bottomleft'
@@ -41,7 +123,7 @@
         div.style.position = "absolute";
         div.style.left = "0";
         div.style.bottom = "0";
-        div.innerHTML = " Ver: 1.0.9 ";
+        div.innerHTML = " Ver: 1.0.7 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -54,12 +136,12 @@
       }
     });
 
-    // Añadir el control de versión al mapa (sin cambios)
+    // Añadir el control de versión al mapa
     L.control.version = function(opts) {
       return new L.Control.Version(opts);
     };
 
-    // Inicializar el mapa (sin cambios)
+    // Inicializar el mapa
     function initMap() {
       map = L.map('map').setView([0, 0], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -72,7 +154,7 @@
       L.control.version().addTo(map);
     }
 
-    // Función para solicitar el Wake Lock (sin cambios)
+    // Función para solicitar el Wake Lock
     async function acquireWakeLock() {
       try {
         wakeLockSentinel = await navigator.wakeLock.request('screen');
@@ -86,7 +168,7 @@
       }
     }
 
-    // Función para liberar el Wake Lock (sin cambios)
+    // Función para liberar el Wake Lock
     async function releaseWakeLock() {
       if (wakeLockSentinel) {
         await wakeLockSentinel.release();
@@ -95,7 +177,7 @@
       }
     }
 
-    // Obtener la ubicación del usuario (sin cambios)
+    // Obtener la ubicación del usuario
     function getLocation() {
       if (navigator.geolocation) {
         acquireWakeLock();
@@ -119,7 +201,7 @@
       }
     }
 
-    // Detener la captura de coordenadas (sin cambios)
+    // Detener la captura de coordenadas
     function stopCapture() {
       releaseWakeLock();
 
@@ -129,7 +211,7 @@
       }
     }
 
-    // Reiniciar la captura de coordenadas (sin cambios)
+    // Reiniciar la captura de coordenadas
     function restartCapture() {
       stopCapture();
       getLocation();
@@ -172,7 +254,7 @@
       return R * c; // Distancia en metros
     }
 
-    // Actualizar el mapa con nuevas coordenadas (sin cambios)
+    // Actualizar el mapa con nuevas coordenadas
     function updateMap(lat, lng) {
       if (!map) return;
 
@@ -181,13 +263,13 @@
       polyline.addLatLng(newLatLng);
     }
 
-    // Guardar coordenadas en localStorage (sin cambios)
+    // Guardar coordenadas en localStorage
     function saveCoordinates() {
       localStorage.setItem("coordinates", JSON.stringify(coordinates));
       localStorage.setItem("totalDistance", totalDistance.toString());
     }
 
-    // Cargar coordenadas desde localStorage (sin cambios)
+    // Cargar coordenadas desde localStorage
     function loadCoordinates() {
       const savedCoordinates = localStorage.getItem("coordinates");
       const savedDistance = localStorage.getItem("totalDistance");
@@ -199,7 +281,7 @@
       }
     }
 
-    // Cargar coordenadas guardadas y mostrarlas en el mapa (sin cambios)
+    // Cargar coordenadas guardadas y mostrarlas en el mapa
     function loadMapWithSavedCoordinates() {
       coordinates.forEach(coord => {
         polyline.addLatLng([coord.lat, coord.lng]);
@@ -210,18 +292,18 @@
       }
     }
 
-    // Actualizar la distancia total en la interfaz (sin cambios)
+    // Actualizar la distancia total en la interfaz
     function updateDistance() {
       document.getElementById('distance').textContent =
         `Distancia total recorrida: ${totalDistance.toFixed(2)} km`;
     }
 
-    // Actualizar el estado en la interfaz (sin cambios)
+    // Actualizar el estado en la interfaz
     function updateStatus(message) {
       document.getElementById('status').textContent = message;
     }
 
-    // Limpiar el historial de coordenadas (sin cambios)
+    // Limpiar el historial de coordenadas
     function clearHistory() {
       coordinates = [];
       totalDistance = 0;
@@ -231,7 +313,7 @@
       updateStatus("Historial limpiado.");
     }
 
-    // Función para generar el enlace de Google Maps (sin cambios)
+    // Función para generar el enlace de Google Maps
     function generateGoogleMapsLink() {
       if (coordinates.length === 0) return null;
 
@@ -246,7 +328,7 @@
       return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}`;
     }
 
-    // Función para compartir el enlace por WhatsApp (sin cambios)
+    // Función para compartir el enlace por WhatsApp
     function shareViaWhatsApp() {
       const link = generateGoogleMapsLink();
       if (link) {
@@ -258,7 +340,7 @@
       }
     }
 
-    // Inicializar la aplicación (sin cambios)
+    // Inicializar la aplicación
     document.addEventListener('DOMContentLoaded', () => {
       initMap();
       loadCoordinates();
