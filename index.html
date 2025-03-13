@@ -461,10 +461,15 @@ function updateMap(lat, lng) {
   map.setView(newLatLng, 13); // Centrar el mapa en la nueva coordenada
   polyline.addLatLng(newLatLng);
 
-  // Ajustar el zoom automáticamente para que el recorrido se vea completo
+  // Ajustar el zoom solo si la nueva coordenada está fuera de los límites actuales
   if (coordinates.length > 1) {
     const bounds = polyline.getBounds(); // Obtener los límites del recorrido
-    map.fitBounds(bounds, { padding: [20, 20] }); // Ajustar el zoom con un padding de 20px
+    const currentBounds = map.getBounds(); // Obtener los límites actuales del mapa
+
+    // Verificar si la nueva coordenada está fuera de los límites actuales
+    if (!currentBounds.contains(newLatLng)) {
+      map.fitBounds(bounds, { padding: [20, 20] }); // Ajustar el zoom con un padding de 20px
+    }
   }
 }
 
