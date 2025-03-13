@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seguime - GPS</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 85vh; /* Ocupar toda la altura de la pantalla */
+    }
+    h1 {
+      margin: 5px 0; /* Menor margen superior e inferior */
+      font-size: 16px; /* Tamaño de fuente más pequeño */
+      text-align: center;
+      padding: 0 10px; /* Pequeño padding para evitar que el texto toque los bordes */
+    }
+    #map {
+      width: 100%;
+      flex-grow: 1; /* El mapa ocupa el espacio restante */
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 5px; /* Menor margen inferior */
+    }
+    #status {
+      margin-bottom: 5px; /* Menor margen inferior */
+      font-weight: bold;
+      font-size: 12px; /* Tamaño de fuente más pequeño para el estado */
+      text-align: center;
+    }
+    #distance {
+      margin-bottom: 10px;
+      font-size: 12px; /* Tamaño de fuente más pequeño para la distancia */
+      text-align: center;
+    }
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px; /* Espacio entre botones */
+      flex-wrap: wrap; /* Permitir que los botones se envuelvan en pantallas pequeñas */
+      padding: 0 10px; /* Pequeño padding para evitar que los botones toquen los bordes */
+      margin-bottom: 10px; /* Margen inferior para separar del borde */
+    }
+    button {
+      padding: 6px 12px; /* Padding más pequeño */
+      font-size: 12px; /* Tamaño de fuente más pequeño */
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      flex: 1; /* Los botones ocupan el espacio disponible */
+      max-width: 150px; /* Ancho máximo para los botones */
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #stopButton {
+      background-color: #dc3545;
+    }
+    #stopButton:hover {
+      background-color: #a71d2a;
+    }
+
+    /* Estilos para pantallas pequeñas (orientación vertical) */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 14px; /* Tamaño de fuente más pequeño para pantallas pequeñas */
+      }
+      #map {
+        height: calc(45vh - 37.8px); /* Reducir 1 cm (37.8px) en orientación vertical */
+      }
+      .buttons {
+        flex-direction: column; /* Botones en columna en pantallas pequeñas */
+      }
+      button {
+        max-width: 100%; /* Botones ocupan todo el ancho en pantallas pequeñas */
+      }
+    }
+
+    /* Estilos para pantallas grandes (orientación horizontal) */
+    @media (min-width: 601px) {
+      #map {
+        height: calc(55vh - 37.8px); /* Reducir 1 cm (37.8px) en orientación horizontal */
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Seguime - GPS</h1>
+  <div id="map"></div>
+  <div id="status">Obteniendo ubicación...</div>
+  <div id="distance">Distancia total recorrida: 0 km</div>
+  <div class="buttons">
+    <button id="clearButton">Limpiar historial</button>
+    <button id="stopButton">Detener captura</button>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Variables globales
+    let map;
+    let polyline;
+    let coordinates = []; // Array para almacenar las coordenadas
+    let totalDistance = 0; // Distancia total recorrida en kilómetros
+    const MAX_COORDINATES = 1000; // Límite de coordenadas almacenadas
+    let watchId; // ID del seguimiento de la ubicación
+
+    // Definir el control de versión
+    L.Control.Version = L.Control.extend({
+      options: {
+        position: 'bottomleft'
+      },
+      onAdd: function(map) {
+        let div = L.DomUtil.create('div', 'leaflet-control-version');
+        div.style.position = "absolute";
+        div.style.left = "0"; // Pegado al borde izquierdo
+        div.style.bottom = "0"; // Pegado al borde inferior
+        div.innerHTML = " Ver: 1.0.6 ";
+        div.style.padding = "0px"; // Eliminar padding
+        div.style.margin = "0"; // Eliminar margen
+        div.style.background = "rgba(255, 255, 255, 0.8)";
+        div.style.fontSize = "10px"; // Tamaño de fuente más pequeño
+        div.style.borderRadius = "0px"; // Eliminar bordes redondeados
+        div.style.border = "none"; // Eliminar borde
+        div.style.whiteSpace = "nowrap"; // Mantener en una sola línea
+        div.style.lineHeight = "normal"; // Ajustar altura de línea
+        return div;
+      }
+    });
+
+    // Añadir el control de versión al mapa
+    L.control.version = function(opts) {
+      return new L.Control.Version(opts);
+    };
+
+    // Inicializar el mapa
+    function initMap() {
+      map = L.map('map').setView([0, 0], 13); // Centrar en (0, 0) inicialmente
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      polyline = L.polyline([], { color: 'blue' }).addTo(map); // Línea para el recorrido
+
+      // Añadir el control de versión
+      L.control.version().addTo(map);
+    }
+
+    // Obtener la ubicación del usuario
+    function getLocation() {
+      if (navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            addCoordinate(lat, lng); // Agregar coordenada
+            updateMap(lat, lng); // Actualizar el mapa
+            updateStatus(`Ubicación: Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`);
+          },
+          (error) => {
+            console.error("Error al obtener la ubicación:", error);
+            updateStatus("Error al obtener la ubicación.");
+          },
+          { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+        );
+      } else {
+        updateStatus("Tu navegador no soporta geolocalización.");
+      }
+    }
+
+    // Detener la captura de coordenadas
+    function stopCapture() {
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        updateStatus("Captura de coordenadas detenida.");
+      }
+    }
+
+    // Reiniciar la captura de coordenadas
+    function restartCapture() {
+      stopCapture(); // Detener la captura actual (si está activa)
+      getLocation(); // Reiniciar la captura
+      updateStatus("Captura de coordenadas reiniciada.");
+    }
+
+    // Agregar una nueva coordenada
+    function addCoordinate(lat, lng) {
+      if (coordinates.length >= MAX_COORDINATES) {
+        coordinates.shift(); // Eliminar la coordenada más antigua si se supera el límite
+      }
+
+      if (coordinates.length > 0) {
+        const lastCoord = coordinates[coordinates.length - 1];
+        totalDistance += calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng); // Calcular distancia
+      }
+
+      coordinates.push({ lat, lng }); // Guardar coordenada
+      saveCoordinates(); // Guardar en localStorage
+      updateDistance(); // Actualizar la distancia total
+    }
+
+    // Calcular la distancia entre dos coordenadas (en kilómetros)
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371; // Radio de la Tierra en km
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLng = (lng2 - lng1) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // Distancia en km
+    }
+
+    // Actualizar el mapa con nuevas coordenadas
+    function updateMap(lat, lng) {
+      if (!map) return;
+
+      const newLatLng = [lat, lng];
+      map.setView(newLatLng, 13); // Centrar el mapa en la nueva ubicación
+      polyline.addLatLng(newLatLng); // Agregar punto a la línea
+    }
+
+    // Guardar coordenadas en localStorage
+    function saveCoordinates() {
+      localStorage.setItem("coordinates", JSON.stringify(coordinates));
+      localStorage.setItem("totalDistance", totalDistance.toString());
+    }
+
+    // Cargar coordenadas desde localStorage
+    function loadCoordinates() {
+      const savedCoordinates = localStorage.getItem("coordinates");
+      const savedDistance = localStorage.getItem("totalDistance");
+      if (savedCoordinates) {
+        coordinates = JSON.parse(savedCoordinates);
+      }
+      if (savedDistance) {
+        totalDistance = parseFloat(savedDistance);
+      }
+    }
+
+    // Cargar coordenadas guardadas y mostrarlas en el mapa
+    function loadMapWithSavedCoordinates() {
+      coordinates.forEach(coord => {
+        polyline.addLatLng([coord.lat, coord.lng]);
+      });
+      if (coordinates.length > 0) {
+        const lastCoord = coordinates[coordinates.length - 1];
+        map.setView([lastCoord.lat, lastCoord.lng], 13);
+      }
+    }
+
+    // Actualizar la distancia total en la interfaz
+    function updateDistance() {
+      document.getElementById('distance').textContent =
+        `Distancia total recorrida: ${totalDistance.toFixed(2)} km`;
+    }
+
+    // Actualizar el estado en la interfaz
+    function updateStatus(message) {
+      document.getElementById('status').textContent = message;
+    }
+
+    // Limpiar el historial de coordenadas
+    function clearHistory() {
+      coordinates = [];
+      totalDistance = 0;
+      polyline.setLatLngs([]); // Limpiar la línea del mapa
+      saveCoordinates();
+      updateDistance();
+      updateStatus("Historial limpiado.");
+    }
+
+    // Inicializar la aplicación
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      loadCoordinates();
+      loadMapWithSavedCoordinates();
+      updateDistance();
+      getLocation();
+
+      // Configurar el botón para limpiar el historial
+      document.getElementById('clearButton').addEventListener('click', clearHistory);
+
+      // Configurar el botón para detener la captura
+      document.getElementById('stopButton').addEventListener('click', stopCapture);
+
+      // Reiniciar la captura cuando la página recupera el foco
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          restartCapture();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
