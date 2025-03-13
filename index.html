@@ -480,7 +480,7 @@ function updateMap(lat, lng) {
       if (!speedIndicator) return;
 
       // Convertir la velocidad de m/s a km/h
-      const speedKmh = speed ? Math.round(speed * 3.6) : 0;
+      const speedKmh = speed ? parseInt(speed * 3.6) : 0;
 
       // Actualizar el texto del círculo
       speedIndicator.textContent = `${speedKmh}`;
