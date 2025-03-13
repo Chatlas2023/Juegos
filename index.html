@@ -78,7 +78,7 @@
         div.style.position = "absolute";
         div.style.left = "0"; // Pegado al borde izquierdo
         div.style.bottom = "0"; // Pegado al borde inferior
-        div.innerHTML = " Ver: 1.0.2 ";
+        div.innerHTML = " Ver: 1.4.14 ";
         div.style.padding = "0px"; // Eliminar padding
         div.style.margin = "0"; // Eliminar margen
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -118,7 +118,7 @@
             const lng = position.coords.longitude;
             addCoordinate(lat, lng); // Agregar coordenada
             updateMap(lat, lng); // Actualizar el mapa
-            "updateStatus(`Ubicación obtenida:\nLat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`);"
+            updateStatus(`Ubicación obtenida: Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`);
           },
           (error) => {
             console.error("Error al obtener la ubicación:", error);
