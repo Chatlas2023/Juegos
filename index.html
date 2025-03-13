@@ -454,13 +454,19 @@ function updateAltitude(altitude) {
     }
 
     // Actualizar el mapa con nuevas coordenadas
-    function updateMap(lat, lng) {
-      if (!map) return;
+function updateMap(lat, lng) {
+  if (!map) return;
 
-      const newLatLng = [lat, lng];
-      map.setView(newLatLng, 13);
-      polyline.addLatLng(newLatLng);
-    }
+  const newLatLng = [lat, lng];
+  map.setView(newLatLng, 13); // Centrar el mapa en la nueva coordenada
+  polyline.addLatLng(newLatLng);
+
+  // Ajustar el zoom automáticamente para que el recorrido se vea completo
+  if (coordinates.length > 1) {
+    const bounds = polyline.getBounds(); // Obtener los límites del recorrido
+    map.fitBounds(bounds, { padding: [20, 20] }); // Ajustar el zoom con un padding de 20px
+  }
+}
 
     // Actualizar la velocidad en el círculo
     function updateSpeed(speed) {
