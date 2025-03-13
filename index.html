@@ -15,8 +15,8 @@
       height: 100vh; /* Ocupar toda la altura de la pantalla */
     }
     h1 {
-      margin: 10px 0; /* Menor margen superior e inferior */
-      font-size: 18px; /* Tamaño de fuente más pequeño */
+      margin: 5px 0; /* Menor margen superior e inferior */
+      font-size: 16px; /* Tamaño de fuente más pequeño */
       text-align: center;
       padding: 0 10px; /* Pequeño padding para evitar que el texto toque los bordes */
     }
@@ -25,17 +25,17 @@
       flex-grow: 1; /* El mapa ocupa el espacio restante */
       border: 1px solid #ccc;
       border-radius: 8px;
-      margin-bottom: 10px; /* Menor margen inferior */
+      margin-bottom: 5px; /* Menor margen inferior */
     }
     #status {
       margin-bottom: 5px; /* Menor margen inferior */
       font-weight: bold;
-      font-size: 14px; /* Tamaño de fuente más pequeño para el estado */
+      font-size: 12px; /* Tamaño de fuente más pequeño para el estado */
       text-align: center;
     }
     #distance {
       margin-bottom: 10px;
-      font-size: 14px; /* Tamaño de fuente más pequeño para la distancia */
+      font-size: 12px; /* Tamaño de fuente más pequeño para la distancia */
       text-align: center;
     }
     .buttons {
@@ -47,15 +47,15 @@
       margin-bottom: 10px; /* Margen inferior para separar del borde */
     }
     button {
-      padding: 8px 16px; /* Padding más pequeño */
-      font-size: 14px; /* Tamaño de fuente más pequeño */
+      padding: 6px 12px; /* Padding más pequeño */
+      font-size: 12px; /* Tamaño de fuente más pequeño */
       cursor: pointer;
       border: none;
       border-radius: 5px;
       background-color: #007bff;
       color: white;
       flex: 1; /* Los botones ocupan el espacio disponible */
-      max-width: 200px; /* Ancho máximo para los botones */
+      max-width: 150px; /* Ancho máximo para los botones */
     }
     button:hover {
       background-color: #0056b3;
@@ -70,10 +70,10 @@
     /* Estilos para pantallas pequeñas (orientación vertical) */
     @media (max-width: 600px) {
       h1 {
-        font-size: 16px; /* Tamaño de fuente más pequeño para pantallas pequeñas */
+        font-size: 14px; /* Tamaño de fuente más pequeño para pantallas pequeñas */
       }
       #map {
-        height: 50vh; /* Altura del mapa reducida en orientación vertical */
+        height: 45vh; /* Altura del mapa reducida en orientación vertical */
       }
       .buttons {
         flex-direction: column; /* Botones en columna en pantallas pequeñas */
@@ -86,7 +86,7 @@
     /* Estilos para pantallas grandes (orientación horizontal) */
     @media (min-width: 601px) {
       #map {
-        height: 60vh; /* Altura del mapa reducida en orientación horizontal */
+        height: 55vh; /* Altura del mapa reducida en orientación horizontal */
       }
     }
   </style>
@@ -121,11 +121,11 @@
         div.style.position = "absolute";
         div.style.left = "0"; // Pegado al borde izquierdo
         div.style.bottom = "0"; // Pegado al borde inferior
-        div.innerHTML = " Ver: 1.0.4 ";
+        div.innerHTML = " Ver: 1.0.5 ";
         div.style.padding = "0px"; // Eliminar padding
         div.style.margin = "0"; // Eliminar margen
         div.style.background = "rgba(255, 255, 255, 0.8)";
-        div.style.fontSize = "12px"; // Tamaño de fuente más pequeño
+        div.style.fontSize = "10px"; // Tamaño de fuente más pequeño
         div.style.borderRadius = "0px"; // Eliminar bordes redondeados
         div.style.border = "none"; // Eliminar borde
         div.style.whiteSpace = "nowrap"; // Mantener en una sola línea
