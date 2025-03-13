@@ -68,6 +68,34 @@
     const MAX_COORDINATES = 1000; // Límite de coordenadas almacenadas
     let watchId; // ID del seguimiento de la ubicación
 
+    // Definir el control de versión
+    L.Control.Version = L.Control.extend({
+      options: {
+        position: 'bottomleft'
+      },
+      onAdd: function(map) {
+        let div = L.DomUtil.create('div', 'leaflet-control-version');
+        div.style.position = "absolute";
+        div.style.left = "0"; // Pegado al borde izquierdo
+        div.style.bottom = "0"; // Pegado al borde inferior
+        div.innerHTML = " Ver: 1.0.1 ";
+        div.style.padding = "0px"; // Eliminar padding
+        div.style.margin = "0"; // Eliminar margen
+        div.style.background = "rgba(255, 255, 255, 0.8)";
+        div.style.fontSize = "12px"; // Tamaño de fuente más pequeño
+        div.style.borderRadius = "0px"; // Eliminar bordes redondeados
+        div.style.border = "none"; // Eliminar borde
+        div.style.whiteSpace = "nowrap"; // Mantener en una sola línea
+        div.style.lineHeight = "normal"; // Ajustar altura de línea
+        return div;
+      }
+    });
+
+    // Añadir el control de versión al mapa
+    L.control.version = function(opts) {
+      return new L.Control.Version(opts);
+    };
+
     // Inicializar el mapa
     function initMap() {
       map = L.map('map').setView([0, 0], 13); // Centrar en (0, 0) inicialmente
@@ -76,29 +104,11 @@
       }).addTo(map);
 
       polyline = L.polyline([], { color: 'blue' }).addTo(map); // Línea para el recorrido
+
+      // Añadir el control de versión
+      L.control.version().addTo(map);
     }
-            // Definir el control de versión
-            L.Control.Version = L.Control.extend({
-                options: {
-                    position: 'bottomleft'
-                },
-                onAdd: function(map) {
-                    let div = L.DomUtil.create('div', 'leaflet-control-version');
-                    div.style.position = "absolute";
-                    div.style.left = "0"; // Pegado al borde izquierdo
-                    div.style.bottom = "0"; // Pegado al borde inferior
-                    div.innerHTML = " Ver: 1.4.14 ";
-                    div.style.padding = "0px"; // Eliminar padding
-                    div.style.margin = "0"; // Eliminar margen
-                    div.style.background = "rgba(255, 255, 255, 0.8)";
-                    div.style.fontSize = "12px"; // Tamaño de fuente más pequeño
-                    div.style.borderRadius = "0px"; // Eliminar bordes redondeados
-                    div.style.border = "none"; // Eliminar borde
-                    div.style.whiteSpace = "nowrap"; // Mantener en una sola línea
-                    div.style.lineHeight = "normal"; // Ajustar altura de línea
-                    return div;
-                }
-            });
+
     // Obtener la ubicación del usuario
     function getLocation() {
       if (navigator.geolocation) {
