@@ -71,22 +71,22 @@
     /* Estilos para el círculo de velocidad */
 #speedContainer {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 10px; /* Posición fija arriba */
+  right: 10px; /* Posición fija a la derecha */
   text-align: center;
-  z-index: 1000;
+  z-index: 1000; /* Asegura que esté por encima del mapa */
 }
 
 #speedIndicator {
-  width: 60px;
+  width: 60px; /* Diámetro del círculo */
   height: 60px;
-  background-color: rgba(255, 0, 0, 0.7);
-  border-radius: 50%;
+  background-color: rgba(255, 0, 0, 0.7); /* Color rojo semitransparente */
+  border-radius: 50%; /* Hace que sea un círculo */
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 24px; /* Fuente más grande */
+  font-size: 24px; /* Fuente más grande para el número */
   font-weight: bold;
   border: 2px solid white;
 }
@@ -123,11 +123,12 @@
 </head>
 <body>
   <h1>Seguime - GPS</h1>
-  <div id="map">
-    <!-- Círculo de velocidad -->
-    <div id="speedContainer">
-  <div id="speedIndicator">0</div>
-  <div id="speedLabel">Km/h</div>
+<div id="map">
+  <!-- Círculo de velocidad -->
+  <div id="speedContainer">
+    <div id="speedIndicator">0</div>
+    <div id="speedLabel">Km/h</div>
+  </div>
 </div>
   <div id="status">Obteniendo ubicación...</div>
   <div id="distance">Distancia total recorrida: 0 km</div>
