@@ -100,16 +100,17 @@
     <button id="clearButton">Limpiar historial</button>
     <button id="stopButton">Detener captura</button>
   </div>
-
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    // Variables globales
+ // Variables globales
     let map;
     let polyline;
-    let coordinates = []; // Array para almacenar las coordenadas
-    let totalDistance = 0; // Distancia total recorrida en kilómetros
-    const MAX_COORDINATES = 1000; // Límite de coordenadas almacenadas
-    let watchId; // ID del seguimiento de la ubicación
+    let coordinates = [];
+    let totalDistance = 0;
+    const MAX_COORDINATES = 1000;
+    let watchId;
+    let wakeLockSentinel = null; // NUEVO: Variable para el Wake Lock
 
     // Definir el control de versión
     L.Control.Version = L.Control.extend({
@@ -119,17 +120,17 @@
       onAdd: function(map) {
         let div = L.DomUtil.create('div', 'leaflet-control-version');
         div.style.position = "absolute";
-        div.style.left = "0"; // Pegado al borde izquierdo
-        div.style.bottom = "0"; // Pegado al borde inferior
-        div.innerHTML = " Ver: 1.0.6 ";
-        div.style.padding = "0px"; // Eliminar padding
-        div.style.margin = "0"; // Eliminar margen
+        div.style.left = "0";
+        div.style.bottom = "0";
+        div.innerHTML = " Ver: 1.0.7 ";
+        div.style.padding = "0px";
+        div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
-        div.style.fontSize = "10px"; // Tamaño de fuente más pequeño
-        div.style.borderRadius = "0px"; // Eliminar bordes redondeados
-        div.style.border = "none"; // Eliminar borde
-        div.style.whiteSpace = "nowrap"; // Mantener en una sola línea
-        div.style.lineHeight = "normal"; // Ajustar altura de línea
+        div.style.fontSize = "10px";
+        div.style.borderRadius = "0px";
+        div.style.border = "none";
+        div.style.whiteSpace = "nowrap";
+        div.style.lineHeight = "normal";
         return div;
       }
     });
@@ -141,26 +142,54 @@
 
     // Inicializar el mapa
     function initMap() {
-      map = L.map('map').setView([0, 0], 13); // Centrar en (0, 0) inicialmente
+      map = L.map('map').setView([0, 0], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
 
-      polyline = L.polyline([], { color: 'blue' }).addTo(map); // Línea para el recorrido
+      polyline = L.polyline([], { color: 'blue' }).addTo(map);
 
       // Añadir el control de versión
       L.control.version().addTo(map);
     }
 
+    // NUEVO: Función para solicitar el Wake Lock
+    async function acquireWakeLock() {
+      try {
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        console.log('Wake Lock activo'); // Opcional: Para depuración
+        // Listener para cuando el Wake Lock se libera (por el sistema, no por tu app)
+        wakeLockSentinel.addEventListener('release', () => {
+          console.log('Wake Lock fue liberado por el sistema!'); // Opcional: Para depuración
+          wakeLockSentinel = null; // Asegurar que la variable se actualice
+        });
+      } catch (err) {
+        console.error(`Error al solicitar Wake Lock: ${err.name}, ${err.message}`);
+        // Podrías manejar el error aquí, por ejemplo, mostrando un mensaje al usuario
+      }
+    }
+
+    // NUEVO: Función para liberar el Wake Lock
+    async function releaseWakeLock() {
+      if (wakeLockSentinel) {
+        await wakeLockSentinel.release();
+        wakeLockSentinel = null;
+        console.log('Wake Lock liberado'); // Opcional: Para depuración
+      }
+    }
+
+
     // Obtener la ubicación del usuario
     function getLocation() {
       if (navigator.geolocation) {
+        acquireWakeLock(); // NUEVO: Solicitar Wake Lock al iniciar la geolocalización
+
         watchId = navigator.geolocation.watchPosition(
           (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            addCoordinate(lat, lng); // Agregar coordenada
-            updateMap(lat, lng); // Actualizar el mapa
+            addCoordinate(lat, lng);
+            updateMap(lat, lng);
             updateStatus(`Ubicación: Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`);
           },
           (error) => {
@@ -176,6 +205,8 @@
 
     // Detener la captura de coordenadas
     function stopCapture() {
+      releaseWakeLock(); // NUEVO: Liberar Wake Lock al detener la captura
+
       if (watchId) {
         navigator.geolocation.clearWatch(watchId);
         updateStatus("Captura de coordenadas detenida.");
@@ -192,17 +223,17 @@
     // Agregar una nueva coordenada
     function addCoordinate(lat, lng) {
       if (coordinates.length >= MAX_COORDINATES) {
-        coordinates.shift(); // Eliminar la coordenada más antigua si se supera el límite
+        coordinates.shift();
       }
 
       if (coordinates.length > 0) {
         const lastCoord = coordinates[coordinates.length - 1];
-        totalDistance += calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng); // Calcular distancia
+        totalDistance += calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng);
       }
 
-      coordinates.push({ lat, lng }); // Guardar coordenada
-      saveCoordinates(); // Guardar en localStorage
-      updateDistance(); // Actualizar la distancia total
+      coordinates.push({ lat, lng });
+      saveCoordinates();
+      updateDistance();
     }
 
     // Calcular la distancia entre dos coordenadas (en kilómetros)
@@ -223,8 +254,8 @@
       if (!map) return;
 
       const newLatLng = [lat, lng];
-      map.setView(newLatLng, 13); // Centrar el mapa en la nueva ubicación
-      polyline.addLatLng(newLatLng); // Agregar punto a la línea
+      map.setView(newLatLng, 13);
+      polyline.addLatLng(newLatLng);
     }
 
     // Guardar coordenadas en localStorage
@@ -269,9 +300,10 @@
 
     // Limpiar el historial de coordenadas
     function clearHistory() {
+      // releaseWakeLock(); // Opcional: Liberar Wake Lock al limpiar el historial (considerar si es necesario)
       coordinates = [];
       totalDistance = 0;
-      polyline.setLatLngs([]); // Limpiar la línea del mapa
+      polyline.setLatLngs([]);
       saveCoordinates();
       updateDistance();
       updateStatus("Historial limpiado.");
@@ -291,10 +323,11 @@
       // Configurar el botón para detener la captura
       document.getElementById('stopButton').addEventListener('click', stopCapture);
 
-      // Reiniciar la captura cuando la página recupera el foco
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
           restartCapture();
+        } else { // NUEVO: Si la página se oculta
+          releaseWakeLock(); // Liberar el Wake Lock
         }
       });
     });
