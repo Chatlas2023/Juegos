@@ -361,7 +361,7 @@ function updateAltitude(altitude) {
 
   // Verificar si la altitud está disponible
   // Redondear la altitud a entero
-  const altitudeMeters = altitude ? Math.round(altitude) : 0;
+  const altitudeMeters = altitude ? Math.round(parseFloat(altitude)) : 0;
 
   // Actualizar el texto del círculo
   altitudeIndicator.textContent = `${altitudeMeters}`;
