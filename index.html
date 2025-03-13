@@ -26,6 +26,7 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       margin-bottom: 5px; /* Menor margen inferior */
+      position: relative; /* Para posicionar el círculo de velocidad */
     }
     #status {
       margin-bottom: 5px; /* Menor margen inferior */
@@ -67,6 +68,25 @@
       background-color: #a71d2a;
     }
 
+    /* Estilos para el círculo de velocidad */
+    #speedIndicator {
+      position: absolute;
+      top: 10px; /* Posición fija arriba */
+      right: 10px; /* Posición fija a la derecha */
+      width: 60px; /* Diámetro del círculo */
+      height: 60px;
+      background-color: rgba(255, 0, 0, 0.7); /* Color rojo semitransparente */
+      border-radius: 50%; /* Hace que sea un círculo */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      border: 2px solid white;
+      z-index: 1000; /* Asegura que esté por encima del mapa */
+    }
+
     /* Estilos para pantallas pequeñas (orientación vertical) */
     @media (max-width: 600px) {
       h1 {
@@ -93,7 +113,10 @@
 </head>
 <body>
   <h1>Seguime - GPS</h1>
-  <div id="map"></div>
+  <div id="map">
+    <!-- Círculo de velocidad -->
+    <div id="speedIndicator">0 km/h</div>
+  </div>
   <div id="status">Obteniendo ubicación...</div>
   <div id="distance">Distancia total recorrida: 0 km</div>
   <div class="buttons">
@@ -112,7 +135,6 @@
     const MIN_DISTANCE_METERS = 45; // Distancia mínima para guardar una nueva coordenada
     let watchId;
     let wakeLockSentinel = null;
-    let speedCircle; // Círculo para mostrar la velocidad
     let lastPositionTime = null; // Tiempo de la última posición
 
     // Definir el control de versión
@@ -154,16 +176,6 @@
 
       // Añadir el control de versión
       L.control.version().addTo(map);
-
-      // Crear el círculo de velocidad
-      speedCircle = L.circle([0, 0], {
-        radius: 20, // Radio en píxeles (aproximadamente 2 cm en pantalla)
-        color: 'red',
-        fillColor: '#f03',
-        fillOpacity: 0.5,
-      }).addTo(map);
-
-      speedCircle.bindTooltip("0 km/h", { permanent: true, direction: 'center' }); // Mostrar velocidad
     }
 
     // Función para solicitar el Wake Lock
@@ -202,7 +214,7 @@
             addCoordinate(lat, lng);
             updateMap(lat, lng);
             updateStatus(`Ubicación: Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)}`);
-            updateSpeed(lat, lng, speed); // Actualizar la velocidad
+            updateSpeed(speed); // Actualizar la velocidad
           },
           (error) => {
             console.error("Error al obtener la ubicación:", error);
@@ -278,17 +290,15 @@
     }
 
     // Actualizar la velocidad en el círculo
-    function updateSpeed(lat, lng, speed) {
-      if (!speedCircle) return;
+    function updateSpeed(speed) {
+      const speedIndicator = document.getElementById('speedIndicator');
+      if (!speedIndicator) return;
 
       // Convertir la velocidad de m/s a km/h
       const speedKmh = speed ? (speed * 3.6).toFixed(1) : 0;
 
-      // Mover el círculo a la nueva posición
-      speedCircle.setLatLng([lat, lng]);
-
       // Actualizar el texto del círculo
-      speedCircle.setTooltipContent(`${speedKmh} km/h`);
+      speedIndicator.textContent = `${speedKmh} km/h`;
     }
 
     // Guardar coordenadas en localStorage
