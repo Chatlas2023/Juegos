@@ -78,7 +78,27 @@
     #darkModeButton {
       background-color: #333; /* Fondo oscuro para el botón de modo oscuro */
     }
+/* Estilos para el título dentro del mapa */
+#map h1 {
+  position: absolute; /* Posición absoluta dentro del mapa */
+  top: 10px; /* Distancia desde la parte superior del mapa */
+  left: 10px; /* Distancia desde la izquierda del mapa */
+  background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco con transparencia */
+  padding: 8px 12px; /* Espaciado interno */
+  border-radius: 5px; /* Bordes redondeados */
+  font-size: 16px; /* Tamaño de fuente */
+  font-weight: bold; /* Texto en negrita */
+  color: black; /* Color del texto */
+  z-index: 1000; /* Asegura que esté por encima del mapa */
+  margin: 0; /* Elimina el margen predeterminado */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra para resaltar */
+}
 
+/* Estilos para modo oscuro */
+body.dark-mode #map h1 {
+  background-color: rgba(0, 0, 0, 0.8); /* Fondo oscuro con transparencia */
+  color: white; /* Texto blanco */
+}
     /* Estilos para el círculo de velocidad */
     #speedContainer {
       position: absolute;
@@ -205,6 +225,8 @@ body.dark-mode #altitudeLabel {
 <body>
   <h1>Seguime - GPS</h1>
 <div id="map">
+  <!-- Título dentro del mapa -->
+  <h1>Seguime - GPS</h1>
   <!-- Círculo de velocidad -->
   <div id="speedContainer">
     <div id="speedIndicator">0</div>
