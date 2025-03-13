@@ -73,7 +73,7 @@
         font-size: 14px; /* Tamaño de fuente más pequeño para pantallas pequeñas */
       }
       #map {
-        height: 45vh; /* Altura del mapa reducida en orientación vertical */
+        height: calc(45vh - 37.8px); /* Reducir 1 cm (37.8px) en orientación vertical */
       }
       .buttons {
         flex-direction: column; /* Botones en columna en pantallas pequeñas */
@@ -86,7 +86,7 @@
     /* Estilos para pantallas grandes (orientación horizontal) */
     @media (min-width: 601px) {
       #map {
-        height: 55vh; /* Altura del mapa reducida en orientación horizontal */
+        height: calc(55vh - 37.8px); /* Reducir 1 cm (37.8px) en orientación horizontal */
       }
     }
   </style>
@@ -121,7 +121,7 @@
         div.style.position = "absolute";
         div.style.left = "0"; // Pegado al borde izquierdo
         div.style.bottom = "0"; // Pegado al borde inferior
-        div.innerHTML = " Ver: 1.0.5 ";
+        div.innerHTML = " Ver: 1.0.6 ";
         div.style.padding = "0px"; // Eliminar padding
         div.style.margin = "0"; // Eliminar margen
         div.style.background = "rgba(255, 255, 255, 0.8)";
