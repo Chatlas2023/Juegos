@@ -9,3 +9,4 @@ Aplicación de registro de localizaciones
 1.0.12 Agrega la funcionalidad de continuar captura botón rojo/verde
 1.0.15 Opción modo oscuro
 1.0.16 Muestra la altitud. Se eliminan los botones de zoom. Ajusta el zoom a la polilínea
+1.0.17 Muestra letras más legibles
