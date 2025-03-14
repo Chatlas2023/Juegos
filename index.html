@@ -153,9 +153,9 @@
       color: black; /* Color del texto */
       text-shadow: 
         -1px -1px 0 white,  
-         1px -1px 0 white,
+        1px -1px 0 white,
         -1px  1px 0 white,
-         1px  1px 0 white; /* Borde blanco alrededor del texto */
+        1px  1px 0 white; /* Borde blanco alrededor del texto */
     }
 
     /* Estilos para el círculo de altitud */
@@ -188,9 +188,9 @@
       color: black; /* Color del texto */
       text-shadow: 
         -1px -1px 0 white,  
-         1px -1px 0 white,
+        1px -1px 0 white,
         -1px  1px 0 white,
-         1px  1px 0 white; /* Borde blanco alrededor del texto */
+        1px  1px 0 white; /* Borde blanco alrededor del texto */
     }
 
     /* Estilos para modo oscuro */
@@ -198,18 +198,18 @@
       color: white; /* Texto blanco */
       text-shadow: 
         -1px -1px 0 black,  
-         1px -1px 0 black,
+        1px -1px 0 black,
         -1px  1px 0 black,
-         1px  1px 0 black; /* Borde negro alrededor del texto */
+        1px  1px 0 black; /* Borde negro alrededor del texto */
     }
 
     body.dark-mode #altitudeLabel {
       color: white; /* Texto blanco */
       text-shadow: 
         -1px -1px 0 black,  
-         1px -1px 0 black,
+        1px -1px 0 black,
         -1px  1px 0 black,
-         1px  1px 0 black; /* Borde negro alrededor del texto */
+        1px  1px 0 black; /* Borde negro alrededor del texto */
     }
 
     /* Estilos para modo oscuro */
@@ -315,16 +315,35 @@
     let wakeLockSentinel = null;
     let lastPositionTime = null; // Tiempo de la última posición
     let isCapturing = true; // Estado de la captura (activa o detenida)
+    let darkMode = false; // Estado del modo oscuro
 
-    // Capa de mosaicos para modo claro
-    const lightTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+    // Definir el control de versión
+    L.Control.Version = L.Control.extend({
+      options: {
+        position: 'bottomleft'
+      },
+      onAdd: function(map) {
+        let div = L.DomUtil.create('div', 'leaflet-control-version');
+        div.style.position = "absolute";
+        div.style.left = "0";
+        div.style.bottom = "0";
+        div.innerHTML = " Ver: 1.0.17 ";
+        div.style.padding = "0px";
+        div.style.margin = "0";
+        div.style.background = "rgba(255, 255, 255, 0.8)";
+        div.style.fontSize = "10px";
+        div.style.borderRadius = "0px";
+        div.style.border = "none";
+        div.style.whiteSpace = "nowrap";
+        div.style.lineHeight = "normal";
+        return div;
+      }
     });
 
-    // Capa de mosaicos para modo oscuro (CartoDB Dark Matter)
-    const darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap contributors, © CartoDB'
-    });
+    // Añadir el control de versión al mapa
+    L.control.version = function(opts) {
+      return new L.Control.Version(opts);
+    };
 
     // Inicializar el mapa
     function initMap() {
@@ -332,10 +351,27 @@
         zoomControl: false // Desactiva los controles de zoom
       }).setView([0, 0], 15);
 
-      // Agregar la capa de mosaicos clara por defecto
-      lightTiles.addTo(map);
+      // Capa de mosaicos para modo claro
+      const lightLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      });
+
+      // Capa de mosaicos para modo oscuro
+      const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap contributors, © CartoDB'
+      });
+
+      // Añadir la capa de mosaicos inicial (modo claro)
+      lightLayer.addTo(map);
 
       polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
+
+      // Añadir el control de versión
+      L.control.version().addTo(map);
+
+      // Guardar las capas para poder cambiarlas
+      map.lightLayer = lightLayer;
+      map.darkLayer = darkLayer;
     }
 
     // Función para alternar el modo oscuro
@@ -346,11 +382,11 @@
 
       // Cambiar la capa de mosaicos según el modo
       if (body.classList.contains('dark-mode')) {
-        lightTiles.remove(); // Quitar la capa de mosaicos clara
-        darkTiles.addTo(map); // Agregar la capa de mosaicos oscura
+        map.lightLayer.remove();
+        map.darkLayer.addTo(map);
       } else {
-        darkTiles.remove(); // Quitar la capa de mosaicos oscura
-        lightTiles.addTo(map); // Agregar la capa de mosaicos clara
+        map.darkLayer.remove();
+        map.lightLayer.addTo(map);
       }
 
       // Guardar la preferencia en localStorage
@@ -370,17 +406,43 @@
       if (isDarkMode) {
         body.classList.add('dark-mode');
         darkModeButton.textContent = 'Modo claro';
-        lightTiles.remove(); // Quitar la capa de mosaicos clara
-        darkTiles.addTo(map); // Agregar la capa de mosaicos oscura
+        map.lightLayer.remove();
+        map.darkLayer.addTo(map);
       } else {
         body.classList.remove('dark-mode');
         darkModeButton.textContent = 'Modo oscuro';
-        darkTiles.remove(); // Quitar la capa de mosaicos oscura
-        lightTiles.addTo(map); // Agregar la capa de mosaicos clara
+        map.darkLayer.remove();
+        map.lightLayer.addTo(map);
       }
     }
 
-    // Resto del código JavaScript...
+    // Resto del código...
+    // (Aquí irían las funciones restantes como `getLocation`, `updateAltitude`, `toggleCapture`, etc.)
+
+    // Inicializar la aplicación
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      loadCoordinates();
+      loadMapWithSavedCoordinates();
+      updateDistance();
+      getLocation();
+      applyDarkModePreference(); // Aplicar la preferencia de modo oscuro
+
+      document.getElementById('clearButton').addEventListener('click', clearHistory);
+      document.getElementById('stopButton').addEventListener('click', toggleCapture);
+      document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
+      document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode); // Nuevo evento
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          if (isCapturing) {
+            getLocation();
+          }
+        } else {
+          releaseWakeLock();
+        }
+      });
+    });
   </script>
 </body>
 </html>
