@@ -132,26 +132,31 @@
       z-index: 1000; /* Asegura que esté por encima del mapa */
     }
 
-    #speedIndicator {
-      width: 80px; /* Ancho más grande para el óvalo */
-      height: 60px; /* Altura igual que antes */
-      background-color: white; /* Fondo blanco */
-      border-radius: 30px; /* Bordes redondeados para forma ovalada */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: black; /* Letras negras */
-      font-size: 32px; /* Fuente más grande para el número */
-      font-weight: bold;
-      border: 4px solid red; /* Borde rojo más ancho */
-    }
+#speedIndicator {
+  width: 80px; /* Ancho más grande para el óvalo */
+  height: 60px; /* Altura igual que antes */
+  background-color: white; /* Fondo blanco */
+  border-radius: 30px; /* Bordes redondeados para forma ovalada */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black; /* Letras negras */
+  font-size: 32px; /* Fuente más grande para el número */
+  font-weight: bold;
+  border: 4px solid red; /* Borde rojo más ancho */
+}
 
-    #speedLabel {
-      margin-top: 5px; /* Espacio entre el círculo y la leyenda */
-      font-size: 14px; /* Tamaño de fuente más grande */
-      font-weight: bold; /* Texto en negrita */
-      color: black; /* Color de la leyenda */
-    }
+#speedLabel {
+  margin-top: 5px; /* Espacio entre el círculo y la leyenda */
+  font-size: 14px; /* Tamaño de fuente más grande */
+  font-weight: bold; /* Texto en negrita */
+  color: black; /* Color del texto */
+  text-shadow: 
+    -1px -1px 0 white,  
+     1px -1px 0 white,
+    -1px  1px 0 white,
+     1px  1px 0 white; /* Borde blanco alrededor del texto */
+}
 
     /* Estilos para el círculo de altitud */
     #altitudeContainer {
@@ -176,12 +181,17 @@
       border: 4px solid #00BFFF; /* Borde celeste */
     }
 
-    #altitudeLabel {
-      margin-top: 5px; /* Espacio entre el círculo y la leyenda */
-      font-size: 14px; /* Tamaño de fuente más grande */
-      font-weight: bold; /* Texto en negrita */
-      color: black; /* Color de la leyenda */
-    }
+#altitudeLabel {
+  margin-top: 5px; /* Espacio entre el círculo y la leyenda */
+  font-size: 14px; /* Tamaño de fuente más grande */
+  font-weight: bold; /* Texto en negrita */
+  color: black; /* Color del texto */
+  text-shadow: 
+    -1px -1px 0 white,  
+     1px -1px 0 white,
+    -1px  1px 0 white,
+     1px  1px 0 white; /* Borde blanco alrededor del texto */
+}
 
     /* Estilos para modo oscuro */
     body.dark-mode {
