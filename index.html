@@ -132,31 +132,31 @@
       z-index: 1000; /* Asegura que esté por encima del mapa */
     }
 
-    #speedIndicator {
-      width: 80px; /* Ancho más grande para el óvalo */
-      height: 60px; /* Altura igual que antes */
-      background-color: white; /* Fondo blanco */
-      border-radius: 30px; /* Bordes redondeados para forma ovalada */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: black; /* Letras negras */
-      font-size: 32px; /* Fuente más grande para el número */
-      font-weight: bold;
-      border: 4px solid red; /* Borde rojo más ancho */
-    }
+#speedIndicator {
+  width: 80px; /* Ancho más grande para el óvalo */
+  height: 60px; /* Altura igual que antes */
+  background-color: white; /* Fondo blanco */
+  border-radius: 30px; /* Bordes redondeados para forma ovalada */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black; /* Letras negras */
+  font-size: 32px; /* Fuente más grande para el número */
+  font-weight: bold;
+  border: 4px solid red; /* Borde rojo más ancho */
+}
 
-    #speedLabel {
-      margin-top: 5px; /* Espacio entre el círculo y la leyenda */
-      font-size: 14px; /* Tamaño de fuente más grande */
-      font-weight: bold; /* Texto en negrita */
-      color: black; /* Color del texto */
-      text-shadow: 
-        -1px -1px 0 white,  
-        1px -1px 0 white,
-        -1px  1px 0 white,
-        1px  1px 0 white; /* Borde blanco alrededor del texto */
-    }
+#speedLabel {
+  margin-top: 5px; /* Espacio entre el círculo y la leyenda */
+  font-size: 14px; /* Tamaño de fuente más grande */
+  font-weight: bold; /* Texto en negrita */
+  color: black; /* Color del texto */
+  text-shadow: 
+    -1px -1px 0 white,  
+     1px -1px 0 white,
+    -1px  1px 0 white,
+     1px  1px 0 white; /* Borde blanco alrededor del texto */
+}
 
     /* Estilos para el círculo de altitud */
     #altitudeContainer {
@@ -181,36 +181,35 @@
       border: 4px solid #00BFFF; /* Borde celeste */
     }
 
-    #altitudeLabel {
-      margin-top: 5px; /* Espacio entre el círculo y la leyenda */
-      font-size: 14px; /* Tamaño de fuente más grande */
-      font-weight: bold; /* Texto en negrita */
-      color: black; /* Color del texto */
-      text-shadow: 
-        -1px -1px 0 white,  
-        1px -1px 0 white,
-        -1px  1px 0 white,
-        1px  1px 0 white; /* Borde blanco alrededor del texto */
-    }
-
+#altitudeLabel {
+  margin-top: 5px; /* Espacio entre el círculo y la leyenda */
+  font-size: 14px; /* Tamaño de fuente más grande */
+  font-weight: bold; /* Texto en negrita */
+  color: black; /* Color del texto */
+  text-shadow: 
+    -1px -1px 0 white,  
+     1px -1px 0 white,
+    -1px  1px 0 white,
+     1px  1px 0 white; /* Borde blanco alrededor del texto */
+}
     /* Estilos para modo oscuro */
-    body.dark-mode #speedLabel {
-      color: white; /* Texto blanco */
-      text-shadow: 
-        -1px -1px 0 black,  
-        1px -1px 0 black,
-        -1px  1px 0 black,
-        1px  1px 0 black; /* Borde negro alrededor del texto */
-    }
+body.dark-mode #speedLabel {
+  color: white; /* Texto blanco */
+  text-shadow: 
+    -1px -1px 0 black,  
+     1px -1px 0 black,
+    -1px  1px 0 black,
+     1px  1px 0 black; /* Borde negro alrededor del texto */
+}
 
-    body.dark-mode #altitudeLabel {
-      color: white; /* Texto blanco */
-      text-shadow: 
-        -1px -1px 0 black,  
-        1px -1px 0 black,
-        -1px  1px 0 black,
-        1px  1px 0 black; /* Borde negro alrededor del texto */
-    }
+body.dark-mode #altitudeLabel {
+  color: white; /* Texto blanco */
+  text-shadow: 
+    -1px -1px 0 black,  
+     1px -1px 0 black,
+    -1px  1px 0 black,
+     1px  1px 0 black; /* Borde negro alrededor del texto */
+}
 
     /* Estilos para modo oscuro */
     body.dark-mode {
@@ -315,7 +314,6 @@
     let wakeLockSentinel = null;
     let lastPositionTime = null; // Tiempo de la última posición
     let isCapturing = true; // Estado de la captura (activa o detenida)
-    let darkMode = false; // Estado del modo oscuro
 
     // Definir el control de versión
     L.Control.Version = L.Control.extend({
@@ -351,27 +349,99 @@
         zoomControl: false // Desactiva los controles de zoom
       }).setView([0, 0], 15);
 
-      // Capa de mosaicos para modo claro
-      const lightLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
-      });
-
-      // Capa de mosaicos para modo oscuro
-      const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap contributors, © CartoDB'
-      });
-
-      // Añadir la capa de mosaicos inicial (modo claro)
-      lightLayer.addTo(map);
+      }).addTo(map);
 
       polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
 
       // Añadir el control de versión
       L.control.version().addTo(map);
+    }
 
-      // Guardar las capas para poder cambiarlas
-      map.lightLayer = lightLayer;
-      map.darkLayer = darkLayer;
+    // Función para solicitar el Wake Lock
+    async function acquireWakeLock() {
+      try {
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        console.log('Wake Lock activo');
+        wakeLockSentinel.addEventListener('release', () => {
+          console.log('Wake Lock fue liberado por el sistema!');
+          wakeLockSentinel = null;
+        });
+      } catch (err) {
+        console.error(`Error al solicitar Wake Lock: ${err.name}, ${err.message}`);
+      }
+    }
+
+    // Función para liberar el Wake Lock
+    async function releaseWakeLock() {
+      if (wakeLockSentinel) {
+        await wakeLockSentinel.release();
+        wakeLockSentinel = null;
+        console.log('Wake Lock liberado');
+      }
+    }
+
+    // Modificar la función getLocation para capturar la altitud
+    function getLocation() {
+      if (navigator.geolocation) {
+        acquireWakeLock();
+
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const speed = position.coords.speed; // Velocidad en m/s (si está disponible)
+            const altitude = position.coords.altitude; // Altitud en metros (si está disponible)
+            addCoordinate(lat, lng);
+            updateMap(lat, lng);
+            updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
+            updateSpeed(speed); // Actualizar la velocidad
+            updateAltitude(altitude); // Actualizar la altitud
+          },
+          (error) => {
+            console.error("Error al obtener la ubicación:", error);
+            updateStatus("Error al obtener la ubicación.");
+          },
+          { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+        );
+      } else {
+        updateStatus("Tu navegador no soporta geolocalización.");
+      }
+    }
+
+    // Función para actualizar la altitud en el círculo
+    function updateAltitude(altitude) {
+      const altitudeIndicator = document.getElementById('altitudeIndicator');
+      if (!altitudeIndicator) return;
+
+      // Verificar si la altitud está disponible
+      const altitudeMeters = altitude ? Math.round(parseFloat(altitude)) : 0;
+
+      // Actualizar el texto del círculo
+      altitudeIndicator.textContent = `${altitudeMeters}`;
+    }
+
+    // Detener o reanudar la captura de coordenadas
+    function toggleCapture() {
+      const stopButton = document.getElementById('stopButton');
+      if (isCapturing) {
+        // Detener la captura
+        if (watchId) {
+          navigator.geolocation.clearWatch(watchId);
+          watchId = null;
+        }
+        stopButton.textContent = "Continuar captura";
+        stopButton.classList.add('continue');
+        updateStatus("Captura de coordenadas detenida.");
+      } else {
+        // Reanudar la captura
+        getLocation();
+        stopButton.textContent = "Detener captura";
+        stopButton.classList.remove('continue');
+        updateStatus("Captura de coordenadas reanudada.");
+      }
+      isCapturing = !isCapturing; // Cambiar el estado de la captura
     }
 
     // Función para alternar el modo oscuro
@@ -379,15 +449,6 @@
       const body = document.body;
       const darkModeButton = document.getElementById('darkModeButton');
       body.classList.toggle('dark-mode');
-
-      // Cambiar la capa de mosaicos según el modo
-      if (body.classList.contains('dark-mode')) {
-        map.lightLayer.remove();
-        map.darkLayer.addTo(map);
-      } else {
-        map.darkLayer.remove();
-        map.lightLayer.addTo(map);
-      }
 
       // Guardar la preferencia en localStorage
       const isDarkMode = body.classList.contains('dark-mode');
@@ -406,18 +467,151 @@
       if (isDarkMode) {
         body.classList.add('dark-mode');
         darkModeButton.textContent = 'Modo claro';
-        map.lightLayer.remove();
-        map.darkLayer.addTo(map);
       } else {
         body.classList.remove('dark-mode');
         darkModeButton.textContent = 'Modo oscuro';
-        map.darkLayer.remove();
-        map.lightLayer.addTo(map);
       }
     }
 
-    // Resto del código...
-    // (Aquí irían las funciones restantes como `getLocation`, `updateAltitude`, `toggleCapture`, etc.)
+    // Agregar una nueva coordenada (modificada)
+    function addCoordinate(lat, lng) {
+      if (coordinates.length >= MAX_COORDINATES) {
+        coordinates.shift();
+      }
+
+      if (coordinates.length > 0) {
+        const lastCoord = coordinates[coordinates.length - 1];
+        const distance = calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng);
+
+        // Solo guardar la coordenada si la distancia es mayor a 45 metros
+        if (distance < MIN_DISTANCE_METERS) {
+          return; // No guardar la coordenada
+        }
+
+        totalDistance += distance / 1000; // Convertir a kilómetros
+      }
+
+      coordinates.push({ lat, lng });
+      saveCoordinates();
+      updateDistance();
+    }
+
+    // Calcular la distancia entre dos coordenadas (en metros)
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371e3; // Radio de la Tierra en metros
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLng = (lng2 - lng1) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // Distancia en metros
+    }
+
+    // Actualizar el mapa con nuevas coordenadas
+    function updateMap(lat, lng) {
+      if (!map) return;
+
+      const newLatLng = [lat, lng];
+      map.setView(newLatLng, 15); // Centrar el mapa en la nueva coordenada
+      polyline.addLatLng(newLatLng);
+
+      // Ajustar el zoom automáticamente para que el recorrido se vea completo
+      if (coordinates.length > 1) {
+        const bounds = polyline.getBounds(); // Obtener los límites del recorrido
+        map.fitBounds(bounds, { padding: [20, 20] }); // Ajustar el zoom con un padding de 20px
+      }
+    }
+
+    // Actualizar la velocidad en el círculo
+    function updateSpeed(speed) {
+      const speedIndicator = document.getElementById('speedIndicator');
+      if (!speedIndicator) return;
+
+      // Convertir la velocidad de m/s a km/h
+      const speedKmh = speed ? parseInt(speed * 3.6) : 0;
+
+      // Actualizar el texto del círculo
+      speedIndicator.textContent = `${speedKmh}`;
+    }
+
+    // Guardar coordenadas en localStorage
+    function saveCoordinates() {
+      localStorage.setItem("coordinates", JSON.stringify(coordinates));
+      localStorage.setItem("totalDistance", totalDistance.toString());
+    }
+
+    // Cargar coordenadas desde localStorage
+    function loadCoordinates() {
+      const savedCoordinates = localStorage.getItem("coordinates");
+      const savedDistance = localStorage.getItem("totalDistance");
+      if (savedCoordinates) {
+        coordinates = JSON.parse(savedCoordinates);
+      }
+      if (savedDistance) {
+        totalDistance = parseFloat(savedDistance);
+      }
+    }
+
+    // Cargar coordenadas guardadas y mostrarlas en el mapa
+    function loadMapWithSavedCoordinates() {
+      coordinates.forEach(coord => {
+        polyline.addLatLng([coord.lat, coord.lng]);
+      });
+      if (coordinates.length > 0) {
+        const lastCoord = coordinates[coordinates.length - 1];
+        map.setView([lastCoord.lat, lastCoord.lng], 13);
+      }
+    }
+
+    // Actualizar la distancia total en la interfaz
+    function updateDistance() {
+      document.getElementById('distance').textContent =
+        `Distancia total recorrida: ${totalDistance.toFixed(2)} km`;
+    }
+
+    // Actualizar el estado en la interfaz
+    function updateStatus(message) {
+      document.getElementById('status').textContent = message;
+    }
+
+    // Limpiar el historial de coordenadas
+    function clearHistory() {
+      coordinates = [];
+      totalDistance = 0;
+      polyline.setLatLngs([]);
+      saveCoordinates();
+      updateDistance();
+      updateStatus("Historial limpiado.");
+    }
+
+    // Función para generar el enlace de Google Maps
+    function generateGoogleMapsLink() {
+      if (coordinates.length === 0) return null;
+
+      const origin = `${coordinates[0].lat},${coordinates[0].lng}`;
+      const destination = `${coordinates[coordinates.length - 1].lat},${coordinates[coordinates.length - 1].lng}`;
+      let waypoints = '';
+
+      if (coordinates.length > 2) {
+        waypoints = coordinates.slice(1, -1).map(coord => `${coord.lat},${coord.lng}`).join('|');
+      }
+
+      return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}`;
+    }
+
+    // Función para compartir el enlace por WhatsApp
+    function shareViaWhatsApp() {
+      const link = generateGoogleMapsLink();
+      if (link) {
+        const message = `Aquí está mi recorrido: ${link}`;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+      } else {
+        alert("No hay coordenadas para compartir.");
+      }
+    }
 
     // Inicializar la aplicación
     document.addEventListener('DOMContentLoaded', () => {
