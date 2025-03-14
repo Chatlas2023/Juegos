@@ -291,13 +291,13 @@ body.dark-mode #altitudeLabel {
 function initMap() {
   map = L.map('map', {
     zoomControl: false // Desactiva los controles de zoom
-  }).setView([0, 0], 13);
+  }).setView([0, 0], 15);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  polyline = L.polyline([], { color: 'blue' }).addTo(map);
+  polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
 
   // Añadir el control de versión
   L.control.version().addTo(map);
@@ -459,7 +459,7 @@ function updateMap(lat, lng) {
   if (!map) return;
 
   const newLatLng = [lat, lng];
-  map.setView(newLatLng, 13); // Centrar el mapa en la nueva coordenada
+  map.setView(newLatLng, 15); // Centrar el mapa en la nueva coordenada
   polyline.addLatLng(newLatLng);
 
   // Ajustar el zoom solo si la nueva coordenada está fuera de los límites actuales
