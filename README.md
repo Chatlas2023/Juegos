@@ -10,3 +10,4 @@ Aplicación de registro de localizaciones
 1.0.15 Opción modo oscuro
 1.0.16 Muestra la altitud. Se eliminan los botones de zoom. Ajusta el zoom a la polilínea
 1.0.17 Muestra letras más legibles
+1.0.18 Trata de corregir prolema del zoom automático que realizaba zoom in/out todo el tiempo
