@@ -6,291 +6,246 @@
   <title>Seguime - GPS</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
+    /* Estilos CSS (sin cambios) */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
       display: flex;
       flex-direction: column;
-      height: 85vh; /* Ocupar toda la altura de la pantalla */
-      background-color: white; /* Fondo claro por defecto */
-      color: black; /* Texto oscuro por defecto */
+      height: 85vh;
+      background-color: white;
+      color: black;
     }
-
     #map {
       width: 100%;
-      flex-grow: 1; /* El mapa ocupa el espacio restante */
+      flex-grow: 1;
       border: 1px solid #ccc;
       border-radius: 8px;
-      margin-bottom: 5px; /* Menor margen inferior */
-      position: relative; /* Para posicionar el círculo de velocidad */
+      margin-bottom: 5px;
+      position: relative;
     }
-
-    /* Contenedor de información */
     #infoContainer {
       display: flex;
-      flex-direction: column; /* Por defecto, en columna (vertical) */
+      flex-direction: column;
       align-items: center;
       margin-bottom: 10px;
     }
-
     #status,
     #distance {
-      font-size: 14px; /* Tamaño de fuente más pequeño para el estado y la distancia */
+      font-size: 14px;
       font-weight: bold;
       text-align: center;
-      margin: 0; /* Eliminar márgenes */
+      margin: 0;
     }
-
-    /* Estilos para orientación horizontal */
     @media (min-width: 601px) and (orientation: landscape) {
       #infoContainer {
-        flex-direction: row; /* Colocar en la misma línea */
-        justify-content: center; /* Centrar horizontalmente */
-        gap: 20px; /* Espacio entre los elementos */
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
       }
-
       #status,
       #distance {
-        font-size: 14px; /* Tamaño de fuente para pantallas horizontales */
+        font-size: 14px;
       }
     }
-
     .buttons {
       display: flex;
       justify-content: center;
-      gap: 10px; /* Espacio entre botones */
-      flex-wrap: wrap; /* Permitir que los botones se envuelvan en pantallas pequeñas */
-      padding: 0 10px; /* Pequeño padding para evitar que los botones toquen los bordes */
-      margin-bottom: 10px; /* Margen inferior para separar del borde */
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 0 10px;
+      margin-bottom: 10px;
     }
-
     button {
-      padding: 6px 12px; /* Padding más pequeño */
-      font-size: 12px; /* Tamaño de fuente más pequeño */
+      padding: 6px 12px;
+      font-size: 12px;
       cursor: pointer;
       border: none;
       border-radius: 5px;
       background-color: #007bff;
       color: white;
-      flex: 1; /* Los botones ocupan el espacio disponible */
-      max-width: 150px; /* Ancho máximo para los botones */
+      flex: 1;
+      max-width: 150px;
     }
-
     button:hover {
       background-color: #0056b3;
     }
-
     #stopButton {
       background-color: #dc3545;
     }
-
     #stopButton:hover {
       background-color: #a71d2a;
     }
-
     #stopButton.continue {
-      background-color: #28a745; /* Verde para "Continuar captura" */
+      background-color: #28a745;
     }
-
     #stopButton.continue:hover {
-      background-color: #218838; /* Verde oscuro al pasar el mouse */
+      background-color: #218838;
     }
-
     #darkModeButton {
-      background-color: #333; /* Fondo oscuro para el botón de modo oscuro */
+      background-color: #333;
     }
-
-    /* Estilos para el título dentro del mapa */
     #map h1 {
-      position: absolute; /* Posición absoluta dentro del mapa */
-      top: 10px; /* Distancia desde la parte superior del mapa */
-      left: 10px; /* Distancia desde la izquierda del mapa */
-      background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco con transparencia */
-      padding: 8px 12px; /* Espaciado interno */
-      border-radius: 5px; /* Bordes redondeados */
-      font-size: 16px; /* Tamaño de fuente */
-      font-weight: bold; /* Texto en negrita */
-      color: black; /* Color del texto */
-      z-index: 1000; /* Asegura que esté por encima del mapa */
-      margin: 0; /* Elimina el margen predeterminado */
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra para resaltar */
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 8px 12px;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+      color: black;
+      z-index: 1000;
+      margin: 0;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
-
-    /* Estilos para modo oscuro */
     body.dark-mode #map h1 {
-      background-color: rgba(0, 0, 0, 0.8); /* Fondo oscuro con transparencia */
-      color: white; /* Texto blanco */
+      background-color: rgba(0, 0, 0, 0.8);
+      color: white;
     }
-
-    /* Estilos para el círculo de velocidad */
     #speedContainer {
       position: absolute;
-      top: 10px; /* Posición fija arriba */
-      right: 10px; /* Posición fija a la derecha */
+      top: 10px;
+      right: 10px;
       text-align: center;
-      z-index: 1000; /* Asegura que esté por encima del mapa */
+      z-index: 1000;
     }
-
-#speedIndicator {
-  width: 80px; /* Ancho más grande para el óvalo */
-  height: 60px; /* Altura igual que antes */
-  background-color: white; /* Fondo blanco */
-  border-radius: 30px; /* Bordes redondeados para forma ovalada */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: black; /* Letras negras */
-  font-size: 32px; /* Fuente más grande para el número */
-  font-weight: bold;
-  border: 4px solid red; /* Borde rojo más ancho */
-}
-
-#speedLabel {
-  margin-top: 5px; /* Espacio entre el círculo y la leyenda */
-  font-size: 14px; /* Tamaño de fuente más grande */
-  font-weight: bold; /* Texto en negrita */
-  color: black; /* Color del texto */
-  text-shadow: 
-    -1px -1px 0 white,  
-     1px -1px 0 white,
-    -1px  1px 0 white,
-     1px  1px 0 white; /* Borde blanco alrededor del texto */
-}
-
-    /* Estilos para el círculo de altitud */
-    #altitudeContainer {
-      position: absolute;
-      top: 110px; /* Posición debajo del círculo de velocidad */
-      right: 10px; /* Misma posición horizontal que el círculo de velocidad */
-      text-align: center;
-      z-index: 1000; /* Asegura que esté por encima del mapa */
-    }
-
-    #altitudeIndicator {
-      width: 80px; /* Ancho más grande para el óvalo */
-      height: 60px; /* Altura igual que antes */
-      background-color: white; /* Fondo blanco */
-      border-radius: 30px; /* Bordes redondeados para forma ovalada */
+    #speedIndicator {
+      width: 80px;
+      height: 60px;
+      background-color: white;
+      border-radius: 30px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: black; /* Letras negras */
-      font-size: 24px; /* Fuente más grande para el número */
+      color: black;
+      font-size: 32px;
       font-weight: bold;
-      border: 4px solid #00BFFF; /* Borde celeste */
+      border: 4px solid red;
     }
-
-#altitudeLabel {
-  margin-top: 5px; /* Espacio entre el círculo y la leyenda */
-  font-size: 14px; /* Tamaño de fuente más grande */
-  font-weight: bold; /* Texto en negrita */
-  color: black; /* Color del texto */
-  text-shadow: 
-    -1px -1px 0 white,  
-     1px -1px 0 white,
-    -1px  1px 0 white,
-     1px  1px 0 white; /* Borde blanco alrededor del texto */
-}
-    /* Estilos para modo oscuro */
-body.dark-mode #speedLabel {
-  color: white; /* Texto blanco */
-  text-shadow: 
-    -1px -1px 0 black,  
-     1px -1px 0 black,
-    -1px  1px 0 black,
-     1px  1px 0 black; /* Borde negro alrededor del texto */
-}
-
-body.dark-mode #altitudeLabel {
-  color: white; /* Texto blanco */
-  text-shadow: 
-    -1px -1px 0 black,  
-     1px -1px 0 black,
-    -1px  1px 0 black,
-     1px  1px 0 black; /* Borde negro alrededor del texto */
-}
-
-    /* Estilos para modo oscuro */
+    #speedLabel {
+      margin-top: 5px;
+      font-size: 14px;
+      font-weight: bold;
+      color: black;
+      text-shadow: 
+        -1px -1px 0 white,  
+        1px -1px 0 white,
+        -1px 1px 0 white,
+        1px 1px 0 white;
+    }
+    #altitudeContainer {
+      position: absolute;
+      top: 110px;
+      right: 10px;
+      text-align: center;
+      z-index: 1000;
+    }
+    #altitudeIndicator {
+      width: 80px;
+      height: 60px;
+      background-color: white;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: black;
+      font-size: 24px;
+      font-weight: bold;
+      border: 4px solid #00BFFF;
+    }
+    #altitudeLabel {
+      margin-top: 5px;
+      font-size: 14px;
+      font-weight: bold;
+      color: black;
+      text-shadow: 
+        -1px -1px 0 white,  
+        1px -1px 0 white,
+        -1px 1px 0 white,
+        1px 1px 0 white;
+    }
+    body.dark-mode #speedLabel {
+      color: white;
+      text-shadow: 
+        -1px -1px 0 black,  
+        1px -1px 0 black,
+        -1px 1px 0 black,
+        1px 1px 0 black;
+    }
+    body.dark-mode #altitudeLabel {
+      color: white;
+      text-shadow: 
+        -1px -1px 0 black,  
+        1px -1px 0 black,
+        -1px 1px 0 black,
+        1px 1px 0 black;
+    }
     body.dark-mode {
-      background-color: #121212; /* Fondo oscuro */
-      color: #ffffff; /* Texto blanco */
+      background-color: #121212;
+      color: #ffffff;
     }
-
     body.dark-mode #map {
-      border-color: #333; /* Borde del mapa más oscuro */
+      border-color: #333;
     }
-
     body.dark-mode .buttons button {
-      background-color: #444; /* Fondo de botones oscuro */
-      color: #ffffff; /* Texto de botones blanco */
+      background-color: #444;
+      color: #ffffff;
     }
-
     body.dark-mode #status,
     body.dark-mode #distance {
-      color: #ffffff; /* Texto de estado y distancia en blanco */
+      color: #ffffff;
     }
-
     body.dark-mode #speedIndicator {
-      background-color: #333; /* Fondo del círculo oscuro */
-      color: #ffffff; /* Texto del círculo en blanco */
-      border: 4px solid #ff4444; /* Borde rojo más oscuro */
+      background-color: #333;
+      color: #ffffff;
+      border: 4px solid #ff4444;
     }
-
     body.dark-mode #speedLabel {
-      color: #ffffff; /* Texto "Km/h" en blanco */
+      color: #ffffff;
     }
-
     body.dark-mode #altitudeIndicator {
-      background-color: #333; /* Fondo del círculo oscuro */
-      color: #ffffff; /* Texto del círculo en blanco */
-      border: 4px solid #00BFFF; /* Borde celeste */
+      background-color: #333;
+      color: #ffffff;
+      border: 4px solid #00BFFF;
     }
-
     body.dark-mode #altitudeLabel {
-      color: #ffffff; /* Texto "m" en blanco */
+      color: #ffffff;
     }
-
-    /* Estilos para pantallas pequeñas (orientación vertical) */
     @media (max-width: 600px) {
       h1 {
-        font-size: 14px; /* Tamaño de fuente más pequeño para pantallas pequeñas */
+        font-size: 14px;
       }
       #map {
-        height: calc(45vh - 37.8px); /* Reducir 1 cm (37.8px) en orientación vertical */
+        height: calc(45vh - 37.8px);
       }
       .buttons {
-        flex-direction: column; /* Botones en columna en pantallas pequeñas */
+        flex-direction: column;
       }
       button {
-        max-width: 100%; /* Botones ocupan todo el ancho en pantallas pequeñas */
+        max-width: 100%;
       }
     }
-
-    /* Estilos para pantallas grandes (orientación horizontal) */
     @media (min-width: 601px) {
       #map {
-        height: calc(55vh - 37.8px); /* Reducir 1 cm (37.8px) en orientación horizontal */
+        height: calc(55vh - 37.8px);
       }
     }
   </style>
 </head>
 <body>
   <div id="map">
-    <!-- Título dentro del mapa -->
     <h1>Seguime - GPS</h1>
-    <!-- Círculo de velocidad -->
     <div id="speedContainer">
       <div id="speedIndicator">0</div>
       <div id="speedLabel">Velocidad</div>
     </div>
-    <!-- Círculo de altitud -->
     <div id="altitudeContainer">
       <div id="altitudeIndicator">0</div>
       <div id="altitudeLabel">Altitud</div>
     </div>
   </div>
-  <!-- Contenedor de información -->
   <div id="infoContainer">
     <div id="status">Obteniendo ubicación...</div>
     <div id="distance">Distancia total recorrida: 0 km</div>
@@ -309,11 +264,12 @@ body.dark-mode #altitudeLabel {
     let coordinates = [];
     let totalDistance = 0;
     const MAX_COORDINATES = 1000;
-    const MIN_DISTANCE_METERS = 45; // Distancia mínima para guardar una nueva coordenada
+    const MIN_DISTANCE_METERS = 45;
     let watchId;
     let wakeLockSentinel = null;
-    let lastPositionTime = null; // Tiempo de la última posición
-    let isCapturing = true; // Estado de la captura (activa o detenida)
+    let lastPositionTime = null;
+    let isCapturing = true;
+    let shouldAdjustZoom = true; // Controla si se debe ajustar el zoom automáticamente
 
     // Definir el control de versión
     L.Control.Version = L.Control.extend({
@@ -346,7 +302,7 @@ body.dark-mode #altitudeLabel {
     // Inicializar el mapa
     function initMap() {
       map = L.map('map', {
-        zoomControl: false // Desactiva los controles de zoom
+        zoomControl: false
       }).setView([0, 0], 15);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -391,13 +347,13 @@ body.dark-mode #altitudeLabel {
           (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            const speed = position.coords.speed; // Velocidad en m/s (si está disponible)
-            const altitude = position.coords.altitude; // Altitud en metros (si está disponible)
+            const speed = position.coords.speed;
+            const altitude = position.coords.altitude;
             addCoordinate(lat, lng);
             updateMap(lat, lng);
             updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
-            updateSpeed(speed); // Actualizar la velocidad
-            updateAltitude(altitude); // Actualizar la altitud
+            updateSpeed(speed);
+            updateAltitude(altitude);
           },
           (error) => {
             console.error("Error al obtener la ubicación:", error);
@@ -415,10 +371,7 @@ body.dark-mode #altitudeLabel {
       const altitudeIndicator = document.getElementById('altitudeIndicator');
       if (!altitudeIndicator) return;
 
-      // Verificar si la altitud está disponible
       const altitudeMeters = altitude ? Math.round(parseFloat(altitude)) : 0;
-
-      // Actualizar el texto del círculo
       altitudeIndicator.textContent = `${altitudeMeters}`;
     }
 
@@ -426,7 +379,6 @@ body.dark-mode #altitudeLabel {
     function toggleCapture() {
       const stopButton = document.getElementById('stopButton');
       if (isCapturing) {
-        // Detener la captura
         if (watchId) {
           navigator.geolocation.clearWatch(watchId);
           watchId = null;
@@ -435,13 +387,12 @@ body.dark-mode #altitudeLabel {
         stopButton.classList.add('continue');
         updateStatus("Captura de coordenadas detenida.");
       } else {
-        // Reanudar la captura
         getLocation();
         stopButton.textContent = "Detener captura";
         stopButton.classList.remove('continue');
         updateStatus("Captura de coordenadas reanudada.");
       }
-      isCapturing = !isCapturing; // Cambiar el estado de la captura
+      isCapturing = !isCapturing;
     }
 
     // Función para alternar el modo oscuro
@@ -450,11 +401,9 @@ body.dark-mode #altitudeLabel {
       const darkModeButton = document.getElementById('darkModeButton');
       body.classList.toggle('dark-mode');
 
-      // Guardar la preferencia en localStorage
       const isDarkMode = body.classList.contains('dark-mode');
       localStorage.setItem('darkMode', isDarkMode);
 
-      // Cambiar el texto del botón
       darkModeButton.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
     }
 
@@ -473,7 +422,7 @@ body.dark-mode #altitudeLabel {
       }
     }
 
-    // Agregar una nueva coordenada (modificada)
+    // Agregar una nueva coordenada
     function addCoordinate(lat, lng) {
       if (coordinates.length >= MAX_COORDINATES) {
         coordinates.shift();
@@ -483,22 +432,25 @@ body.dark-mode #altitudeLabel {
         const lastCoord = coordinates[coordinates.length - 1];
         const distance = calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng);
 
-        // Solo guardar la coordenada si la distancia es mayor a 45 metros
         if (distance < MIN_DISTANCE_METERS) {
-          return; // No guardar la coordenada
+          return;
         }
 
-        totalDistance += distance / 1000; // Convertir a kilómetros
+        totalDistance += distance / 1000;
       }
 
       coordinates.push({ lat, lng });
       saveCoordinates();
       updateDistance();
+
+      if (coordinates.length > 1) {
+        shouldAdjustZoom = false;
+      }
     }
 
-    // Calcular la distancia entre dos coordenadas (en metros)
+    // Calcular la distancia entre dos coordenadas
     function calculateDistance(lat1, lng1, lat2, lng2) {
-      const R = 6371e3; // Radio de la Tierra en metros
+      const R = 6371e3;
       const dLat = (lat2 - lat1) * (Math.PI / 180);
       const dLng = (lng2 - lng1) * (Math.PI / 180);
       const a =
@@ -506,7 +458,7 @@ body.dark-mode #altitudeLabel {
         Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
         Math.sin(dLng / 2) * Math.sin(dLng / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c; // Distancia en metros
+      return R * c;
     }
 
     // Actualizar el mapa con nuevas coordenadas
@@ -514,13 +466,12 @@ body.dark-mode #altitudeLabel {
       if (!map) return;
 
       const newLatLng = [lat, lng];
-      map.setView(newLatLng, 15); // Centrar el mapa en la nueva coordenada
+      map.setView(newLatLng, 15);
       polyline.addLatLng(newLatLng);
 
-      // Ajustar el zoom automáticamente para que el recorrido se vea completo
-      if (coordinates.length > 1) {
-        const bounds = polyline.getBounds(); // Obtener los límites del recorrido
-        map.fitBounds(bounds, { padding: [20, 20] }); // Ajustar el zoom con un padding de 20px
+      if (shouldAdjustZoom && coordinates.length > 1) {
+        const bounds = polyline.getBounds();
+        map.fitBounds(bounds, { padding: [20, 20] });
       }
     }
 
@@ -529,10 +480,7 @@ body.dark-mode #altitudeLabel {
       const speedIndicator = document.getElementById('speedIndicator');
       if (!speedIndicator) return;
 
-      // Convertir la velocidad de m/s a km/h
       const speedKmh = speed ? parseInt(speed * 3.6) : 0;
-
-      // Actualizar el texto del círculo
       speedIndicator.textContent = `${speedKmh}`;
     }
 
@@ -586,6 +534,12 @@ body.dark-mode #altitudeLabel {
       updateStatus("Historial limpiado.");
     }
 
+    // Función para iniciar un nuevo recorrido
+    function startNewRoute() {
+      shouldAdjustZoom = true;
+      clearHistory();
+    }
+
     // Función para generar el enlace de Google Maps
     function generateGoogleMapsLink() {
       if (coordinates.length === 0) return null;
@@ -620,12 +574,12 @@ body.dark-mode #altitudeLabel {
       loadMapWithSavedCoordinates();
       updateDistance();
       getLocation();
-      applyDarkModePreference(); // Aplicar la preferencia de modo oscuro
+      applyDarkModePreference();
 
-      document.getElementById('clearButton').addEventListener('click', clearHistory);
+      document.getElementById('clearButton').addEventListener('click', startNewRoute);
       document.getElementById('stopButton').addEventListener('click', toggleCapture);
       document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
-      document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode); // Nuevo evento
+      document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
 
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
