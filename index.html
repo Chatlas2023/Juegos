@@ -364,9 +364,186 @@
       }
     }
 
-    // Resto del código (sin cambios)...
-    // (Aquí van las funciones addCoordinate, calculateDistance, updateMap, updateSpeed, etc.)
+// Función para agregar una nueva coordenada
+function addCoordinate(lat, lng) {
+  if (coordinates.length >= MAX_COORDINATES) {
+    coordinates.shift();
+  }
 
+  if (coordinates.length > 0) {
+    const lastCoord = coordinates[coordinates.length - 1];
+    const distance = calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng);
+
+    if (distance < MIN_DISTANCE_METERS) {
+      return;
+    }
+
+    totalDistance += distance / 1000;
+  }
+
+  coordinates.push({ lat, lng });
+  saveCoordinates();
+  updateDistance();
+
+  if (coordinates.length > 1) {
+    shouldAdjustZoom = false;
+  }
+}
+
+// Función para calcular la distancia entre dos coordenadas
+function calculateDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371e3; // Radio de la Tierra en metros
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLng = (lng2 - lng1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distancia en metros
+}
+
+// Función para actualizar el mapa con nuevas coordenadas
+function updateMap(lat, lng) {
+  if (!map) return;
+
+  const newLatLng = [lat, lng];
+  map.setView(newLatLng, 15);
+  polyline.addLatLng(newLatLng);
+
+  if (shouldAdjustZoom && coordinates.length > 1) {
+    const bounds = polyline.getBounds();
+    map.fitBounds(bounds, { padding: [20, 20] });
+  }
+}
+
+// Función para actualizar la velocidad en la interfaz
+function updateSpeed(speed) {
+  const speedIndicator = document.getElementById('speedIndicator');
+  if (!speedIndicator) return;
+
+  const speedKmh = speed ? parseInt(speed * 3.6) : 0;
+  speedIndicator.textContent = `${speedKmh}`;
+}
+
+// Función para actualizar la altitud en la interfaz
+function updateAltitude(altitude) {
+  const altitudeIndicator = document.getElementById('altitudeIndicator');
+  if (!altitudeIndicator) return;
+
+  const altitudeMeters = altitude ? Math.round(parseFloat(altitude)) : 0;
+  altitudeIndicator.textContent = `${altitudeMeters}`;
+}
+
+// Función para guardar las coordenadas en localStorage
+function saveCoordinates() {
+  localStorage.setItem("coordinates", JSON.stringify(coordinates));
+  localStorage.setItem("totalDistance", totalDistance.toString());
+}
+
+// Función para cargar las coordenadas desde localStorage
+function loadCoordinates() {
+  const savedCoordinates = localStorage.getItem("coordinates");
+  const savedDistance = localStorage.getItem("totalDistance");
+  if (savedCoordinates) {
+    coordinates = JSON.parse(savedCoordinates);
+  }
+  if (savedDistance) {
+    totalDistance = parseFloat(savedDistance);
+  }
+}
+
+// Función para cargar las coordenadas guardadas y mostrarlas en el mapa
+function loadMapWithSavedCoordinates() {
+  coordinates.forEach(coord => {
+    polyline.addLatLng([coord.lat, coord.lng]);
+  });
+  if (coordinates.length > 0) {
+    const lastCoord = coordinates[coordinates.length - 1];
+    map.setView([lastCoord.lat, lastCoord.lng], 13);
+  }
+}
+
+// Función para actualizar la distancia total en la interfaz
+function updateDistance() {
+  document.getElementById('distance').textContent =
+    `Distancia total recorrida: ${totalDistance.toFixed(2)} km`;
+}
+
+// Función para actualizar el estado en la interfaz
+function updateStatus(message) {
+  document.getElementById('status').textContent = message;
+}
+
+// Función para limpiar el historial de coordenadas
+function clearHistory() {
+  coordinates = [];
+  totalDistance = 0;
+  polyline.setLatLngs([]);
+  saveCoordinates();
+  updateDistance();
+  updateStatus("Historial limpiado.");
+}
+
+// Función para iniciar un nuevo recorrido
+function startNewRoute() {
+  shouldAdjustZoom = true;
+  clearHistory();
+}
+
+// Función para generar el enlace de Google Maps
+function generateGoogleMapsLink() {
+  if (coordinates.length === 0) return null;
+
+  const origin = `${coordinates[0].lat},${coordinates[0].lng}`;
+  const destination = `${coordinates[coordinates.length - 1].lat},${coordinates[coordinates.length - 1].lng}`;
+  let waypoints = '';
+
+  if (coordinates.length > 2) {
+    waypoints = coordinates.slice(1, -1).map(coord => `${coord.lat},${coord.lng}`).join('|');
+  }
+
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}`;
+}
+
+// Función para compartir el enlace por WhatsApp
+function shareViaWhatsApp() {
+  const link = generateGoogleMapsLink();
+  if (link) {
+    const message = `Aquí está mi recorrido: ${link}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  } else {
+    alert("No hay coordenadas para compartir.");
+  }
+}
+
+// Función para alternar el modo oscuro
+function toggleDarkMode() {
+  const body = document.body;
+  const darkModeButton = document.getElementById('darkModeButton');
+  body.classList.toggle('dark-mode');
+
+  const isDarkMode = body.classList.contains('dark-mode');
+  localStorage.setItem('darkMode', isDarkMode);
+
+  darkModeButton.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
+}
+
+// Función para aplicar el modo oscuro al cargar la página
+function applyDarkModePreference() {
+  const isDarkMode = localStorage.getItem('darkMode') === 'true';
+  const body = document.body;
+  const darkModeButton = document.getElementById('darkModeButton');
+
+  if (isDarkMode) {
+    body.classList.add('dark-mode');
+    darkModeButton.textContent = 'Modo claro';
+  } else {
+    body.classList.remove('dark-mode');
+    darkModeButton.textContent = 'Modo oscuro';
+  }
+}
     // Inicializar la aplicación
     document.addEventListener('DOMContentLoaded', () => {
       initMap();
