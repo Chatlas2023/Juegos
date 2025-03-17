@@ -1,39 +1,92 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Test GeoJSON Barrio</title>
-    <style>
-        body { font-family: sans-serif; }
-        #resultado { font-size: 1.2em; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <h1>¿En qué barrio estoy?</h1>
-    <p>Cargando ubicación...</p>
-    <div id="resultado"></div>
+<script>
+            // Reemplaza con la URL RAW de tu archivo Barrios_AMBA.geojson en GitHub
+            const geojsonUrl = 'https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson';
+            const resultadoDiv = document.getElementById('resultado');
 
-    <script>
-        // Reemplaza con la URL RAW de tu archivo Barrios_AMBA.geojson en GitHub
-        const geojsonUrl = 'https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson';
-        const resultadoDiv = document.getElementById('resultado');
-
-        function isPointInPolygon(point, polygon) {
-            const x = point[0];
-            const y = point[1];
-            let inside = false;
-            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-                const xi = polygon[i][0];
-                const yi = polygon[i][1];
-                const xj = polygon[j][0];
-                const yj = polygon[j][1];
-                const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-                if (intersect) inside = !inside;
+            function isPointInPolygon(point, polygon) {
+                const x = point[0];
+                const y = point[1];
+                let inside = false;
+                for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                    const xi = polygon[i][0];
+                    const yi = polygon[i][1];
+                    const xj = polygon[j][0];
+                    const yj = polygon[j][1];
+                    const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                    if (intersect) inside = !inside;
+                }
+                return inside;
             }
-            return inside;
-        }
 
-        function findBarrio(latitude, longitude, geojson) {
-            const point = [longitude, latitude]; // GeoJSON usa [longitude, latitude]
+            function findBarrio(latitude, longitude, geojson) {
+                const point = [longitude, latitude]; // GeoJSON usa [longitude, latitude]
+                for (const feature of geojson.features) {
+                    if (feature.geometry.type === 'Polygon') {
+                        const coordinates = feature.geometry.coordinates[0]; // Asumiendo polígonos simples
+                        if (isPointInPolygon(point, coordinates)) {
+                            return feature.properties.Name; // <---- CAMBIÉ AQUÍ a "Name"
+                        }
+                    } else if (feature.geometry.type === 'MultiPolygon') {
+                        for (const polygon of feature.geometry.coordinates) {
+                            if (isPointInPolygon(point, polygon[0])) {
+                                return feature.properties.Name; // <---- CAMBIÉ AQUÍ a "Name"
+                            }
+                        }
+                    }
+                }
+                return 'Barrio no encontrado';
+            }
+
+            function handleLocationSuccess(position) {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                resultadoDiv.textContent = `Ubicación obtenida: Latitud ${latitude.toFixed(6)}, Longitud ${longitude.toFixed(6)}. Cargando datos del barrio...`;
+                fetchGeoJSONAndFindBarrio(latitude, longitude);
+            }
+
+            function handleLocationError(error) {
+                let errorMessage = 'Error al obtener la ubicación.';
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage = 'Permiso de ubicación denegado.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage = 'Información de ubicación no disponible.';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage = 'Tiempo de espera agotado al obtener la ubicación.';
+                        break;
+                    case error.UNKNOWN_ERROR:
+                        errorMessage = 'Ocurrió un error desconocido al obtener la ubicación.';
+                        break;
+                }
+                resultadoDiv.textContent = errorMessage;
+                console.error('Error getting location:', error);
+            }
+
+            async function fetchGeoJSONAndFindBarrio(latitude, longitude) {
+                try {
+                    const response = await fetch(geojsonUrl);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const geojson = await response.json();
+                    const barrioEncontrado = findBarrio(latitude, longitude, geojson);
+                    resultadoDiv.textContent = `Estás en el barrio: ${barrioEncontrado}`;
+                } catch (error) {
+                    resultadoDiv.textContent = 'Error al cargar los datos del barrio.';
+                    console.error('Error:', error);
+                }
+            }
+
+            const locationOptions = {
+                enableHighAccuracy: true, // Intenta obtener la ubicación más precisa
+                timeout: 10000,           // Tiempo máximo para esperar la ubicación (en milisegundos)
+                maximumAge: 0             // No usar caché
+            };
+
+            navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError, locationOptions);
+        </script>
             for (const feature of geojson.features) {
                 if (feature.geometry.type === 'Polygon') {
                     const coordinates = feature.geometry.coordinates[0]; // Asumiendo polígonos simples
