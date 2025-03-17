@@ -38,12 +38,12 @@
                 if (feature.geometry.type === 'Polygon') {
                     const coordinates = feature.geometry.coordinates[0]; // Asumiendo polígonos simples
                     if (isPointInPolygon(point, coordinates)) {
-                        return feature.properties.name; // Ajusta 'nombre' al campo correcto en tu GeoJSON
+                        return feature.properties.nombre; // Ajusta 'nombre' al campo correcto en tu GeoJSON
                     }
                 } else if (feature.geometry.type === 'MultiPolygon') {
                     for (const polygon of feature.geometry.coordinates) {
                         if (isPointInPolygon(point, polygon[0])) {
-                            return feature.properties.nombre; // Ajusta 'nombre' al campo correcto en tu GeoJSON
+                            return feature.properties.nombre;
                         }
                     }
                 }
@@ -51,10 +51,34 @@
             return 'Barrio no encontrado';
         }
 
-        navigator.geolocation.getCurrentPosition(async position => {
+        function handleLocationSuccess(position) {
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
+            resultadoDiv.textContent = `Ubicación obtenida: Latitud ${latitude.toFixed(6)}, Longitud ${longitude.toFixed(6)}. Cargando datos del barrio...`;
+            fetchGeoJSONAndFindBarrio(latitude, longitude);
+        }
 
+        function handleLocationError(error) {
+            let errorMessage = 'Error al obtener la ubicación.';
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = 'Permiso de ubicación denegado.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = 'Información de ubicación no disponible.';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = 'Tiempo de espera agotado al obtener la ubicación.';
+                    break;
+                case error.UNKNOWN_ERROR:
+                    errorMessage = 'Ocurrió un error desconocido al obtener la ubicación.';
+                    break;
+            }
+            resultadoDiv.textContent = errorMessage;
+            console.error('Error getting location:', error);
+        }
+
+        async function fetchGeoJSONAndFindBarrio(latitude, longitude) {
             try {
                 const response = await fetch(geojsonUrl);
                 if (!response.ok) {
@@ -67,11 +91,15 @@
                 resultadoDiv.textContent = 'Error al cargar los datos del barrio.';
                 console.error('Error:', error);
             }
-        }, error => {
-            resultadoDiv.textContent = 'Error al obtener la ubicación.';
-            console.error('Error getting location:', error);
-        });
+        }
+
+        const locationOptions = {
+            enableHighAccuracy: true, // Intenta obtener la ubicación más precisa
+            timeout: 10000,           // Tiempo máximo para esperar la ubicación (en milisegundos)
+            maximumAge: 0             // No usar caché
+        };
+
+        navigator.geolocation.getCurrentPosition(handleLocationSuccess, handleLocationError, locationOptions);
     </script>
 </body>
 </html>
-```
