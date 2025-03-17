@@ -245,6 +245,9 @@
             <div id="altitudeIndicator">0</div>
             <div id="altitudeLabel">Altitud</div>
         </div>
+        <div id="barrioContainer" style="position: absolute; bottom: 10px; left: 10px; background-color: rgba(255, 255, 255, 0.9); padding: 8px 12px; border-radius: 5px; font-size: 14px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
+            Barrio: <span id="barrio">Desconocido</span>
+        </div>
     </div>
     <div id="infoContainer">
         <div id="status">Obteniendo ubicación...</div>
@@ -261,7 +264,7 @@
         // Variables globales
         let map;
         let polyline;
-        let coordinates =; // Corrección en la línea 205
+        let coordinates = [];
         let totalDistance = 0;
         const MAX_COORDINATES = 1000;
         const MIN_DISTANCE_METERS = 45;
@@ -269,36 +272,11 @@
         let wakeLockSentinel = null;
         let lastPositionTime = null;
         let isCapturing = true;
-        let shouldAdjustZoom = true; // Controla si se debe ajustar el zoom automáticamente
-        let barriosGeoJSON; // Para almacenar los datos del GeoJSON
+        let shouldAdjustZoom = true;
+        let barriosGeoJSON = null; // Almacenará el GeoJSON cargado
 
-        // Definir el control de versión
-        L.Control.Version = L.Control.extend({
-            options: {
-                position: 'bottomleft'
-            },
-            onAdd: function(map) {
-                let div = L.DomUtil.create('div', 'leaflet-control-version');
-                div.style.position = "absolute";
-                div.style.left = "0";
-                div.style.bottom = "0";
-                div.innerHTML = " Ver: 1.0.18 ";
-                div.style.padding = "0px";
-                div.style.margin = "0";
-                div.style.background = "rgba(255, 255, 255, 0.8)";
-                div.style.fontSize = "10px";
-                div.style.borderRadius = "0px";
-                div.style.border = "none";
-                div.style.whiteSpace = "nowrap";
-                div.style.lineHeight = "normal";
-                return div;
-            }
-        });
-
-        // Añadir el control de versión al mapa
-        L.control.version = function(opts) {
-            return new L.Control.Version(opts);
-        };
+        // URL del archivo GeoJSON
+        const geojsonUrl = 'https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson';
 
         // Función para verificar si un punto está dentro de un polígono
         function isPointInPolygon(point, polygon) {
@@ -316,179 +294,112 @@
             return inside;
         }
 
-        // Función para encontrar el barrio basado en latitud y longitud
+        // Función para encontrar el barrio en función de las coordenadas
         function findBarrio(latitude, longitude, geojson) {
-            if (!geojson || !geojson.features) {
-                return null;
-            }
             const point = [longitude, latitude]; // GeoJSON usa [longitude, latitude]
             for (const feature of geojson.features) {
                 if (feature.geometry.type === 'Polygon') {
                     const coordinates = feature.geometry.coordinates[0]; // Asumiendo polígonos simples
                     if (isPointInPolygon(point, coordinates)) {
-                        return feature.properties.Name;
+                        return feature.properties.Name; // Cambia "Name" por el nombre correcto de la propiedad en tu GeoJSON
                     }
                 } else if (feature.geometry.type === 'MultiPolygon') {
                     for (const polygon of feature.geometry.coordinates) {
                         if (isPointInPolygon(point, polygon[0])) {
-                            return feature.properties.Name;
+                            return feature.properties.Name; // Cambia "Name" por el nombre correcto de la propiedad en tu GeoJSON
                         }
                     }
                 }
             }
-            return null; // Retorna null si no se encuentra el barrio
+            return 'Barrio no encontrado';
         }
 
-        // Inicializar el mapa
-        async function initMap() {
-            map = L.map('map', {
-                zoomControl: false
-            }).setView([0, 0], 15);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-
-            polyline = L.polyline(, { color: 'blue', weight: 6 }).addTo(map); // Corrección en la línea 253
-
-
-
-            // Añadir el control de versión
-            L.control.version().addTo(map);
-
-            // Cargar el GeoJSON de los barrios
-            // try {
-            //     const response = await fetch('https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson');
-            //     if (!response.ok) {
-            //         throw new Error(`HTTP error! status: ${response.status}`);
-            //     }
-            //     barriosGeoJSON = await response.json();
-            // } catch (error) {
-            //     console.error('Error al cargar los datos de los barrios:', error);
-            //     updateStatus("Error al cargar los datos de los barrios.");
-            // }
-            // Elimina o comenta la línea que llama a fetchBarriosGeoJSON
-            // fetchBarriosGeoJSON();
+        // Función para obtener el barrio en función de las coordenadas
+        function getBarrio(lat, lng) {
+            if (!barriosGeoJSON) return null;
+            return findBarrio(lat, lng, barriosGeoJSON);
         }
 
-        // Función para solicitar el Wake Lock
-        async function acquireWakeLock() {
-            try {
-                wakeLockSentinel = await navigator.wakeLock.request('screen');
-                console.log('Wake Lock activo');
-                wakeLockSentinel.addEventListener('release', () => {
-                    console.log('Wake Lock fue liberado por el sistema!');
-                    wakeLockSentinel = null;
-                });
-            } catch (err) {
-                console.error(`Error al solicitar Wake Lock: ${err.name}, ${err.message}`);
+        // Función para cargar el GeoJSON de barrios
+        function loadBarriosGeoJSON() {
+            fetch(geojsonUrl)
+                .then(response => response.json())
+                .then(data => {
+                    barriosGeoJSON = data; // Almacena el GeoJSON cargado
+                    console.log('GeoJSON cargado correctamente:', data);
+                })
+                .catch(error => console.error('Error cargando el GeoJSON:', error));
+        }
+
+        // Función para actualizar el barrio en la interfaz
+        function updateBarrio(barrio) {
+            const barrioElement = document.getElementById('barrio');
+            if (barrioElement) {
+                barrioElement.textContent = barrio || "Desconocido";
             }
         }
 
-        // Función para liberar el Wake Lock
-        async function releaseWakeLock() {
-            if (wakeLockSentinel) {
-                await wakeLockSentinel.release();
-                wakeLockSentinel = null;
-                console.log('Wake Lock liberado');
-            }
-        }
-
-        // Modificar la función getLocation para capturar la altitud y el barrio
+        // Función para obtener la ubicación
         function getLocation() {
             if (navigator.geolocation) {
+                console.log("Solicitando ubicación...");
                 acquireWakeLock();
 
                 watchId = navigator.geolocation.watchPosition(
                     (position) => {
+                        console.log("Ubicación obtenida:", position);
                         const lat = position.coords.latitude;
                         const lng = position.coords.longitude;
                         const speed = position.coords.speed;
                         const altitude = position.coords.altitude;
+
+                        // Verificar si las coordenadas son válidas
+                        if (isNaN(lat) || isNaN(lng)) {
+                            console.error("Coordenadas inválidas:", lat, lng);
+                            updateStatus("Error: Coordenadas inválidas.");
+                            return;
+                        }
+
+                        // Actualizar la aplicación con las nuevas coordenadas
                         addCoordinate(lat, lng);
                         updateMap(lat, lng);
                         updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
                         updateSpeed(speed);
                         updateAltitude(altitude);
-                        // const barrio = findBarrio(lat, lng, barriosGeoJSON);
-                        // updateMapTitle(barrio); // Actualizar el título del mapa con el nombre del barrio
+
+                        // Obtener el barrio actual
+                        const barrio = getBarrio(lat, lng);
+                        updateBarrio(barrio);
                     },
                     (error) => {
                         console.error("Error al obtener la ubicación:", error);
                         updateStatus("Error al obtener la ubicación.");
+
+                        // Manejar errores específicos
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                console.error("El usuario denegó el permiso de geolocalización.");
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                console.error("La información de ubicación no está disponible.");
+                                break;
+                            case error.TIMEOUT:
+                                console.error("Se agotó el tiempo de espera para obtener la ubicación.");
+                                break;
+                            default:
+                                console.error("Error desconocido al obtener la ubicación.");
+                                break;
+                        }
                     },
                     { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
                 );
             } else {
+                console.error("Geolocalización no soportada por el navegador.");
                 updateStatus("Tu navegador no soporta geolocalización.");
             }
         }
 
-        // Función para actualizar el título del mapa con el nombre del barrio
-        function updateMapTitle(barrio) {
-            const mapTitle = document.querySelector('#map h1');
-            if (mapTitle) {
-                mapTitle.textContent = `Seguime - GPS${barrio ? ' - ' + barrio : ''}`;
-            }
-        }
-
-        // Función para actualizar la altitud en el círculo
-        function updateAltitude(altitude) {
-            const altitudeIndicator = document.getElementById('altitudeIndicator');
-            if (!altitudeIndicator) return;
-
-            const altitudeMeters = altitude ? Math.round(parseFloat(altitude)) : 0;
-            altitudeIndicator.textContent = `${altitudeMeters}`;
-        }
-
-        // Detener o reanudar la captura de coordenadas
-        function toggleCapture() {
-            const stopButton = document.getElementById('stopButton');
-            if (isCapturing) {
-                if (watchId) {
-                    navigator.geolocation.clearWatch(watchId);
-                    watchId = null;
-                }
-                stopButton.textContent = "Continuar captura";
-                stopButton.classList.add('continue');
-                updateStatus("Captura de coordenadas detenida.");
-            } else {
-                getLocation();
-                stopButton.textContent = "Detener captura";
-                stopButton.classList.remove('continue');
-                updateStatus("Captura de coordenadas reanudada.");
-            }
-            isCapturing = !isCapturing;
-        }
-
-        // Función para alternar el modo oscuro
-        function toggleDarkMode() {
-            const body = document.body;
-            const darkModeButton = document.getElementById('darkModeButton');
-            body.classList.toggle('dark-mode');
-
-            const isDarkMode = body.classList.contains('dark-mode');
-            localStorage.setItem('darkMode', isDarkMode);
-
-            darkModeButton.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
-        }
-
-        // Aplicar el modo oscuro al cargar la página
-        function applyDarkModePreference() {
-            const isDarkMode = localStorage.getItem('darkMode') === 'true';
-            const body = document.body;
-            const darkModeButton = document.getElementById('darkModeButton');
-
-            if (isDarkMode) {
-                body.classList.add('dark-mode');
-                darkModeButton.textContent = 'Modo claro';
-            } else {
-                body.classList.remove('dark-mode');
-                darkModeButton.textContent = 'Modo oscuro';
-            }
-        }
-
-        // Agregar una nueva coordenada
+        // Función para agregar una nueva coordenada
         function addCoordinate(lat, lng) {
             if (coordinates.length >= MAX_COORDINATES) {
                 coordinates.shift();
@@ -514,9 +425,9 @@
             }
         }
 
-        // Calcular la distancia entre dos coordenadas
+        // Función para calcular la distancia entre dos coordenadas
         function calculateDistance(lat1, lng1, lat2, lng2) {
-            const R = 6371e3;
+            const R = 6371e3; // Radio de la Tierra en metros
             const dLat = (lat2 - lat1) * (Math.PI / 180);
             const dLng = (lng2 - lng1) * (Math.PI / 180);
             const a =
@@ -524,10 +435,10 @@
                 Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
                 Math.sin(dLng / 2) * Math.sin(dLng / 2);
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            return R * c;
+            return R * c; // Distancia en metros
         }
 
-        // Actualizar el mapa con nuevas coordenadas
+        // Función para actualizar el mapa con nuevas coordenadas
         function updateMap(lat, lng) {
             if (!map) return;
 
@@ -541,7 +452,7 @@
             }
         }
 
-        // Actualizar la velocidad en el círculo
+        // Función para actualizar la velocidad en la interfaz
         function updateSpeed(speed) {
             const speedIndicator = document.getElementById('speedIndicator');
             if (!speedIndicator) return;
@@ -550,13 +461,22 @@
             speedIndicator.textContent = `${speedKmh}`;
         }
 
-        // Guardar coordenadas en localStorage
+        // Función para actualizar la altitud en la interfaz
+        function updateAltitude(altitude) {
+            const altitudeIndicator = document.getElementById('altitudeIndicator');
+            if (!altitudeIndicator) return;
+
+            const altitudeMeters = altitude ? Math.round(parseFloat(altitude)) : 0;
+            altitudeIndicator.textContent = `${altitudeMeters}`;
+        }
+
+        // Función para guardar las coordenadas en localStorage
         function saveCoordinates() {
             localStorage.setItem("coordinates", JSON.stringify(coordinates));
             localStorage.setItem("totalDistance", totalDistance.toString());
         }
 
-        // Cargar coordenadas desde localStorage
+        // Función para cargar las coordenadas desde localStorage
         function loadCoordinates() {
             const savedCoordinates = localStorage.getItem("coordinates");
             const savedDistance = localStorage.getItem("totalDistance");
@@ -568,7 +488,7 @@
             }
         }
 
-        // Cargar coordenadas guardadas y mostrarlas en el mapa
+        // Función para cargar las coordenadas guardadas y mostrarlas en el mapa
         function loadMapWithSavedCoordinates() {
             coordinates.forEach(coord => {
                 polyline.addLatLng([coord.lat, coord.lng]);
@@ -579,22 +499,22 @@
             }
         }
 
-        // Actualizar la distancia total en la interfaz
+        // Función para actualizar la distancia total en la interfaz
         function updateDistance() {
             document.getElementById('distance').textContent =
                 `Distancia total recorrida: ${totalDistance.toFixed(2)} km`;
         }
 
-        // Actualizar el estado en la interfaz
+        // Función para actualizar el estado en la interfaz
         function updateStatus(message) {
             document.getElementById('status').textContent = message;
         }
 
-        // Limpiar el historial de coordenadas
+        // Función para limpiar el historial de coordenadas
         function clearHistory() {
-            coordinates =;
+            coordinates = [];
             totalDistance = 0;
-            polyline.setLatLngs();
+            polyline.setLatLngs([]);
             saveCoordinates();
             updateDistance();
             updateStatus("Historial limpiado.");
@@ -618,7 +538,7 @@
                 waypoints = coordinates.slice(1, -1).map(coord => `${coord.lat},${coord.lng}`).join('|');
             }
 
-            return `https://www.google.com/maps/dir/?api=1&origin=$?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}`;
+            return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}`;
         }
 
         // Función para compartir el enlace por WhatsApp
@@ -633,9 +553,37 @@
             }
         }
 
+        // Función para alternar el modo oscuro
+        function toggleDarkMode() {
+            const body = document.body;
+            const darkModeButton = document.getElementById('darkModeButton');
+            body.classList.toggle('dark-mode');
+
+            const isDarkMode = body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+
+            darkModeButton.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
+        }
+
+        // Función para aplicar el modo oscuro al cargar la página
+        function applyDarkModePreference() {
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            const body = document.body;
+            const darkModeButton = document.getElementById('darkModeButton');
+
+            if (isDarkMode) {
+                body.classList.add('dark-mode');
+                darkModeButton.textContent = 'Modo claro';
+            } else {
+                body.classList.remove('dark-mode');
+                darkModeButton.textContent = 'Modo oscuro';
+            }
+        }
+
         // Inicializar la aplicación
         document.addEventListener('DOMContentLoaded', () => {
             initMap();
+            loadBarriosGeoJSON(); // Cargar el GeoJSON de barrios
             loadCoordinates();
             loadMapWithSavedCoordinates();
             updateDistance();
