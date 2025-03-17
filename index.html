@@ -6,6 +6,19 @@
   <title>Seguime - GPS</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
+    #neighborhoodName {
+  position: absolute; /* Posición absoluta dentro del mapa */
+  bottom: 10px; /* Distancia desde la parte inferior */
+  left: 10px; /* Distancia desde la izquierda */
+  background-color: rgba(255, 255, 255, 0.9); /* Fondo semitransparente */
+  padding: 8px 12px; /* Espaciado interno */
+  border-radius: 5px; /* Bordes redondeados */
+  font-size: 14px; /* Tamaño de fuente */
+  font-weight: bold; /* Negrita */
+  color: black; /* Color del texto */
+  z-index: 1000; /* Asegura que esté por encima de otros elementos */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra */
+}
     /* Estilos CSS (sin cambios) */
     body {
       font-family: Arial, sans-serif;
@@ -236,20 +249,20 @@
 </head>
 <body>
   <div id="map">
-    <h1>Seguime - GPS</h1>
-<div id="speedContainer">
-  <div id="speedIndicator" style="display: flex; flex-direction: column; align-items: center;">
-    <div style="font-size: 36px;">0</div> <div style="font-size: 14px; margin-top: -8px;">Km/h</div>
-  </div>
-</div>
-  <div id="speedLabel">Velocidad</div> <!-- Este se mantiene igual -->
-</div>
-    <div id="altitudeContainer">
-      <div id="altitudeIndicator">0</div>
-      <div id="altitudeLabel">Altitud</div>
+  <h1>Seguime - GPS</h1>
+  <div id="speedContainer">
+    <div id="speedIndicator">
+      <div>0</div>
+      <div style="font-size: 14px;">Km/h</div>
     </div>
-<div id="neighborhoodName" style="position: absolute; bottom: 10px; left: 10px; background-color: rgba(255, 255, 255, 0.9); padding: 8px 12px; border-radius: 5px; font-size: 14px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
-  Barrio: Cargando...
+    <div id="speedLabel">Velocidad</div>
+  </div>
+  <div id="altitudeContainer">
+    <div id="altitudeIndicator">0 Metros</div>
+    <div id="altitudeLabel">Altitud</div>
+  </div>
+  <!-- Texto del barrio dentro del mapa -->
+  <div id="neighborhoodName">Barrio: Cargando...</div>
 </div>
   </div>
   <div id="infoContainer">
