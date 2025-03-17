@@ -332,37 +332,65 @@
       }
     }
 
-    // Función para obtener la ubicación
-    function getLocation() {
-      if (navigator.geolocation) {
-        acquireWakeLock();
+   // Función para obtener la ubicación
+function getLocation() {
+  if (navigator.geolocation) {
+    console.log("Solicitando ubicación...");
+    acquireWakeLock();
 
-        watchId = navigator.geolocation.watchPosition(
-          (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const speed = position.coords.speed;
-            const altitude = position.coords.altitude;
-            addCoordinate(lat, lng);
-            updateMap(lat, lng);
-            updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
-            updateSpeed(speed);
-            updateAltitude(altitude);
+    watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        console.log("Ubicación obtenida:", position);
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        const speed = position.coords.speed;
+        const altitude = position.coords.altitude;
 
-            // Obtener el barrio actual
-            const barrio = getBarrio(lat, lng);
-            updateBarrio(barrio);
-          },
-          (error) => {
-            console.error("Error al obtener la ubicación:", error);
-            updateStatus("Error al obtener la ubicación.");
-          },
-          { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
-        );
-      } else {
-        updateStatus("Tu navegador no soporta geolocalización.");
-      }
-    }
+        // Verificar si las coordenadas son válidas
+        if (isNaN(lat) || isNaN(lng)) {
+          console.error("Coordenadas inválidas:", lat, lng);
+          updateStatus("Error: Coordenadas inválidas.");
+          return;
+        }
+
+        // Actualizar la aplicación con las nuevas coordenadas
+        addCoordinate(lat, lng);
+        updateMap(lat, lng);
+        updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
+        updateSpeed(speed);
+        updateAltitude(altitude);
+
+        // Obtener el barrio actual
+        const barrio = getBarrio(lat, lng);
+        updateBarrio(barrio);
+      },
+      (error) => {
+        console.error("Error al obtener la ubicación:", error);
+        updateStatus("Error al obtener la ubicación.");
+
+        // Manejar errores específicos
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            console.error("El usuario denegó el permiso de geolocalización.");
+            break;
+          case error.POSITION_UNAVAILABLE:
+            console.error("La información de ubicación no está disponible.");
+            break;
+          case error.TIMEOUT:
+            console.error("Se agotó el tiempo de espera para obtener la ubicación.");
+            break;
+          default:
+            console.error("Error desconocido al obtener la ubicación.");
+            break;
+        }
+      },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+    );
+  } else {
+    console.error("Geolocalización no soportada por el navegador.");
+    updateStatus("Tu navegador no soporta geolocalización.");
+  }
+}
 
 // Función para agregar una nueva coordenada
 function addCoordinate(lat, lng) {
