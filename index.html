@@ -430,24 +430,26 @@
     }
 
     // Detener o reanudar la captura de coordenadas
-    function toggleCapture() {
-      const stopButton = document.getElementById('stopButton');
-      if (isCapturing) {
-        if (watchId) {
-          navigator.geolocation.clearWatch(watchId);
-          watchId = null;
-        }
-        stopButton.textContent = "Continuar captura";
-        stopButton.classList.add('continue');
-        updateStatus("Captura de coordenadas detenida.");
-      } else {
-        getLocation();
-        stopButton.textContent = "Detener captura";
-        stopButton.classList.remove('continue');
-        updateStatus("Captura de coordenadas reanudada.");
-      }
-      isCapturing = !isCapturing;
+function toggleCapture() {
+  const stopButton = document.getElementById('stopButton');
+  if (isCapturing) {
+    if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
     }
+    stopButton.textContent = "Continuar captura";
+    stopButton.classList.add('continue');
+    updateStatus("Captura de coordenadas detenida.");
+    shouldAdjustZoom = false; // Desactiva el ajuste automático del zoom
+  } else {
+    getLocation();
+    stopButton.textContent = "Detener captura";
+    stopButton.classList.remove('continue');
+    updateStatus("Captura de coordenadas reanudada.");
+    shouldAdjustZoom = true; // Reactiva el ajuste automático del zoom
+  }
+  isCapturing = !isCapturing;
+}
 
     // Función para alternar el modo oscuro
     function toggleDarkMode() {
@@ -516,18 +518,19 @@
     }
 
     // Actualizar el mapa con nuevas coordenadas
-    function updateMap(lat, lng) {
-      if (!map) return;
+function updateMap(lat, lng) {
+  if (!map) return;
 
-      const newLatLng = [lat, lng];
-      map.setView(newLatLng, 15);
-      polyline.addLatLng(newLatLng);
+  const newLatLng = [lat, lng];
+  map.setView(newLatLng, 15); // Centra el mapa en la nueva ubicación
+  polyline.addLatLng(newLatLng); // Añade la nueva coordenada a la polilínea
 
-      if (shouldAdjustZoom && coordinates.length > 1) {
-        const bounds = polyline.getBounds();
-        map.fitBounds(bounds, { padding: [20, 20] });
-      }
-    }
+  // Ajusta el zoom solo si shouldAdjustZoom es true
+  if (shouldAdjustZoom && coordinates.length > 1) {
+    const bounds = polyline.getBounds();
+    map.fitBounds(bounds, { padding: [20, 20] });
+  }
+}
 
     // Actualizar la velocidad en el círculo
     function updateSpeed(speed) {
