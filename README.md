@@ -14,4 +14,4 @@ Aplicación de registro de localizaciones
 1.0.19 Incrusta nombre del barrio desde capa GeoJson
 1.0.20 Miestra el nombre del barrio sobre el mapa, no por debajo
 1.0.24 Modo oscuro de mapa
-1.0.25 Ahorro de bateria
+1.0.25 Confirma eliminacion de ruta e implementa ahorro de bateria
