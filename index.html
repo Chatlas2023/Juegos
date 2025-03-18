@@ -111,19 +111,29 @@
       text-align: center;
       z-index: 1000;
     }
-    #speedIndicator {
+#speedIndicator, #altitudeIndicator {
+  width: 80px;
+  height: 80px;
+  background-color: white;
+  border-radius: 50%; /* Hace que el div sea circular */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  border: 4px solid red; /* Borde para el indicador de velocidad */
+  color: black;
+  font-weight: bold;
 }
-#speedValue {
+    #altitudeIndicator {
+  border: 4px solid #00BFFF; /* Borde para el indicador de altitud */
+}
+#speedValue, #altitudeValue {
   font-size: 32px; /* Tamaño del número */
-  font-weight: bold;
 }
-#speedUnit {
+
+#speedUnit, #altitudeUnit {
   font-size: 16px; /* Mitad del tamaño del número */
-  font-weight: bold;
+  margin-top: -10px; /* Ajusta la posición vertical */
 }
     #speedLabel {
       margin-top: 5px;
@@ -143,12 +153,6 @@
       text-align: center;
       z-index: 1000;
     }
-#altitudeIndicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
 #altitudeValue {
   font-size: 32px; /* Tamaño del número */
   font-weight: bold;
@@ -199,18 +203,20 @@
     body.dark-mode #distance {
       color: #ffffff;
     }
-    body.dark-mode #speedIndicator {
-      background-color: #333;
-      color: #ffffff;
-      border: 4px solid #ff4444;
-    }
+body.dark-mode #speedIndicator, body.dark-mode #altitudeIndicator {
+  background-color: #333;
+  color: #ffffff;
+}
+
+body.dark-mode #speedIndicator {
+  border: 4px solid #ff4444;
+}
+
+body.dark-mode #altitudeIndicator {
+  border: 4px solid #00BFFF;
+}
     body.dark-mode #speedLabel {
       color: #ffffff;
-    }
-    body.dark-mode #altitudeIndicator {
-      background-color: #333;
-      color: #ffffff;
-      border: 4px solid #00BFFF;
     }
     body.dark-mode #altitudeLabel {
       color: #ffffff;
@@ -239,14 +245,18 @@
 <body>
   <div id="map">
     <h1>Seguime - GPS</h1>
-    <div id="speedContainer">
-      <span id="speedValue">0</span>
-      <span id="speedUnit">Km/h</span>
-    </div>
-    <div id="altitudeContainer">
-       <span id="altitudeValue">0</span>
-       <span id="altitudeUnit">Metros</span>
-    </div>
+<div id="speedContainer">
+  <div id="speedIndicator">
+    <span id="speedValue">0</span>
+    <span id="speedUnit">Km/h</span>
+  </div>
+</div>
+<div id="altitudeContainer">
+  <div id="altitudeIndicator">
+    <span id="altitudeValue">0</span>
+    <span id="altitudeUnit">Metros</span>
+  </div>
+</div>
     <div id="neighborhoodName" style="position: absolute; bottom: 15px; left: 10px; background-color: rgba(255, 255, 255, 0.9); padding: 8px 12px; border-radius: 5px; font-size: 16px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
       Barrio: Cargando...
     </div>
