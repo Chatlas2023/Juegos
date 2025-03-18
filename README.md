@@ -13,3 +13,5 @@ Aplicación de registro de localizaciones
 1.0.18 Corrige prolema del zoom automático que realizaba zoom in/out todo el tiempo
 1.0.19 Incrusta nombre del barrio desde capa GeoJson
 1.0.20 Miestra el nombre del barrio sobre el mapa, no por debajo
+1.0.24 Modo oscuro de mapa
+1.0.25 Ahorro de bateria
