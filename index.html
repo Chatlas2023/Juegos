@@ -220,9 +220,49 @@
       #map {
         height: calc(45vh - 37.8px);
       }
-      .buttons {
-        flex-direction: column;
-      }
+.buttons button {
+  padding: 4px 12px; /* Padding vertical reducido */
+  font-size: 14px; /* Tamaño de fuente aumentado */
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff;
+  color: white;
+  flex: 1;
+  max-width: 150px;
+  white-space: nowrap; /* Evita que el texto se divida en varias líneas */
+}
+
+.buttons button:hover {
+  background-color: #0056b3;
+}
+
+#stopButton {
+  background-color: #dc3545;
+}
+
+#stopButton:hover {
+  background-color: #a71d2a;
+}
+
+#stopButton.continue {
+  background-color: #28a745;
+}
+
+#stopButton.continue:hover {
+  background-color: #218838;
+}
+
+#darkModeButton {
+  background-color: #333;
+}
+
+@media (max-width: 600px) {
+  .buttons button {
+    font-size: 12px; /* Tamaño de fuente más pequeño en móviles */
+    padding: 3px 10px; /* Padding reducido en móviles */
+  }
+}
       button {
         max-width: 100%;
       }
