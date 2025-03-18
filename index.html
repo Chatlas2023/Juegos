@@ -620,27 +620,22 @@ function updateMap(lat, lng) {
       document.getElementById('status').textContent = message;
     }
 
-// Función para limpiar el historial de coordenadas con confirmación
+// Función para limpiar el historial de coordenadas (sin confirmación)
 function clearHistory() {
-  const confirmacion = confirm("¿Estás seguro de que deseas eliminar la ruta cargada?");
-  if (confirmacion) {
-    coordinates = [];
-    totalDistance = 0;
-    polyline.setLatLngs([]);
-    saveCoordinates();
-    updateDistance();
-    updateStatus("Historial limpiado.");
-  } else {
-    updateStatus("Eliminación de ruta cancelada.");
-  }
+  coordinates = [];
+  totalDistance = 0;
+  polyline.setLatLngs([]);
+  saveCoordinates();
+  updateDistance();
+  updateStatus("Historial limpiado.");
 }
 
-// Función para iniciar un nuevo recorrido
+// Función para iniciar un nuevo recorrido (con confirmación)
 function startNewRoute() {
-  const confirmacion = confirm("¿Estás seguro de que deseas iniciar una nueva ruta? Esto eliminará la ruta actual.");
+  const confirmacion = confirm("¿Estás seguro de que deseas eliminar la ruta actual?");
   if (confirmacion) {
     shouldAdjustZoom = true;
-    clearHistory();
+    clearHistory(); // Llama a clearHistory sin mostrar otra confirmación
   } else {
     updateStatus("Inicio de nueva ruta cancelado.");
   }
