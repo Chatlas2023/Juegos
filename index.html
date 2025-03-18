@@ -100,10 +100,17 @@
       margin: 0;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
-    body.dark-mode #map h1 {
-      background-color: rgba(0, 0, 0, 0.8);
-      color: white;
-    }
+/* Aplicar el filtro de negativo al mapa en modo oscuro */
+body.dark-mode #map {
+  filter: invert(1) hue-rotate(180deg); /* Invierte los colores y ajusta el tono */
+}
+
+/* Asegurarse de que los elementos superpuestos no se vean afectados por el filtro */
+body.dark-mode #speedIndicator,
+body.dark-mode #altitudeIndicator,
+body.dark-mode #neighborhoodName {
+  filter: invert(1) hue-rotate(180deg); /* Revierte el filtro para estos elementos */
+}
     #speedContainer {
       position: absolute;
       top: 10px;
@@ -324,7 +331,7 @@
         div.style.position = "absolute";
         div.style.left = "0";
         div.style.bottom = "0";
-        div.innerHTML = " Ver: 1.0.23 ";
+        div.innerHTML = " Ver: 1.0.24 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
