@@ -292,12 +292,12 @@
     <div id="status">Obteniendo ubicación...</div>
     <div id="distance">Distancia total recorrida: 0 km</div>
   </div>
-  <div class="buttons">
-    <button id="clearButton">Limpiar historial</button>
-    <button id="stopButton">Detener captura</button>
-    <button id="shareButton">Compartir por WhatsApp</button>
-    <button id="darkModeButton">Modo oscuro</button>
-  </div>
+<div class="buttons">
+  <button id="clearButton">Limpiar historial</button>
+  <button id="stopButton">Detener captura</button>
+  <button id="shareButton">Compartir por WhatsApp</button>
+  <button id="darkModeButton">Modo oscuro</button>
+</div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     // Variables globales
@@ -620,21 +620,31 @@ function updateMap(lat, lng) {
       document.getElementById('status').textContent = message;
     }
 
-    // Limpiar el historial de coordenadas
-    function clearHistory() {
-      coordinates = [];
-      totalDistance = 0;
-      polyline.setLatLngs([]);
-      saveCoordinates();
-      updateDistance();
-      updateStatus("Historial limpiado.");
-    }
+// Función para limpiar el historial de coordenadas con confirmación
+function clearHistory() {
+  const confirmacion = confirm("¿Estás seguro de que deseas eliminar la ruta cargada?");
+  if (confirmacion) {
+    coordinates = [];
+    totalDistance = 0;
+    polyline.setLatLngs([]);
+    saveCoordinates();
+    updateDistance();
+    updateStatus("Historial limpiado.");
+  } else {
+    updateStatus("Eliminación de ruta cancelada.");
+  }
+}
 
-    // Función para iniciar un nuevo recorrido
-    function startNewRoute() {
-      shouldAdjustZoom = true;
-      clearHistory();
-    }
+// Función para iniciar un nuevo recorrido
+function startNewRoute() {
+  const confirmacion = confirm("¿Estás seguro de que deseas iniciar una nueva ruta? Esto eliminará la ruta actual.");
+  if (confirmacion) {
+    shouldAdjustZoom = true;
+    clearHistory();
+  } else {
+    updateStatus("Inicio de nueva ruta cancelado.");
+  }
+}
 
     // Función para generar el enlace de Google Maps
     function generateGoogleMapsLink() {
@@ -663,30 +673,29 @@ function updateMap(lat, lng) {
       }
     }
 
-    // Inicializar la aplicación
-    document.addEventListener('DOMContentLoaded', () => {
-      initMap();
-      loadCoordinates();
-      loadMapWithSavedCoordinates();
-      updateDistance();
-      getLocation();
-      applyDarkModePreference();
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  loadCoordinates();
+  loadMapWithSavedCoordinates();
+  updateDistance();
+  getLocation();
+  applyDarkModePreference();
 
-      document.getElementById('clearButton').addEventListener('click', startNewRoute);
-      document.getElementById('stopButton').addEventListener('click', toggleCapture);
-      document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
-      document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
+  document.getElementById('clearButton').addEventListener('click', startNewRoute);
+  document.getElementById('stopButton').addEventListener('click', toggleCapture);
+  document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
+  document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
 
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          if (isCapturing) {
-            getLocation();
-          }
-        } else {
-          releaseWakeLock();
-        }
-      });
-    });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      if (isCapturing) {
+        getLocation();
+      }
+    } else {
+      releaseWakeLock();
+    }
+  });
+});
   </script>
 </body>
 </html>
