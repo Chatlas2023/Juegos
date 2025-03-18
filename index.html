@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -6,19 +6,6 @@
   <title>Seguime - GPS</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    #neighborhoodName {
-  position: absolute; /* Posición absoluta dentro del mapa */
-  bottom: 10px; /* Distancia desde la parte inferior */
-  left: 10px; /* Distancia desde la izquierda */
-  background-color: rgba(255, 255, 255, 0.9); /* Fondo semitransparente */
-  padding: 4px 12px; /* Espaciado interno */
-  border-radius: 5px; /* Bordes redondeados */
-  font-size: 28px; /* Tamaño de fuente */
-  font-weight: bold; /* Negrita */
-  color: black; /* Color del texto */
-  z-index: 1000; /* Asegura que esté por encima de otros elementos */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra */
-}
     /* Estilos CSS (sin cambios) */
     body {
       font-family: Arial, sans-serif;
@@ -72,7 +59,7 @@
     }
     button {
       padding: 6px 12px;
-      font-size: 16px;
+      font-size: 12px;
       cursor: pointer;
       border: none;
       border-radius: 5px;
@@ -249,23 +236,18 @@
 </head>
 <body>
   <div id="map">
-  <h1>Seguime - GPS</h1>
-<div id="speedContainer">
-  <div id="speedIndicator">
-    <div style="font-size: 32px; font-weight: bold;">0</div> <!-- Número de velocidad -->
-    <div style="font-size: 14px;">Km/h</div> <!-- Texto "Km/h" -->
-  </div>
-  <div id="speedLabel">Velocidad</div> <!-- Este se mantiene igual -->
-</div>
-    <div id="speedLabel">Velocidad</div>
-  </div>
-  <div id="altitudeContainer">
-    <div id="altitudeIndicator">0 Metros</div>
-    <div id="altitudeLabel">Altitud</div>
-  </div>
-  <!-- Texto del barrio dentro del mapa -->
-  <div id="neighborhoodName">Barrio: Cargando...</div>
-</div>
+    <h1>Seguime - GPS</h1>
+    <div id="speedContainer">
+      <div id="speedIndicator">0</div>
+      <div id="speedLabel">Velocidad</div>
+    </div>
+    <div id="altitudeContainer">
+      <div id="altitudeIndicator">0</div>
+      <div id="altitudeLabel">Altitud</div>
+    </div>
+    <div id="neighborhoodName" style="position: absolute; bottom: 15px; left: 10px; background-color: rgba(255, 255, 255, 0.9); padding: 8px 12px; border-radius: 5px; font-size: 16px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
+      Barrio: Cargando...
+    </div>
   </div>
   <div id="infoContainer">
     <div id="status">Obteniendo ubicación...</div>
@@ -303,7 +285,7 @@
         div.style.position = "absolute";
         div.style.left = "0";
         div.style.bottom = "0";
-        div.innerHTML = " Ver: 1.0.21 ";
+        div.innerHTML = " Ver: 1.0.20 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -548,13 +530,13 @@
     }
 
     // Actualizar la velocidad en el círculo
-function updateSpeed(speed) {
-  const speedIndicator = document.getElementById('speedIndicator');
-  if (!speedIndicator) return;
+    function updateSpeed(speed) {
+      const speedIndicator = document.getElementById('speedIndicator');
+      if (!speedIndicator) return;
 
-  const speedKmh = speed ? parseInt(speed * 3.6) : 0;
-  speedIndicator.firstElementChild.textContent = `${speedKmh}`; // Actualiza solo el número
-}
+      const speedKmh = speed ? parseInt(speed * 3.6) : 0;
+      speedIndicator.textContent = `${speedKmh}`;
+    }
 
     // Guardar coordenadas en localStorage
     function saveCoordinates() {
