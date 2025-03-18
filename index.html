@@ -628,6 +628,7 @@ function updateMap(lat, lng) {
     }
 
 // Función para limpiar el historial de coordenadas (sin confirmación)
+// Función para limpiar el historial de coordenadas (sin confirmación)
 function clearHistory() {
   coordinates = [];
   totalDistance = 0;
@@ -635,6 +636,17 @@ function clearHistory() {
   saveCoordinates();
   updateDistance();
   updateStatus("Historial limpiado.");
+}
+
+// Función para iniciar un nuevo recorrido (con confirmación)
+function startNewRoute() {
+  const confirmacion = confirm("¿Estás seguro de que deseas eliminar la ruta actual?.");
+  if (confirmacion) {
+    shouldAdjustZoom = true;
+    clearHistory(); // Llama a clearHistory sin mostrar otra confirmación
+  } else {
+    updateStatus("Inicio de nueva ruta cancelado.");
+  }
 }
 
 // Función para iniciar un nuevo recorrido (con confirmación)
