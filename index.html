@@ -298,12 +298,12 @@
     <button id="shareButton">Compartir por WhatsApp</button>
     <button id="darkModeButton">Modo oscuro</button>
   </div>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     // Variables globales
     let map;
     let polyline;
-    let coordinates =;
+    let coordinates = [];
     let totalDistance = 0;
     const MAX_COORDINATES = 1000;
     const MIN_DISTANCE_METERS = 45; // Distancia mínima en metros
@@ -348,19 +348,22 @@
       map = L.map('map', {
         zoomControl: false
       }).setView([0, 0], 15);
-
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
-
-      polyline = L.polyline(, { color: 'blue', weight: 6 }).addTo(map);
+      polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
 
       // Añadir el control de versión
       L.control.version().addTo(map);
 
       // Cargar los barrios desde el archivo GeoJSON
       fetch('https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson')
-        .then(response => response.json())
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Error al cargar GeoJSON: ${response.status}`);
+          }
+          return response.json();
+        })
         .then(data => {
           neighborhoodsLayer = L.geoJSON(data, {
             style: function(feature) {
@@ -380,10 +383,8 @@
         })
         .catch(error => {
           console.error('Error cargando los barrios:', error);
-          const neighborhoodNameElement = document.getElementById('neighborhoodName');
-          if (neighborhoodNameElement) {
-            neighborhoodNameElement.textContent = `Barrio: Error al cargar`;
-          }
+          updateStatus(`Error cargando datos de barrios: ${error.message}`);
+          updateNeighborhoodName('Desconocido');
         });
     }
 
@@ -397,19 +398,22 @@
 
     // Función para encontrar el barrio en el que se encuentra el usuario
     function findNeighborhood(lat, lng) {
-      if (!neighborhoodsLayer) return;
-
+      if (!neighborhoodsLayer) {
+        console.warn("Capa de barrios no cargada");
+        updateNeighborhoodName('Desconocido');
+        return;
+      }
       const point = L.latLng(lat, lng);
       let found = false;
-
       neighborhoodsLayer.eachLayer(layer => {
         if (layer.getBounds().contains(point)) {
+          console.log(`Barrio encontrado: ${layer.feature.properties.Name}`);
           updateNeighborhoodName(layer.feature.properties.Name);
           found = true;
         }
       });
-
       if (!found) {
+        console.warn("No se encontró ningún barrio para las coordenadas actuales");
         updateNeighborhoodName('Desconocido');
       }
     }
@@ -440,33 +444,26 @@
     // Función para agregar una nueva coordenada con filtros
     function addCoordinate(lat, lng) {
       const now = Date.now(); // Obtener el tiempo actual
-
       // Verificar si ha pasado el intervalo mínimo desde la última actualización
       if (lastPositionTime && now - lastPositionTime < MIN_UPDATE_INTERVAL) {
         return; // No hacer nada si no ha pasado el tiempo mínimo
       }
-
       // Verificar si hay coordenadas previas
       if (coordinates.length > 0) {
         const lastCoord = coordinates[coordinates.length - 1];
         const distance = calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng);
-
         // Verificar si la distancia es menor que la mínima requerida
         if (distance < MIN_DISTANCE_METERS) {
           return; // No hacer nada si no se ha movido lo suficiente
         }
-
         totalDistance += distance / 1000; // Actualizar la distancia total
       }
-
       // Guardar la nueva coordenada
       coordinates.push({ lat, lng });
       saveCoordinates();
       updateDistance();
-
       // Actualizar el tiempo de la última posición
       lastPositionTime = now;
-
       // Ajustar el zoom si es necesario
       if (coordinates.length > 1) {
         shouldAdjustZoom = false;
@@ -490,15 +487,12 @@
     function getLocation() {
       if (navigator.geolocation) {
         acquireWakeLock();
-
         watchId = navigator.geolocation.watchPosition(
           (position) => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             const speed = position.coords.speed;
             const altitude = position.coords.altitude;
-
-            // Aplicar filtros antes de procesar la nueva posición
             addCoordinate(lat, lng);
             updateMap(lat, lng);
             updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
@@ -508,11 +502,7 @@
           },
           (error) => {
             console.error("Error al obtener la ubicación:", error);
-            if (error.code === error.PERMISSION_DENIED) {
-              updateStatus("Permiso de ubicación denegado. Por favor, activa la ubicación en tu dispositivo.");
-            } else {
-              updateStatus("Error al obtener la ubicación: " + error.message);
-            }
+            updateStatus(`Error al obtener la ubicación: ${error.message}`);
           },
           { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
         );
@@ -525,28 +515,8 @@
     function updateAltitude(altitude) {
       const altitudeIndicator = document.getElementById('altitudeIndicator');
       if (!altitudeIndicator) return;
-
       const altitudeMeters = altitude ? Math.round(parseFloat(altitude)) : 0;
       altitudeIndicator.textContent = `${altitudeMeters}`;
-    }
-
-    // Función para actualizar la velocidad en el círculo
-    function updateSpeed(speed) {
-      const speedIndicator = document.getElementById('speedIndicator');
-      if (!speedIndicator) return;
-
-      const speedKmh = speed ? Math.round(parseFloat(speed) * 3.6) : 0; // Convert m/s to km/h
-      speedIndicator.textContent = `${speedKmh}`;
-    }
-
-    // Función para actualizar el mapa con las coordenadas
-    function updateMap(lat, lng) {
-      const newLatLng = new L.LatLng(lat, lng);
-      polyline.addLatLng(newLatLng);
-
-      if (shouldAdjustZoom) {
-        map.setView(newLatLng, 17); // Adjust zoom level as needed
-      }
     }
 
     // Detener o reanudar la captura de coordenadas
@@ -576,10 +546,8 @@
       const body = document.body;
       const darkModeButton = document.getElementById('darkModeButton');
       body.classList.toggle('dark-mode');
-
       const isDarkMode = body.classList.contains('dark-mode');
       localStorage.setItem('darkMode', isDarkMode);
-
       darkModeButton.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
     }
 
@@ -588,7 +556,6 @@
       const isDarkMode = localStorage.getItem('darkMode') === 'true';
       const body = document.body;
       const darkModeButton = document.getElementById('darkModeButton');
-
       if (isDarkMode) {
         body.classList.add('dark-mode');
         darkModeButton.textContent = 'Modo claro';
@@ -618,12 +585,15 @@
 
     // Cargar coordenadas guardadas y mostrarlas en el mapa
     function loadMapWithSavedCoordinates() {
-      coordinates.forEach(coord => {
-        polyline.addLatLng([coord.lat, coord.lng]);
-      });
       if (coordinates.length > 0) {
+        coordinates.forEach(coord => {
+          polyline.addLatLng([coord.lat, coord.lng]);
+        });
         const lastCoord = coordinates[coordinates.length - 1];
         map.setView([lastCoord.lat, lastCoord.lng], 13);
+        console.log(`Cargadas ${coordinates.length} coordenadas guardadas`);
+      } else {
+        console.warn("No hay coordenadas guardadas");
       }
     }
 
@@ -640,9 +610,9 @@
 
     // Función para limpiar el historial de coordenadas (sin confirmación)
     function clearHistory() {
-      coordinates =;
+      coordinates = [];
       totalDistance = 0;
-      polyline.setLatLngs();
+      polyline.setLatLngs([]);
       saveCoordinates();
       updateDistance();
       updateStatus("Historial limpiado.");
@@ -662,16 +632,13 @@
     // Función para generar el enlace de Google Maps
     function generateGoogleMapsLink() {
       if (coordinates.length === 0) return null;
-
       const origin = `${coordinates[0].lat},${coordinates[0].lng}`;
       const destination = `${coordinates[coordinates.length - 1].lat},${coordinates[coordinates.length - 1].lng}`;
       let waypoints = '';
-
       if (coordinates.length > 2) {
         waypoints = coordinates.slice(1, -1).map(coord => `${coord.lat},${coord.lng}`).join('|');
       }
-
-      return `https://www.google.com/maps/dir/?api=1&origin=$?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}`;
+      return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}`;
     }
 
     // Función para compartir el enlace por WhatsApp
@@ -694,12 +661,10 @@
       updateDistance();
       getLocation();
       applyDarkModePreference();
-
       document.getElementById('clearButton').addEventListener('click', startNewRoute);
       document.getElementById('stopButton').addEventListener('click', toggleCapture);
       document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
       document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
-
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
           if (isCapturing) {
