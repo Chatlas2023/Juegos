@@ -112,6 +112,13 @@
       color: white; /* Texto blanco */
       box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2); /* Sombra ajustada */
     }
+    body.dark-mode #speedIndicator {
+  border-color: #ff4444 !important; /* Color del borde para el indicador de velocidad */
+}
+
+body.dark-mode #altitudeIndicator {
+  border-color: #00BFFF !important; /* Color del borde para el indicador de altitud */
+}
     #speedContainer {
       position: absolute;
       top: 10px;
@@ -191,16 +198,13 @@ body.dark-mode #altitudeUnit {
     body.dark-mode #distance {
       color: #ffffff !important;
     }
-    body.dark-mode #speedIndicator {
-      background-color: #333 !important;
-      color: #ffffff !important;
-      border: 4px solid #ff4444 !important;
-    }
-    body.dark-mode #altitudeIndicator {
-      background-color: #333 !important;
-      color: #ffffff !important;
-      border: 4px solid #00BFFF !important;
-    }
+/* Asegurar que los textos dentro de los indicadores cambien de color */
+body.dark-mode #speedIndicator #speedValue,
+body.dark-mode #speedIndicator #speedUnit,
+body.dark-mode #altitudeIndicator #altitudeValue,
+body.dark-mode #altitudeIndicator #altitudeUnit {
+  color: white !important; /* Asegura que el texto sea blanco en modo oscuro */
+}
     @media (max-width: 600px) {
       h1 {
         font-size: 14px;
