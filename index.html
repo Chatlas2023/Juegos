@@ -170,11 +170,6 @@
       font-size: 16px; /* Tamaño de la leyenda "Metros" */
       margin-top: -5px; /* Espaciado entre el número y la leyenda */
     }
-    #altitudeLabel {
-  font-size: 14px; /* Tamaño del texto "Altitud" */
-  margin-top: 5px; /* Espaciado entre el círculo y el texto */
-  font-weight: bold;
-}
     body.dark-mode #speedValue,
     body.dark-mode #speedUnit {
       color: white;
@@ -255,21 +250,17 @@
 </head>
 <body>
   <div id="map">
-   <div id="speedContainer">
-  <div id="speedIndicator">
-    <div id="speedValue">0</div>
-    <div id="speedUnit">Km/h</div>
-  </div>
-  <div id="speedLabel">Velocidad</div> <!-- Texto "Velocidad" -->
-</div>
-
-<div id="altitudeContainer">
-  <div id="altitudeIndicator">
-    <div id="altitudeValue">0</div>
-    <div id="altitudeUnit">Metros</div>
-  </div>
-  <div id="altitudeLabel">Altitud</div> <!-- Texto "Altitud" -->
-</div>
+    <div id="speedContainer">
+      <div id="speedIndicator">
+        <div id="speedValue">0</div>
+        <div id="speedUnit">Km/h</div>
+      </div>
+    </div>
+    <div id="altitudeContainer">
+      <div id="altitudeIndicator">
+        <div id="altitudeValue">0</div>
+        <div id="altitudeUnit">Metros</div>
+      </div>
     </div>
     <div id="neighborhoodName" style="position: absolute; bottom: 15px; left: 10px; background-color: rgba(255, 255, 255, 0.9); padding: 4px 12px; border-radius: 5px; font-size: 22px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
       Barrio: Cargando...
@@ -311,7 +302,7 @@
         div.style.position = "absolute";
         div.style.left = "0";
         div.style.bottom = "0";
-        div.innerHTML = " Ver: 1.0.29 ";
+        div.innerHTML = " Ver: 1.0.28 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
