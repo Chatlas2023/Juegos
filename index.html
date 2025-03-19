@@ -6,7 +6,7 @@
   <title>Seguime - GPS</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    /* Estilos CSS (sin cambios) */
+    /* Estilos CSS */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -121,74 +121,62 @@
     }
     #speedIndicator {
       width: 80px;
-      height: 60px;
+      height: 80px; /* Altura aumentada para incluir la leyenda */
       background-color: white;
-      border-radius: 30px;
+      border-radius: 50%;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       color: black;
-      font-size: 32px;
+      font-size: 24px; /* Tamaño reducido para acomodar la leyenda */
       font-weight: bold;
       border: 4px solid red;
     }
-    #speedLabel {
-      margin-top: 5px;
-      font-size: 14px;
-      font-weight: bold;
-      color: black;
-      text-shadow: 
-        -1px -1px 0 white,  
-        1px -1px 0 white,
-        -1px 1px 0 white,
-        1px 1px 0 white;
+    #speedValue {
+      font-size: 28px; /* Tamaño del número de velocidad */
+      margin: 0;
+    }
+    #speedUnit {
+      font-size: 12px; /* Tamaño de la leyenda "Km/h" */
+      margin-top: -5px; /* Espaciado entre el número y la leyenda */
     }
     #altitudeContainer {
       position: absolute;
-      top: 110px;
+      top: 120px;
       right: 10px;
       text-align: center;
       z-index: 1000;
     }
     #altitudeIndicator {
       width: 80px;
-      height: 60px;
+      height: 80px; /* Altura aumentada para incluir la leyenda */
       background-color: white;
-      border-radius: 30px;
+      border-radius: 50%;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       color: black;
-      font-size: 32px;
+      font-size: 24px; /* Tamaño reducido para acomodar la leyenda */
       font-weight: bold;
       border: 4px solid #00BFFF;
     }
-    #altitudeLabel {
-      margin-top: 5px;
-      font-size: 14px;
-      font-weight: bold;
-      color: black;
-      text-shadow: 
-        -1px -1px 0 white,  
-        1px -1px 0 white,
-        -1px 1px 0 white,
-        1px 1px 0 white;
+    #altitudeValue {
+      font-size: 28px; /* Tamaño del número de altitud */
+      margin: 0;
     }
-    body.dark-mode #speedLabel {
-      color: white;
-      text-shadow: 
-        -1px -1px 0 black,  
-        1px -1px 0 black,
-        -1px 1px 0 black,
-        1px 1px 0 black;
+    #altitudeUnit {
+      font-size: 12px; /* Tamaño de la leyenda "Metros" */
+      margin-top: -5px; /* Espaciado entre el número y la leyenda */
     }
-    body.dark-mode #altitudeLabel {
+    body.dark-mode #speedValue,
+    body.dark-mode #speedUnit {
       color: white;
-      text-shadow: 
-        -1px -1px 0 black,  
-        1px -1px 0 black,
-        -1px 1px 0 black,
-        1px 1px 0 black;
+    }
+    body.dark-mode #altitudeValue,
+    body.dark-mode #altitudeUnit {
+      color: white;
     }
     body.dark-mode {
       background-color: #121212;
@@ -210,16 +198,10 @@
       color: #ffffff;
       border: 4px solid #ff4444;
     }
-    body.dark-mode #speedLabel {
-      color: #ffffff;
-    }
     body.dark-mode #altitudeIndicator {
       background-color: #333;
       color: #ffffff;
       border: 4px solid #00BFFF;
-    }
-    body.dark-mode #altitudeLabel {
-      color: #ffffff;
     }
     @media (max-width: 600px) {
       h1 {
@@ -269,12 +251,16 @@
 <body>
   <div id="map">
     <div id="speedContainer">
-      <div id="speedIndicator">0</div>
-      <div id="speedLabel">Velocidad</div>
+      <div id="speedIndicator">
+        <div id="speedValue">0</div>
+        <div id="speedUnit">Km/h</div>
+      </div>
     </div>
     <div id="altitudeContainer">
-      <div id="altitudeIndicator">0</div>
-      <div id="altitudeLabel">Altitud</div>
+      <div id="altitudeIndicator">
+        <div id="altitudeValue">0</div>
+        <div id="altitudeUnit">Metros</div>
+      </div>
     </div>
     <div id="neighborhoodName" style="position: absolute; bottom: 15px; left: 10px; background-color: rgba(255, 255, 255, 0.9); padding: 4px 12px; border-radius: 5px; font-size: 22px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
       Barrio: Cargando...
@@ -445,12 +431,24 @@
       }
     }
 
+    // Función para actualizar la velocidad en el círculo
+    function updateSpeed(speed) {
+      const speedValue = document.getElementById('speedValue');
+      const speedUnit = document.getElementById('speedUnit');
+      if (!speedValue || !speedUnit) return;
+      const speedKmh = speed ? parseInt(speed * 3.6) : 0;
+      speedValue.textContent = `${speedKmh}`;
+      speedUnit.textContent = "Km/h";
+    }
+
     // Función para actualizar la altitud en el círculo
     function updateAltitude(altitude) {
-      const altitudeIndicator = document.getElementById('altitudeIndicator');
-      if (!altitudeIndicator) return;
+      const altitudeValue = document.getElementById('altitudeValue');
+      const altitudeUnit = document.getElementById('altitudeUnit');
+      if (!altitudeValue || !altitudeUnit) return;
       const altitudeMeters = altitude ? Math.round(parseFloat(altitude)) : 0;
-      altitudeIndicator.textContent = `${altitudeMeters}`;
+      altitudeValue.textContent = `${altitudeMeters}`;
+      altitudeUnit.textContent = "Metros";
     }
 
     // Detener o reanudar la captura de coordenadas
@@ -540,20 +538,11 @@
       const newLatLng = [lat, lng];
       map.setView(newLatLng, 15); // Centra el mapa en la nueva ubicación
       polyline.addLatLng(newLatLng); // Añade la nueva coordenada a la polilínea
-
       // Ajusta el zoom solo si shouldAdjustZoom es true
       if (shouldAdjustZoom && coordinates.length > 1) {
         const bounds = polyline.getBounds();
         map.fitBounds(bounds, { padding: [20, 20] });
       }
-    }
-
-    // Actualizar la velocidad en el círculo
-    function updateSpeed(speed) {
-      const speedIndicator = document.getElementById('speedIndicator');
-      if (!speedIndicator) return;
-      const speedKmh = speed ? parseInt(speed * 3.6) : 0;
-      speedIndicator.textContent = `${speedKmh}`;
     }
 
     // Guardar coordenadas en localStorage
@@ -652,7 +641,6 @@
       document.getElementById('stopButton').addEventListener('click', toggleCapture);
       document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
       document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
-
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
           if (isCapturing) {
