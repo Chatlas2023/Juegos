@@ -15,7 +15,7 @@
       flex-direction: column;
       height: 85vh;
       background-color: white;
-      : black;
+      color: black;
     }
     #map {
       width: 100%;
@@ -113,12 +113,11 @@
       box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2); /* Sombra ajustada */
     }
     body.dark-mode #speedIndicator {
-  border-color: #c4eef5 !important; /* Color del borde para el indicador de velocidad */
-}
-
-body.dark-mode #altitudeIndicator {
-  border-color: #c4eef5 !important; /* Color del borde para el indicador de altitud */
-}
+      border-color: #c4eef5 !important; /* Color del borde para el indicador de velocidad */
+    }
+    body.dark-mode #altitudeIndicator {
+      border-color: #c4eef5 !important; /* Color del borde para el indicador de altitud */
+    }
     #speedContainer {
       position: absolute;
       top: 10px;
@@ -177,12 +176,12 @@ body.dark-mode #altitudeIndicator {
       font-size: 16px; /* Tamaño de la leyenda "Metros" */
       margin-top: -5px; /* Espaciado entre el número y la leyenda */
     }
-body.dark-mode #speedValue,
-body.dark-mode #speedUnit,
-body.dark-mode #altitudeValue,
-body.dark-mode #altitudeUnit {
-  color: white !important;
-}
+    body.dark-mode #speedValue,
+    body.dark-mode #speedUnit,
+    body.dark-mode #altitudeValue,
+    body.dark-mode #altitudeUnit {
+      color: white !important;
+    }
     body.dark-mode {
       background-color: #121212;
       color: #ffffff !important;
@@ -198,13 +197,13 @@ body.dark-mode #altitudeUnit {
     body.dark-mode #distance {
       color: #ffffff !important;
     }
-/* Asegurar que los textos dentro de los indicadores cambien de color */
-body.dark-mode #speedIndicator #speedValue,
-body.dark-mode #speedIndicator #speedUnit,
-body.dark-mode #altitudeIndicator #altitudeValue,
-body.dark-mode #altitudeIndicator #altitudeUnit {
-  color: white !important; /* Asegura que el texto sea blanco en modo oscuro */
-}
+    /* Asegurar que los textos dentro de los indicadores cambien de color */
+    body.dark-mode #speedIndicator #speedValue,
+    body.dark-mode #speedIndicator #speedUnit,
+    body.dark-mode #altitudeIndicator #altitudeValue,
+    body.dark-mode #altitudeIndicator #altitudeUnit {
+      color: white !important; /* Asegura que el texto sea blanco en modo oscuro */
+    }
     @media (max-width: 600px) {
       h1 {
         font-size: 14px;
@@ -248,6 +247,27 @@ body.dark-mode #altitudeIndicator #altitudeUnit {
         height: calc(55vh - 37.8px);
       }
     }
+    #savedRoutesContainer {
+      margin: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+    #savedRoutesList {
+      list-style-type: none;
+      padding: 0;
+    }
+    #savedRoutesList li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #ddd;
+    }
+    #savedRoutesList li button {
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
@@ -277,6 +297,12 @@ body.dark-mode #altitudeIndicator #altitudeUnit {
     <button id="stopButton">Pausar captura</button>
     <button id="shareButton">Enviar ruta WApp</button>
     <button id="darkModeButton">Modo oscuro</button>
+    <input type="text" id="routeName" placeholder="Nombre de la ruta">
+    <button id="saveRouteButton">Guardar ruta</button>
+  </div>
+  <div id="savedRoutesContainer">
+    <h3>Rutas Guardadas</h3>
+    <ul id="savedRoutesList"></ul>
   </div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
@@ -468,7 +494,7 @@ body.dark-mode #altitudeIndicator #altitudeUnit {
         shouldAdjustZoom = false; // Desactiva el ajuste automático del zoom
       } else {
         getLocation();
-        stopButton.textContent = "Pausar captura";
+        stopButton.textContent = "Detener captura";
         stopButton.classList.remove('continue');
         updateStatus("Captura de coordenadas reanudada.");
         shouldAdjustZoom = true; // Reactiva el ajuste automático del zoom
@@ -632,6 +658,74 @@ body.dark-mode #altitudeIndicator #altitudeUnit {
       }
     }
 
+    // Función para guardar la ruta con un nombre descriptivo
+    function saveRoute() {
+      const routeName = document.getElementById('routeName').value.trim();
+      if (!routeName) {
+        alert("Por favor, ingresa un nombre para la ruta.");
+        return;
+      }
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
+      const route = {
+        name: routeName,
+        coordinates: coordinates,
+        totalDistance: totalDistance,
+        date: new Date().toISOString()
+      };
+      savedRoutes.push(route);
+      localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
+      alert(`Ruta "${routeName}" guardada correctamente.`);
+      document.getElementById('routeName').value = ''; // Limpiar el campo de entrada
+      loadSavedRoutes(); // Recargar la lista de rutas guardadas
+    }
+
+    // Función para cargar y mostrar las rutas guardadas
+    function loadSavedRoutes() {
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
+      const savedRoutesList = document.getElementById('savedRoutesList');
+      savedRoutesList.innerHTML = ''; // Limpiar la lista antes de cargar
+
+      savedRoutes.forEach((route, index) => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+          <span>${route.name} - ${route.totalDistance.toFixed(2)} km - ${new Date(route.date).toLocaleString()}</span>
+          <button onclick="loadRoute(${index})">Cargar</button>
+          <button onclick="deleteRoute(${index})">Eliminar</button>
+        `;
+        savedRoutesList.appendChild(listItem);
+      });
+    }
+
+    // Función para cargar una ruta específica en el mapa
+    function loadRoute(index) {
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
+      const route = savedRoutes[index];
+      if (route) {
+        coordinates = route.coordinates;
+        totalDistance = route.totalDistance;
+        polyline.setLatLngs([]); // Limpiar la polilínea actual
+        coordinates.forEach(coord => polyline.addLatLng([coord.lat, coord.lng]));
+        if (coordinates.length > 0) {
+          const lastCoord = coordinates[coordinates.length - 1];
+          map.setView([lastCoord.lat, lastCoord.lng], 13);
+        }
+        updateDistance();
+        updateStatus(`Ruta "${route.name}" cargada correctamente.`);
+      }
+    }
+
+    // Función para eliminar una ruta guardada
+    function deleteRoute(index) {
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
+      const route = savedRoutes[index];
+      if (route && confirm(`¿Estás seguro de que deseas eliminar la ruta "${route.name}"?`)) {
+        savedRoutes.splice(index, 1);
+        localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
+        loadSavedRoutes(); // Recargar la lista de rutas guardadas
+      }
+    }
+
+    // Cargar las rutas guardadas al iniciar la página
     document.addEventListener('DOMContentLoaded', () => {
       initMap();
       loadCoordinates();
@@ -639,10 +733,12 @@ body.dark-mode #altitudeIndicator #altitudeUnit {
       updateDistance();
       getLocation();
       applyDarkModePreference();
+      loadSavedRoutes(); // Cargar las rutas guardadas
       document.getElementById('clearButton').addEventListener('click', startNewRoute);
       document.getElementById('stopButton').addEventListener('click', toggleCapture);
       document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
       document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
+      document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
           if (isCapturing) {
