@@ -6,7 +6,7 @@
   <title>Seguime - GPS</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    /* Estilos CSS */
+    /* Estilos CSS (sin cambios) */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -248,19 +248,15 @@
       }
     }
     #savedRoutesContainer {
-      margin: 5px 10px 10px 10px; 
-      padding: 1px;
+      margin: 10px;
+      padding: 10px;
       border: 1px solid #ccc;
       border-radius: 8px;
       background-color: #f9f9f9;
-      max-height: 80px; /* Altura máxima del contenedor */
+      max-height: 120px; /* Altura máxima del contenedor */
       overflow-x: auto; /* Scroll horizontal */
       white-space: nowrap; /* Evita que los elementos se envuelvan */
     }
-    #savedRoutesContainer h3 {
-  margin-top: 5px; /* Reduce the top margin */
-  margin-bottom: 5px; /* Reduce the bottom margin */
-}
     #savedRoutesList {
       list-style-type: none;
       padding: 0;
@@ -270,29 +266,17 @@
     }
     #savedRoutesList li {
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
       align-items: center;
-  justify-content: space-between; /* Distribute space between the text and the buttons */
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: #fff;
-  min-width: 150px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #fff;
+      min-width: 150px; /* Ancho mínimo de cada ruta */
     }
-#savedRoutesList li span {
-  flex-grow: 1; /* Allow the text to take up available space */
-  margin-right: 10px; /* Add some space between the text and the buttons */
-}
     #savedRoutesList li button {
-  margin-top: 0; /* Remove the default top margin for the buttons */
-  margin-left: 5px; /* Add some space between the buttons */
-}
-    #routeName {
-  /* Add or modify the following property */
-  max-width: calc(150px - 10px); /* Subtract approximately 19 pixels from the current max-width */
-  /* If there is no max-width set, you can set a fixed width like this: */
-  /* width: calc(a_reasonable_width_in_px - 19px); */
-}
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
@@ -344,6 +328,14 @@
     let isCapturing = true;
     let shouldAdjustZoom = true; // Controla si se debe ajustar el zoom automáticamente
     let neighborhoodsLayer;
+    let userMarker; // Marcador para la posición del usuario
+
+    // Definir el ícono personalizado
+    const userIcon = L.icon({
+      iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
+      iconSize: [40, 40], // Tamaño del ícono
+      iconAnchor: [20, 20], // Punto de anclaje del ícono (centro)
+    });
 
     // Definir el control de versión
     L.Control.Version = L.Control.extend({
@@ -472,6 +464,13 @@
             updateSpeed(speed);
             updateAltitude(altitude);
             findNeighborhood(lat, lng);
+
+            // Actualizar la posición del marcador
+            if (!userMarker) {
+              userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
+            } else {
+              userMarker.setLatLng([lat, lng]);
+            }
           },
           (error) => {
             console.error("Error al obtener la ubicación:", error);
