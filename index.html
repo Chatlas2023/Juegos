@@ -266,17 +266,23 @@
     }
     #savedRoutesList li {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      background-color: #fff;
-      min-width: 150px; /* Ancho mínimo de cada ruta */
+  justify-content: space-between; /* Distribute space between the text and the buttons */
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #fff;
+  min-width: 150px;
     }
+#savedRoutesList li span {
+  flex-grow: 1; /* Allow the text to take up available space */
+  margin-right: 10px; /* Add some space between the text and the buttons */
+}
     #savedRoutesList li button {
-      margin-top: 5px;
-    }
+  margin-top: 0; /* Remove the default top margin for the buttons */
+  margin-left: 5px; /* Add some space between the buttons */
+}
   </style>
 </head>
 <body>
