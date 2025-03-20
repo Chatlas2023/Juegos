@@ -248,15 +248,17 @@
       }
     }
     #savedRoutesContainer {
-      margin: 10px;
-      padding: 10px;
+        margin: 5px 10px 10px 10px; 
+        padding: 1px;
       border: 1px solid #ccc;
       border-radius: 8px;
       background-color: #f9f9f9;
-      max-height: 120px; /* Altura máxima del contenedor */
+      max-height: 80px; /* Altura máxima del contenedor */
       overflow-x: auto; /* Scroll horizontal */
-      white-space: nowrap; /* Evita que los elementos se envuelvan */
-    }
+      white-space: nowrap; /* Evita que los elementos se envuelvan */    }
+    #savedRoutesContainer h3 {
+  margin-top: 5px; /* Reduce the top margin */
+  margin-bottom: 5px; /* Reduce the bottom margin */    }
     #savedRoutesList {
       list-style-type: none;
       padding: 0;
@@ -266,7 +268,7 @@
     }
     #savedRoutesList li {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
       padding: 10px;
       border: 1px solid #ddd;
@@ -274,8 +276,20 @@
       background-color: #fff;
       min-width: 150px; /* Ancho mínimo de cada ruta */
     }
+#savedRoutesList li span {
+  flex-grow: 1; /* Allow the text to take up available space */
+  margin-right: 10px; /* Add some space between the text and the buttons */
+}
+    }
     #savedRoutesList li button {
-      margin-top: 5px;
+        margin-top: 0; /* Remove the default top margin for the buttons */
+  margin-left: 5px; /* Add some space between the buttons */
+}
+    #routeName {
+  /* Add or modify the following property */
+  max-width: calc(150px - 10px); /* Subtract approximately 19 pixels from the current max-width */
+  /* If there is no max-width set, you can set a fixed width like this: */
+  /* width: calc(a_reasonable_width_in_px - 19px); */
     }
   </style>
 </head>
