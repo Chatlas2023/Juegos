@@ -329,10 +329,6 @@
   <script>
     // Variables globales
     let map;
-    let userMarker = null;
-let currentLat = null;
-let currentLon = null;
-let precisionCircle = null; // Variable para el círculo de precisión
     let polyline;
     let coordinates = [];
     let totalDistance = 0;
@@ -345,6 +341,7 @@ let precisionCircle = null; // Variable para el círculo de precisión
     let shouldAdjustZoom = true; // Controla si se debe ajustar el zoom automáticamente
     let neighborhoodsLayer;
     let userMarker; // Marcador para la posición del usuario
+    let precisionCircle = null; // Círculo de precisión del GPS
 
     // Definir el ícono personalizado
     const userIcon = L.icon({
@@ -463,54 +460,8 @@ let precisionCircle = null; // Variable para el círculo de precisión
         console.log('Wake Lock liberado');
       }
     }
-// Función para localizar al usuario
-function localizarUsuario() {
-    if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-            function (position) {
-                currentLat = position.coords.latitude;
-                currentLon = position.coords.longitude;
-                const accuracy = position.coords.accuracy; // Precisión en metros
 
-                // Almacenar la ubicación en sessionStorage
-                sessionStorage.setItem('latitude', currentLat);
-                sessionStorage.setItem('longitude', currentLon);
-
-                map.setView([currentLat, currentLon], 16);
-
-                // Actualizar o crear el marcador del usuario
-                if (userMarker) {
-                    userMarker.setLatLng([currentLat, currentLon]);
-                } else {
-                    userMarker = L.marker([currentLat, currentLon]).addTo(map);
-                }
-
-                // Actualizar o crear el círculo de precisión
-                if (precisionCircle) {
-                    precisionCircle.setLatLng([currentLat, currentLon]).setRadius(accuracy);
-                } else {
-                    precisionCircle = L.circle([currentLat, currentLon], {
-                        color: 'cyan', // Color del borde del círculo
-                        weight: 2,     // Grosor del borde
-                        opacity: 1,    // Opacidad del borde
-                        fillColor: 'cyan', // Color de relleno
-                        fillOpacity: 0.1,  // Opacidad del relleno
-                        radius: accuracy   // Radio basado en la precisión del GPS
-                    }).addTo(map);
-                }
-
-                obtenerDireccion(currentLat, currentLon);
-                obtenerClima(currentLat, currentLon);
-            },
-            function (error) {
-                alert("Error obteniendo la ubicación: " + error.message);
-            }
-        );
-    } else {
-        alert("Tu navegador no soporta geolocalización.");
-    }
-}
-    // Modificar la función getLocation para capturar la altitud
+    // Modificar la función getLocation para capturar la altitud y la precisión
     function getLocation() {
       if (navigator.geolocation) {
         acquireWakeLock();
@@ -520,6 +471,8 @@ function localizarUsuario() {
             const lng = position.coords.longitude;
             const speed = position.coords.speed;
             const altitude = position.coords.altitude;
+            const accuracy = position.coords.accuracy; // Precisión en metros
+
             addCoordinate(lat, lng);
             updateMap(lat, lng);
             updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
@@ -532,6 +485,20 @@ function localizarUsuario() {
               userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
             } else {
               userMarker.setLatLng([lat, lng]);
+            }
+
+            // Actualizar o crear el círculo de precisión
+            if (precisionCircle) {
+              precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
+            } else {
+              precisionCircle = L.circle([lat, lng], {
+                color: 'cyan', // Color del borde del círculo
+                weight: 2,     // Grosor del borde
+                opacity: 1,    // Opacidad del borde
+                fillColor: 'cyan', // Color de relleno
+                fillOpacity: 0.1,  // Opacidad del relleno
+                radius: accuracy   // Radio basado en la precisión del GPS
+              }).addTo(map);
             }
           },
           (error) => {
