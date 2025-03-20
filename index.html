@@ -248,48 +248,51 @@
       }
     }
     #savedRoutesContainer {
-      margin: 10px;
-      padding: 10px;
+      margin: 5px 10px 10px 10px; 
+      padding: 1px;
       border: 1px solid #ccc;
       border-radius: 8px;
       background-color: #f9f9f9;
-      max-height: 120px; /* Altura máxima del contenedor */
+      max-height: 80px; /* Altura máxima del contenedor */
       overflow-x: auto; /* Scroll horizontal */
       white-space: nowrap; /* Evita que los elementos se envuelvan */
     }
+    #savedRoutesContainer h3 {
+  margin-top: 5px; /* Reduce the top margin */
+  margin-bottom: 5px; /* Reduce the bottom margin */
+}
     #savedRoutesList {
       list-style-type: none;
       padding: 0;
       margin: 0;
-      display: flex; /* Muestra las rutas en una fila horizontal */
+      display: inline-flex; /* Muestra las rutas en una fila horizontal */
       gap: 10px; /* Espacio entre las rutas */
     }
     #savedRoutesList li {
       display: flex;
-      flex-direction: row; /* Arrange items in a row */
-      align-items: center; /* Vertically align items in the center */
-      justify-content: space-between; /* Distribute space between the text and the buttons */
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      background-color: #fff;
-      min-width: 150px; /* Ancho mínimo de cada ruta */
+      flex-direction: row;
+      align-items: center;
+  justify-content: space-between; /* Distribute space between the text and the buttons */
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #fff;
+  min-width: 150px;
     }
-    #savedRoutesList li span {
-      flex-grow: 1; /* Allow the text to take up available space */
-      margin-right: 10px; /* Add some space between the text and the buttons */
-    }
+#savedRoutesList li span {
+  flex-grow: 1; /* Allow the text to take up available space */
+  margin-right: 10px; /* Add some space between the text and the buttons */
+}
     #savedRoutesList li button {
-      margin-top: 0;
-      margin-left: 5px;
-    }
-    #savedRoutesContainer h3 {
-      margin-top: 5px; /* Reduce the top margin */
-      margin-bottom: 5px; /* Reduce the bottom margin */
-    }
+  margin-top: 0; /* Remove the default top margin for the buttons */
+  margin-left: 5px; /* Add some space between the buttons */
+}
     #routeName {
-      max-width: calc(150px - 19px); /* Adjust this value as needed */
-    }
+  /* Add or modify the following property */
+  max-width: calc(150px - 11px); /* Subtract approximately 19 pixels from the current max-width */
+  /* If there is no max-width set, you can set a fixed width like this: */
+  /* width: calc(a_reasonable_width_in_px - 19px); */
+}
   </style>
 </head>
 <body>
@@ -331,7 +334,7 @@
     // Variables globales
     let map;
     let polyline;
-    let coordinates =;
+    let coordinates = [];
     let totalDistance = 0;
     const MAX_COORDINATES = 1000;
     const MIN_DISTANCE_METERS = 45;
@@ -341,7 +344,6 @@
     let isCapturing = true;
     let shouldAdjustZoom = true; // Controla si se debe ajustar el zoom automáticamente
     let neighborhoodsLayer;
-    let userMarker; // Variable para el marcador del usuario
 
     // Definir el control de versión
     L.Control.Version = L.Control.extend({
@@ -379,21 +381,10 @@
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
-      polyline = L.polyline(, { color: 'blue', weight: 6 }).addTo(map);
+      polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
 
       // Añadir el control de versión
       L.control.version().addTo(map);
-
-      // Crear un icono personalizado para el usuario
-      const userIcon = L.icon({
-        iconUrl: 'https://github.com/Chatlas2023/Iconos/blob/main/Auto_Rojo.png?raw=true', // Asegúrate de usar la URL raw del archivo
-        iconSize: [32, 32], // Ajusta el tamaño según necesites
-        iconAnchor: [16, 32], // El punto del icono que corresponde a la ubicación
-        popupAnchor: [0, -32] // El punto donde se abrirá la ventana emergente
-      });
-
-      // Inicializar el marcador del usuario con el icono personalizado
-      userMarker = L.marker([0, 0], {icon: userIcon}).addTo(map);
 
       // Cargar los barrios desde el archivo GeoJSON
       fetch('https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson')
@@ -481,20 +472,6 @@
             updateSpeed(speed);
             updateAltitude(altitude);
             findNeighborhood(lat, lng);
-
-            // Actualizar la posición del marcador del usuario
-            if (userMarker) {
-              userMarker.setLatLng([lat, lng]);
-            } else {
-              // Esto debería ocurrir solo si initMap no se ejecutó correctamente antes
-              const userIcon = L.icon({
-                iconUrl: 'https://github.com/Chatlas2023/Iconos/blob/main/Auto_Rojo.png?raw=true',
-                iconSize: [32, 32],
-                iconAnchor: [16, 32],
-                popupAnchor: [0, -32]
-              });
-              userMarker = L.marker([lat, lng], {icon: userIcon}).addTo(map);
-            }
           },
           (error) => {
             console.error("Error al obtener la ubicación:", error);
@@ -663,9 +640,9 @@
 
     // Función para limpiar el historial de coordenadas (sin confirmación)
     function clearHistory() {
-      coordinates =;
+      coordinates = [];
       totalDistance = 0;
-      polyline.setLatLngs();
+      polyline.setLatLngs([]);
       saveCoordinates();
       updateDistance();
       updateStatus("Historial limpiado.");
@@ -713,7 +690,7 @@
         alert("Por favor, ingresa un nombre para la ruta.");
         return;
       }
-      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) ||;
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
       const route = {
         name: routeName,
         coordinates: coordinates,
@@ -729,7 +706,7 @@
 
     // Función para cargar y mostrar las rutas guardadas
     function loadSavedRoutes() {
-      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) ||;
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
       const savedRoutesList = document.getElementById('savedRoutesList');
       savedRoutesList.innerHTML = ''; // Limpiar la lista antes de cargar
 
@@ -746,12 +723,12 @@
 
     // Función para cargar una ruta específica en el mapa
     function loadRoute(index) {
-      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) ||;
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
       const route = savedRoutes[index];
       if (route) {
         coordinates = route.coordinates;
         totalDistance = route.totalDistance;
-        polyline.setLatLngs(); // Limpiar la polilínea actual
+        polyline.setLatLngs([]); // Limpiar la polilínea actual
         coordinates.forEach(coord => polyline.addLatLng([coord.lat, coord.lng]));
         if (coordinates.length > 0) {
           const lastCoord = coordinates[coordinates.length - 1];
@@ -764,7 +741,7 @@
 
     // Función para eliminar una ruta guardada
     function deleteRoute(index) {
-      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) ||;
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
       const route = savedRoutes[index];
       if (route && confirm(`¿Estás seguro de que deseas eliminar la ruta "${route.name}"?`)) {
         savedRoutes.splice(index, 1);
