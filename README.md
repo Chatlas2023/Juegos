@@ -16,3 +16,4 @@ Aplicación de registro de localizaciones
 1.0.24 Modo oscuro de mapa y confirmación de eliminacion de ruta
 1.0.28 Implementa ahorro de bateria
 1.1.0  Guardar rutas
+1.1.1  Usa ícono de auto para marcar la posición
