@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seguime - GPS</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    /* Estilos CSS */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 85vh;
+      background-color: white;
+      color: black;
+    }
+    #map {
+      width: 100%;
+      flex-grow: 1;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 5px;
+      position: relative;
+    }
+    #infoContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    #status,
+    #distance {
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      margin: 0;
+    }
+    @media (min-width: 601px) and (orientation: landscape) {
+      #infoContainer {
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
+      }
+      #status,
+      #distance {
+        font-size: 14px;
+      }
+    }
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 0 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      flex: 1;
+      max-width: 150px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #stopButton {
+      background-color: #dc3545;
+    }
+    #stopButton:hover {
+      background-color: #a71d2a;
+    }
+    #stopButton.continue {
+      background-color: #28a745;
+    }
+    #stopButton.continue:hover {
+      background-color: #218838;
+    }
+    #darkModeButton {
+      background-color: #333;
+    }
+    #map h1 {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      padding: 8px 12px;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: bold;
+      color: black;
+      z-index: 1000;
+      margin: 0;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    /* Aplicar el filtro de negativo al mapa en modo oscuro */
+    body.dark-mode #map {
+      filter: invert(1) hue-rotate(180deg); /* Invierte los colores y ajusta el tono */
+    }
+    /* Asegurarse de que los elementos superpuestos no se vean afectados por el filtro */
+    body.dark-mode #speedIndicator,
+    body.dark-mode #altitudeIndicator,
+    body.dark-mode #neighborhoodName {
+      background-color: rgba(33, 33, 33, 0.9); /* Fondo oscuro */
+      color: white; /* Texto blanco */
+      box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2); /* Sombra ajustada */
+    }
+    body.dark-mode #speedIndicator {
+      border-color: #c4eef5 !important; /* Color del borde para el indicador de velocidad */
+    }
+    body.dark-mode #altitudeIndicator {
+      border-color: #c4eef5 !important; /* Color del borde para el indicador de altitud */
+    }
+    #speedContainer {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      text-align: center;
+      z-index: 1000;
+    }
+    #speedIndicator {
+      width: 80px;
+      height: 80px; /* Altura aumentada para incluir la leyenda */
+      background-color: #e4e8d1;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: black;
+      font-size: 24px; /* Tamaño reducido para acomodar la leyenda */
+      font-weight: bold;
+      border: 3px solid #c4eef5;
+    }
+    #speedValue {
+      font-size: 28px; /* Tamaño del número de velocidad */
+      margin: 0;
+    }
+    #speedUnit {
+      font-size: 16px; /* Tamaño de la leyenda "Km/h" */
+      margin-top: -5px; /* Espaciado entre el número y la leyenda */
+    }
+    #altitudeContainer {
+      position: absolute;
+      top: 120px;
+      right: 10px;
+      text-align: center;
+      z-index: 1000;
+    }
+    #altitudeIndicator {
+      width: 80px;
+      height: 80px; /* Altura aumentada para incluir la leyenda */
+      background-color: #e4e8d1;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: black;
+      font-size: 24px; /* Tamaño reducido para acomodar la leyenda */
+      font-weight: bold;
+      border: 3px solid #c4eef5;
+    }
+    #altitudeValue {
+      font-size: 28px; /* Tamaño del número de altitud */
+      margin: 0;
+    }
+    #altitudeUnit {
+      font-size: 16px; /* Tamaño de la leyenda "Metros" */
+      margin-top: -5px; /* Espaciado entre el número y la leyenda */
+    }
+    body.dark-mode #speedValue,
+    body.dark-mode #speedUnit,
+    body.dark-mode #altitudeValue,
+    body.dark-mode #altitudeUnit {
+      color: white !important;
+    }
+    body.dark-mode {
+      background-color: #121212;
+      color: #ffffff !important;
+    }
+    body.dark-mode #map {
+      border-color: #333 !important;
+    }
+    body.dark-mode .buttons button {
+      background-color: #444 !important;
+      color: #ffffff;
+    }
+    body.dark-mode #status,
+    body.dark-mode #distance {
+      color: #ffffff !important;
+    }
+    /* Asegurar que los textos dentro de los indicadores cambien de color */
+    body.dark-mode #speedIndicator #speedValue,
+    body.dark-mode #speedIndicator #speedUnit,
+    body.dark-mode #altitudeIndicator #altitudeValue,
+    body.dark-mode #altitudeIndicator #altitudeUnit {
+      color: white !important; /* Asegura que el texto sea blanco en modo oscuro */
+    }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 14px;
+      }
+      #map {
+        height: calc(45vh - 37.8px);
+      }
+      .buttons button {
+        padding: 4px 12px; /* Padding vertical reducido */
+        font-size: 14px; /* Tamaño de fuente aumentado */
+        cursor: pointer;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        flex: 1;
+        max-width: 150px;
+        white-space: nowrap; /* Evita que el texto se divida en varias líneas */
+      }
+      .buttons button:hover {
+        background-color: #0056b3;
+      }
+      #stopButton {
+        background-color: #dc3545;
+      }
+      #stopButton:hover {
+        background-color: #a71d2a;
+      }
+      #stopButton.continue {
+        background-color: #28a745;
+      }
+      #stopButton.continue:hover {
+        background-color: #218838;
+      }
+      #darkModeButton {
+        background-color: #333;
+      }
+    }
+    @media (min-width: 601px) {
+      #map {
+        height: calc(55vh - 37.8px);
+      }
+    }
+    #savedRoutesContainer {
+      margin: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      max-height: 120px; /* Altura máxima del contenedor */
+      overflow-x: auto; /* Scroll horizontal */
+      white-space: nowrap; /* Evita que los elementos se envuelvan */
+    }
+    #savedRoutesList {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      display: flex; /* Muestra las rutas en una fila horizontal */
+      gap: 10px; /* Espacio entre las rutas */
+    }
+    #savedRoutesList li {
+      display: flex;
+      flex-direction: row; /* Arrange items in a row */
+      align-items: center; /* Vertically align items in the center */
+      justify-content: space-between; /* Distribute space between the text and the buttons */
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background-color: #fff;
+      min-width: 150px; /* Ancho mínimo de cada ruta */
+    }
+    #savedRoutesList li span {
+      flex-grow: 1; /* Allow the text to take up available space */
+      margin-right: 10px; /* Add some space between the text and the buttons */
+    }
+    #savedRoutesList li button {
+      margin-top: 0;
+      margin-left: 5px;
+    }
+    #savedRoutesContainer h3 {
+      margin-top: 5px; /* Reduce the top margin */
+      margin-bottom: 5px; /* Reduce the bottom margin */
+    }
+    #routeName {
+      max-width: calc(150px - 19px); /* Adjust this value as needed */
+    }
+  </style>
+</head>
+<body>
+  <div id="map">
+    <div id="speedContainer">
+      <div id="speedIndicator">
+        <div id="speedValue">0</div>
+        <div id="speedUnit">Km/h</div>
+      </div>
+    </div>
+    <div id="altitudeContainer">
+      <div id="altitudeIndicator">
+        <div id="altitudeValue">0</div>
+        <div id="altitudeUnit">Metros</div>
+      </div>
+    </div>
+    <div id="neighborhoodName" style="position: absolute; bottom: 15px; left: 10px; background-color: #e4e8d1; padding: 4px 12px; border-radius: 5px; font-size: 22px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
+      Barrio: Cargando...
+    </div>
+  </div>
+  <div id="infoContainer">
+    <div id="status">Obteniendo ubicación...</div>
+    <div id="distance">Distancia total recorrida: 0 km</div>
+  </div>
+  <div class="buttons">
+    <button id="clearButton">Limpiar historial</button>
+    <button id="stopButton">Pausar captura</button>
+    <button id="shareButton">Enviar ruta WApp</button>
+    <button id="darkModeButton">Modo oscuro</button>
+    <input type="text" id="routeName" placeholder="Nombre de la ruta">
+    <button id="saveRouteButton">Guardar ruta</button>
+  </div>
+  <div id="savedRoutesContainer">
+    <h3>Rutas Guardadas</h3>
+    <ul id="savedRoutesList"></ul>
+  </div>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Variables globales
+    let map;
+    let polyline;
+    let coordinates =;
+    let totalDistance = 0;
+    const MAX_COORDINATES = 1000;
+    const MIN_DISTANCE_METERS = 45;
+    let watchId;
+    let wakeLockSentinel = null;
+    let lastPositionTime = null;
+    let isCapturing = true;
+    let shouldAdjustZoom = true; // Controla si se debe ajustar el zoom automáticamente
+    let neighborhoodsLayer;
+    let userMarker; // Variable para el marcador del usuario
+
+    // Definir el control de versión
+    L.Control.Version = L.Control.extend({
+      options: {
+        position: 'bottomleft'
+      },
+      onAdd: function(map) {
+        let div = L.DomUtil.create('div', 'leaflet-control-version');
+        div.style.position = "absolute";
+        div.style.left = "0";
+        div.style.bottom = "0";
+        div.innerHTML = " Ver: 1.1.0 ";
+        div.style.padding = "0px";
+        div.style.margin = "0";
+        div.style.background = "rgba(255, 255, 255, 0.8)";
+        div.style.fontSize = "10px";
+        div.style.borderRadius = "0px";
+        div.style.border = "none";
+        div.style.whiteSpace = "nowrap";
+        div.style.lineHeight = "normal";
+        return div;
+      }
+    });
+
+    // Añadir el control de versión al mapa
+    L.control.version = function(opts) {
+      return new L.Control.Version(opts);
+    };
+
+    // Inicializar el mapa
+    function initMap() {
+      map = L.map('map', {
+        zoomControl: false
+      }).setView([0, 0], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+      polyline = L.polyline(, { color: 'blue', weight: 6 }).addTo(map);
+
+      // Añadir el control de versión
+      L.control.version().addTo(map);
+
+      // Crear un icono personalizado para el usuario
+      const userIcon = L.icon({
+        iconUrl: 'https://github.com/Chatlas2023/Iconos/blob/main/Auto_Rojo.png?raw=true', // Asegúrate de usar la URL raw del archivo
+        iconSize: [32, 32], // Ajusta el tamaño según necesites
+        iconAnchor: [16, 32], // El punto del icono que corresponde a la ubicación
+        popupAnchor: [0, -32] // El punto donde se abrirá la ventana emergente
+      });
+
+      // Inicializar el marcador del usuario con el icono personalizado
+      userMarker = L.marker([0, 0], {icon: userIcon}).addTo(map);
+
+      // Cargar los barrios desde el archivo GeoJSON
+      fetch('https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson')
+        .then(response => response.json())
+        .then(data => {
+          neighborhoodsLayer = L.geoJSON(data, {
+            style: function(feature) {
+              return {
+                color: '#ff7800',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.1
+              };
+            },
+            onEachFeature: function(feature, layer) {
+              layer.on('click', function(e) {
+                updateNeighborhoodName(feature.properties.Name);
+              });
+            }
+          }).addTo(map);
+        })
+        .catch(error => console.error('Error cargando los barrios:', error));
+    }
+
+    // Función para actualizar el nombre del barrio
+    function updateNeighborhoodName(name) {
+      const neighborhoodNameElement = document.getElementById('neighborhoodName');
+      if (neighborhoodNameElement) {
+        neighborhoodNameElement.textContent = `Barrio: ${name}`;
+      }
+    }
+
+    // Función para encontrar el barrio en el que se encuentra el usuario
+    function findNeighborhood(lat, lng) {
+      if (!neighborhoodsLayer) return;
+      const point = L.latLng(lat, lng);
+      let found = false;
+      neighborhoodsLayer.eachLayer(layer => {
+        if (layer.getBounds().contains(point)) {
+          updateNeighborhoodName(layer.feature.properties.Name);
+          found = true;
+        }
+      });
+      if (!found) {
+        updateNeighborhoodName('Desconocido');
+      }
+    }
+
+    // Función para solicitar el Wake Lock
+    async function acquireWakeLock() {
+      try {
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        console.log('Wake Lock activo');
+        wakeLockSentinel.addEventListener('release', () => {
+          console.log('Wake Lock fue liberado por el sistema!');
+          wakeLockSentinel = null;
+        });
+      } catch (err) {
+        console.error(`Error al solicitar Wake Lock: ${err.name}, ${err.message}`);
+      }
+    }
+
+    // Función para liberar el Wake Lock
+    async function releaseWakeLock() {
+      if (wakeLockSentinel) {
+        await wakeLockSentinel.release();
+        wakeLockSentinel = null;
+        console.log('Wake Lock liberado');
+      }
+    }
+
+    // Modificar la función getLocation para capturar la altitud
+    function getLocation() {
+      if (navigator.geolocation) {
+        acquireWakeLock();
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const speed = position.coords.speed;
+            const altitude = position.coords.altitude;
+            addCoordinate(lat, lng);
+            updateMap(lat, lng);
+            updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
+            updateSpeed(speed);
+            updateAltitude(altitude);
+            findNeighborhood(lat, lng);
+
+            // Actualizar la posición del marcador del usuario
+            if (userMarker) {
+              userMarker.setLatLng([lat, lng]);
+            } else {
+              // Esto debería ocurrir solo si initMap no se ejecutó correctamente antes
+              const userIcon = L.icon({
+                iconUrl: 'https://github.com/Chatlas2023/Iconos/blob/main/Auto_Rojo.png?raw=true',
+                iconSize: [32, 32],
+                iconAnchor: [16, 32],
+                popupAnchor: [0, -32]
+              });
+              userMarker = L.marker([lat, lng], {icon: userIcon}).addTo(map);
+            }
+          },
+          (error) => {
+            console.error("Error al obtener la ubicación:", error);
+            updateStatus("Error al obtener la ubicación.");
+          },
+          { enableHighAccuracy: false, maximumAge: 30000, timeout: 10000 } // Optimizado
+        );
+      } else {
+        updateStatus("Tu navegador no soporta geolocalización.");
+      }
+    }
+
+    // Función para actualizar la velocidad en el círculo
+    function updateSpeed(speed) {
+      const speedValue = document.getElementById('speedValue');
+      const speedUnit = document.getElementById('speedUnit');
+      if (!speedValue || !speedUnit) return;
+      const speedKmh = speed ? parseInt(speed * 3.6) : 0;
+      speedValue.textContent = `${speedKmh}`;
+      speedUnit.textContent = "Km/h";
+    }
+
+    // Función para actualizar la altitud en el círculo
+    function updateAltitude(altitude) {
+      const altitudeValue = document.getElementById('altitudeValue');
+      const altitudeUnit = document.getElementById('altitudeUnit');
+      if (!altitudeValue || !altitudeUnit) return;
+      const altitudeMeters = altitude ? Math.round(parseFloat(altitude)) : 0;
+      altitudeValue.textContent = `${altitudeMeters}`;
+      altitudeUnit.textContent = "Metros";
+    }
+
+    // Detener o reanudar la captura de coordenadas
+    function toggleCapture() {
+      const stopButton = document.getElementById('stopButton');
+      if (isCapturing) {
+        if (watchId) {
+          navigator.geolocation.clearWatch(watchId);
+          watchId = null;
+        }
+        stopButton.textContent = "Continuar captura";
+        stopButton.classList.add('continue');
+        updateStatus("Captura de coordenadas detenida.");
+        releaseWakeLock(); // Liberar Wake Lock
+        shouldAdjustZoom = false; // Desactiva el ajuste automático del zoom
+      } else {
+        getLocation();
+        stopButton.textContent = "Detener captura";
+        stopButton.classList.remove('continue');
+        updateStatus("Captura de coordenadas reanudada.");
+        shouldAdjustZoom = true; // Reactiva el ajuste automático del zoom
+      }
+      isCapturing = !isCapturing;
+    }
+
+    // Función para alternar el modo oscuro
+    function toggleDarkMode() {
+      const body = document.body;
+      const darkModeButton = document.getElementById('darkModeButton');
+      body.classList.toggle('dark-mode');
+      const isDarkMode = body.classList.contains('dark-mode');
+      localStorage.setItem('darkMode', isDarkMode);
+      darkModeButton.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
+    }
+
+    // Aplicar el modo oscuro al cargar la página
+    function applyDarkModePreference() {
+      const isDarkMode = localStorage.getItem('darkMode') === 'true';
+      const body = document.body;
+      const darkModeButton = document.getElementById('darkModeButton');
+      if (isDarkMode) {
+        body.classList.add('dark-mode');
+        darkModeButton.textContent = 'Modo claro';
+      } else {
+        body.classList.remove('dark-mode');
+        darkModeButton.textContent = 'Modo oscuro';
+      }
+    }
+
+    // Agregar una nueva coordenada
+    function addCoordinate(lat, lng) {
+      if (coordinates.length >= MAX_COORDINATES) {
+        coordinates.shift();
+      }
+      if (coordinates.length > 0) {
+        const lastCoord = coordinates[coordinates.length - 1];
+        const distance = calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng);
+        if (distance < MIN_DISTANCE_METERS) {
+          return;
+        }
+        totalDistance += distance / 1000;
+      }
+      coordinates.push({ lat, lng });
+      saveCoordinates();
+      updateDistance();
+      if (coordinates.length > 1) {
+        shouldAdjustZoom = false;
+      }
+    }
+
+    // Calcular la distancia entre dos coordenadas
+    function calculateDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371e3;
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLng = (lng2 - lng1) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    // Actualizar el mapa con nuevas coordenadas
+    function updateMap(lat, lng) {
+      if (!map) return;
+      const newLatLng = [lat, lng];
+      map.setView(newLatLng, 15); // Centra el mapa en la nueva ubicación
+      polyline.addLatLng(newLatLng); // Añade la nueva coordenada a la polilínea
+      // Ajusta el zoom solo si shouldAdjustZoom es true
+      if (shouldAdjustZoom && coordinates.length > 1) {
+        const bounds = polyline.getBounds();
+        map.fitBounds(bounds, { padding: [20, 20] });
+      }
+    }
+
+    // Guardar coordenadas en localStorage
+    function saveCoordinates() {
+      localStorage.setItem("coordinates", JSON.stringify(coordinates));
+      localStorage.setItem("totalDistance", totalDistance.toString());
+    }
+
+    // Cargar coordenadas desde localStorage
+    function loadCoordinates() {
+      const savedCoordinates = localStorage.getItem("coordinates");
+      const savedDistance = localStorage.getItem("totalDistance");
+      if (savedCoordinates) {
+        coordinates = JSON.parse(savedCoordinates);
+      }
+      if (savedDistance) {
+        totalDistance = parseFloat(savedDistance);
+      }
+    }
+
+    // Cargar coordenadas guardadas y mostrarlas en el mapa
+    function loadMapWithSavedCoordinates() {
+      coordinates.forEach(coord => {
+        polyline.addLatLng([coord.lat, coord.lng]);
+      });
+      if (coordinates.length > 0) {
+        const lastCoord = coordinates[coordinates.length - 1];
+        map.setView([lastCoord.lat, lastCoord.lng], 13);
+      }
+    }
+
+    // Actualizar la distancia total en la interfaz
+    function updateDistance() {
+      document.getElementById('distance').textContent =
+        `Distancia total recorrida: ${totalDistance.toFixed(2)} km`;
+    }
+
+    // Actualizar el estado en la interfaz
+    function updateStatus(message) {
+      document.getElementById('status').textContent = message;
+    }
+
+    // Función para limpiar el historial de coordenadas (sin confirmación)
+    function clearHistory() {
+      coordinates =;
+      totalDistance = 0;
+      polyline.setLatLngs();
+      saveCoordinates();
+      updateDistance();
+      updateStatus("Historial limpiado.");
+    }
+
+    // Función para iniciar un nuevo recorrido (con confirmación)
+    function startNewRoute() {
+      const confirmacion = confirm("¿Estás seguro de que deseas eliminar la ruta actual?");
+      if (confirmacion) {
+        shouldAdjustZoom = true;
+        clearHistory(); // Llama a clearHistory sin mostrar otra confirmación
+      } else {
+        updateStatus("Inicio de nueva ruta cancelado.");
+      }
+    }
+
+    // Función para generar el enlace de Google Maps
+    function generateGoogleMapsLink() {
+      if (coordinates.length === 0) return null;
+      const origin = `${coordinates[0].lat},${coordinates[0].lng}`;
+      const destination = `${coordinates[coordinates.length - 1].lat},${coordinates[coordinates.length - 1].lng}`;
+      let waypoints = '';
+      if (coordinates.length > 2) {
+        waypoints = coordinates.slice(1, -1).map(coord => `${coord.lat},${coord.lng}`).join('|');
+      }
+      return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}`;
+    }
+
+    // Función para compartir el enlace por WhatsApp
+    function shareViaWhatsApp() {
+      const link = generateGoogleMapsLink();
+      if (link) {
+        const message = `Aquí está mi recorrido: ${link}`;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+      } else {
+        alert("No hay coordenadas para compartir.");
+      }
+    }
+
+    // Función para guardar la ruta con un nombre descriptivo
+    function saveRoute() {
+      const routeName = document.getElementById('routeName').value.trim();
+      if (!routeName) {
+        alert("Por favor, ingresa un nombre para la ruta.");
+        return;
+      }
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) ||;
+      const route = {
+        name: routeName,
+        coordinates: coordinates,
+        totalDistance: totalDistance,
+        date: new Date().toISOString()
+      };
+      savedRoutes.push(route);
+      localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
+      alert(`Ruta "${routeName}" guardada correctamente.`);
+      document.getElementById('routeName').value = ''; // Limpiar el campo de entrada
+      loadSavedRoutes(); // Recargar la lista de rutas guardadas
+    }
+
+    // Función para cargar y mostrar las rutas guardadas
+    function loadSavedRoutes() {
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) ||;
+      const savedRoutesList = document.getElementById('savedRoutesList');
+      savedRoutesList.innerHTML = ''; // Limpiar la lista antes de cargar
+
+      savedRoutes.forEach((route, index) => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+          <span>${route.name} - ${route.totalDistance.toFixed(2)} km - ${new Date(route.date).toLocaleString()}</span>
+          <button onclick="loadRoute(${index})">Cargar</button>
+          <button onclick="deleteRoute(${index})">Eliminar</button>
+        `;
+        savedRoutesList.appendChild(listItem);
+      });
+    }
+
+    // Función para cargar una ruta específica en el mapa
+    function loadRoute(index) {
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) ||;
+      const route = savedRoutes[index];
+      if (route) {
+        coordinates = route.coordinates;
+        totalDistance = route.totalDistance;
+        polyline.setLatLngs(); // Limpiar la polilínea actual
+        coordinates.forEach(coord => polyline.addLatLng([coord.lat, coord.lng]));
+        if (coordinates.length > 0) {
+          const lastCoord = coordinates[coordinates.length - 1];
+          map.setView([lastCoord.lat, lastCoord.lng], 13);
+        }
+        updateDistance();
+        updateStatus(`Ruta "${route.name}" cargada correctamente.`);
+      }
+    }
+
+    // Función para eliminar una ruta guardada
+    function deleteRoute(index) {
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) ||;
+      const route = savedRoutes[index];
+      if (route && confirm(`¿Estás seguro de que deseas eliminar la ruta "${route.name}"?`)) {
+        savedRoutes.splice(index, 1);
+        localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
+        loadSavedRoutes(); // Recargar la lista de rutas guardadas
+      }
+    }
+
+    // Cargar las rutas guardadas al iniciar la página
+    document.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      loadCoordinates();
+      loadMapWithSavedCoordinates();
+      updateDistance();
+      getLocation();
+      applyDarkModePreference();
+      loadSavedRoutes(); // Cargar las rutas guardadas
+      document.getElementById('clearButton').addEventListener('click', startNewRoute);
+      document.getElementById('stopButton').addEventListener('click', toggleCapture);
+      document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
+      document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
+      document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          if (isCapturing) {
+            getLocation();
+          }
+        } else {
+          releaseWakeLock();
+          if (watchId) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
