@@ -468,7 +468,7 @@ body.dark-mode #altitudeIndicator #altitudeUnit {
         shouldAdjustZoom = false; // Desactiva el ajuste automático del zoom
       } else {
         getLocation();
-        stopButton.textContent = "Detener captura";
+        stopButton.textContent = "Pausar captura";
         stopButton.classList.remove('continue');
         updateStatus("Captura de coordenadas reanudada.");
         shouldAdjustZoom = true; // Reactiva el ajuste automático del zoom
