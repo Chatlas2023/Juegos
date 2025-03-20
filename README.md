@@ -15,3 +15,4 @@ Aplicación de registro de localizaciones
 1.0.20 Miestra el nombre del barrio sobre el mapa, no por debajo
 1.0.24 Modo oscuro de mapa y confirmación de eliminacion de ruta
 1.0.28 Implementa ahorro de bateria
+1.1.0  Guardar rutas
