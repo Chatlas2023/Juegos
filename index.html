@@ -37,10 +37,23 @@
   <script>
     function reproducirSonido() {
       const audio = document.getElementById('audio');
-      audio.play().catch(error => {
-        console.error("Error al reproducir el sonido:", error);
-        alert("Hubo un error al reproducir el sonido. Asegúrate de que el navegador permita la reproducción automática.");
-      });
+
+      // Verificar si el navegador permite la reproducción
+      if (audio.paused) {
+        // Intentar reproducir el sonido
+        audio.play()
+          .then(() => {
+            console.log("Sonido reproducido correctamente.");
+          })
+          .catch(error => {
+            console.error("Error al reproducir el sonido:", error);
+            alert("Hubo un error al reproducir el sonido. Asegúrate de que el navegador permita la reproducción automática.");
+          });
+      } else {
+        // Si el sonido ya está reproduciéndose, reiniciarlo
+        audio.currentTime = 0;
+        audio.play();
+      }
     }
   </script>
 </body>
