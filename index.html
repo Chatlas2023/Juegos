@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reproducir Sonido</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <button onclick="reproducirSonido()">Reproducir Sonido</button>
+
+  <audio id="audio" src="notif-23-268244.mp3" preload="auto"></audio>
+
+  <script>
+    function reproducirSonido() {
+      const audio = document.getElementById('audio');
+      audio.play().catch(error => {
+        console.error("Error al reproducir el sonido:", error);
+        alert("Hubo un error al reproducir el sonido. Asegúrate de que el navegador permita la reproducción automática.");
+      });
+    }
+  </script>
+</body>
+</html>
