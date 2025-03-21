@@ -333,7 +333,7 @@
     let coordinates = [];
     let totalDistance = 0;
     const MAX_COORDINATES = 1000;
-    const MIN_DISTANCE_METERS = 45;
+    const MIN_DISTANCE_METERS = 15;
     let watchId;
     let wakeLockSentinel = null;
     let lastPositionTime = null;
@@ -505,7 +505,7 @@
             console.error("Error al obtener la ubicación:", error);
             updateStatus("Error al obtener la ubicación.");
           },
-          { enableHighAccuracy: false, maximumAge: 30000, timeout: 10000 } // Optimizado
+          { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 } // Optimizado
         );
       } else {
         updateStatus("Tu navegador no soporta geolocalización.");
