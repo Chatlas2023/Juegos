@@ -520,15 +520,6 @@
       const speedKmh = speed ? parseInt(speed * 3.6) : 0;
       speedValue.textContent = `${speedKmh}`;
       speedUnit.textContent = "Km/h";
-        // Verificar si la velocidad supera los 80 km/h
-      if (speedKmh > 80) {
-      const speedAlertSound = document.getElementById('speedAlertSound');
-      if (speedAlertSound) {
-      speedAlertSound.play().catch(error => {
-        console.error("Error al reproducir el sonido:", error);
-        });
-      }
-     }
     }
 
     // Función para actualizar la altitud en el círculo
@@ -816,6 +807,5 @@
       });
     });
   </script>
-  <audio id="speedAlertSound" src="notif-23-268244.mp3" preload="auto"></audio>
 </body>
 </html>
