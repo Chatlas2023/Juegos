@@ -48,6 +48,13 @@
           .catch(error => {
             console.error("Error al reproducir el sonido:", error);
             alert("Hubo un error al reproducir el sonido. Asegúrate de que el navegador permita la reproducción automática.");
+            
+            // Mostrar un mensaje más detallado en la consola
+            if (error.name === "NotAllowedError") {
+              console.error("El navegador bloqueó la reproducción automática. Asegúrate de interactuar con la página primero.");
+            } else if (error.name === "NotFoundError") {
+              console.error("El archivo de sonido no se encontró. Verifica la ruta del archivo.");
+            }
           });
       } else {
         // Si el sonido ya está reproduciéndose, reiniciarlo
