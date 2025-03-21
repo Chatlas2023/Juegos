@@ -19,3 +19,5 @@ Aplicación de registro de localizaciones
 1.1.1  Usa ícono de auto para marcar la posición
 1.1.3  Alerta con un sonido si la velocidad excede los 80Km/h
 1.1.4  Marca el círculo de precisión del GPS
+1.1.5  Se elimina el aviso sonoro de los 80Km/h porque no funciona
+
