@@ -47,8 +47,8 @@
           })
           .catch(error => {
             console.error("Error al reproducir el sonido:", error);
-            alert("Hubo un error al reproducir el sonido. Asegúrate de que el navegador permita la reproducción automática.");
-            
+            alert("Hubo un error al reproducir el sonido. Asegúrate de interactuar con la página primero.");
+
             // Mostrar un mensaje más detallado en la consola
             if (error.name === "NotAllowedError") {
               console.error("El navegador bloqueó la reproducción automática. Asegúrate de interactuar con la página primero.");
@@ -62,6 +62,17 @@
         audio.play();
       }
     }
+
+    // Permitir la reproducción después de la primera interacción del usuario
+    document.addEventListener('click', () => {
+      const audio = document.getElementById('audio');
+      audio.play().then(() => {
+        audio.pause(); // Pausar inmediatamente después de reproducir
+        audio.currentTime = 0; // Reiniciar el audio
+      }).catch(error => {
+        console.error("Error al preparar la reproducción:", error);
+      });
+    }, { once: true }); // Solo se ejecuta una vez
   </script>
 </body>
 </html>
