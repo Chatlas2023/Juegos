@@ -202,6 +202,27 @@
     body.dark-mode #altitudeIndicator #altitudeUnit {
       color: white !important; /* Asegura que el texto sea blanco en modo oscuro */
     }
+    /* Modo oscuro para el contenedor de rutas guardadas */
+body.dark-mode #savedRoutesContainer {
+  background-color: #333;
+  border-color: #555;
+}
+
+body.dark-mode #savedRoutesContainer h3 {
+  color: white;
+}
+
+body.dark-mode #savedRoutesList li {
+  background-color: #444;
+  border-color: #666;
+  color: white;
+}
+
+body.dark-mode #savedRoutesList li button {
+  background-color: #555;
+  color: white;
+  border: none;
+}
     @media (max-width: 600px) {
       h1 {
         font-size: 14px;
@@ -360,7 +381,7 @@
         div.style.position = "absolute";
         div.style.left = "0";
         div.style.bottom = "0";
-        div.innerHTML = " Ver: 1.1.4 ";
+        div.innerHTML = " Ver: 1.1.5 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
