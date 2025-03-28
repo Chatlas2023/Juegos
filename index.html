@@ -12,7 +12,7 @@
       padding: 0;
       display: flex;
       flex-direction: column;
-      height: 85vh;
+      height: 100vh;
       background-color: white;
       color: black;
     }
@@ -20,9 +20,7 @@
       width: 100%;
       flex-grow: 1;
       border: 1px solid #ccc;
-      border-radius: 8px;
       margin-bottom: 5px;
-      position: relative;
     }
     #infoContainer {
       display: flex;
@@ -45,8 +43,8 @@
       margin-bottom: 10px;
     }
     button {
-      padding: 6px 12px;
-      font-size: 12px;
+      padding: 8px 12px;
+      font-size: 14px;
       cursor: pointer;
       border: none;
       border-radius: 5px;
@@ -64,9 +62,6 @@
     #stopButton.continue {
       background-color: #28a745;
     }
-    #stopButton.continue:hover {
-      background-color: #218838;
-    }
     #darkModeButton {
       background-color: #333;
     }
@@ -75,11 +70,10 @@
       top: 10px;
       right: 10px;
       background: rgba(255,255,255,0.9);
-      padding: 12px 15px;
+      padding: 10px;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       z-index: 1000;
-      min-width: 150px;
     }
     .speed-row {
       display: flex;
@@ -90,60 +84,33 @@
     .speed-value {
       font-size: 24px;
       font-weight: bold;
-      margin: 0 8px;
+      margin: 0 5px;
     }
     #neighborhoodName {
       position: absolute;
       bottom: 15px;
       left: 10px;
-      background-color: #e4e8d1;
-      padding: 4px 12px;
+      background-color: rgba(255,255,255,0.9);
+      padding: 5px 10px;
       border-radius: 5px;
-      font-size: 22px;
+      font-size: 16px;
       font-weight: bold;
-      color: black;
       z-index: 1000;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      min-width: 200px;
-      text-align: center;
-    }
-    .leaflet-container {
-      transition: none !important;
     }
     body.dark-mode {
       background-color: #121212;
-      color: #ffffff;
+      color: white;
     }
     body.dark-mode #map {
-      border-color: #333 !important;
       filter: invert(1) hue-rotate(180deg);
     }
-    body.dark-mode .buttons button {
-      background-color: #444 !important;
-      color: #ffffff;
-    }
-    body.dark-mode #status,
-    body.dark-mode #distance {
-      color: #ffffff !important;
-    }
-    body.dark-mode #speedPanel {
-      background: rgba(33, 33, 33, 0.9);
-      color: white;
-    }
-    body.dark-mode .speed-value {
-      color: white;
-    }
+    body.dark-mode #speedPanel,
     body.dark-mode #neighborhoodName {
-      background-color: #333;
+      background-color: rgba(33, 33, 33, 0.9);
       color: white;
     }
-    @media (max-width: 600px) {
-      .speed-row {
-        font-size: 14px;
-      }
-      .speed-value {
-        font-size: 20px;
-      }
+    body.dark-mode button {
+      background-color: #444;
     }
   </style>
 </head>
@@ -161,22 +128,18 @@
         <span>km/h</span>
       </div>
     </div>
-    <div id="neighborhoodName">
-      Barrio: Cargando...
-    </div>
+    <div id="neighborhoodName">Barrio: Cargando...</div>
   </div>
   <div id="infoContainer">
     <div id="status">Obteniendo ubicación...</div>
     <div id="distance">Distancia total recorrida: 0 km</div>
   </div>
   <div class="buttons">
-    <button id="clearButton">Limpiar historial</button>
-    <button id="stopButton">Pausar captura</button>
-    <button id="shareButton">Enviar ruta WApp</button>
+    <button id="clearButton">Limpiar</button>
+    <button id="stopButton">Pausar</button>
     <button id="darkModeButton">Modo oscuro</button>
-    <input type="text" id="routeName" placeholder="Nombre de la ruta">
-    <button id="saveRouteButton">Guardar ruta</button>
   </div>
+
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     // Variables globales
@@ -184,218 +147,127 @@
     let polyline;
     let coordinates = [];
     let totalDistance = 0;
-    const MAX_COORDINATES = 1000;
-    const MIN_DISTANCE_METERS = 15;
     let watchId;
-    let wakeLockSentinel = null;
     let isCapturing = true;
-    let shouldAdjustZoom = true;
     let neighborhoodsLayer;
     let userMarker;
-    let precisionCircle = null;
     let speedValues = [];
-    let avgSpeed = 0;
-    let lastPosition = null;
-    const ZOOM_STABLE_THRESHOLD = 5;
 
-    // Inicializar el mapa
+    // Inicializar mapa
     function initMap() {
-      map = L.map('map', {
-        zoomControl: false
-      }).setView([-34.6037, -58.3816], 15); // Coordenadas iniciales de Buenos Aires
-      
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
-      
-      polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
+      map = L.map('map').setView([-34.6037, -58.3816], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+      polyline = L.polyline([], {color: 'blue'}).addTo(map);
       loadNeighborhoods();
     }
 
     // Cargar barrios
     function loadNeighborhoods() {
-      updateNeighborhoodName("Cargando mapa de barrios...");
-      
       fetch('https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson')
-        .then(response => {
-          if (!response.ok) throw new Error('Error HTTP');
-          return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-          if (!data.features) throw new Error('Formato GeoJSON inválido');
-          
           neighborhoodsLayer = L.geoJSON(data, {
-            style: { color: '#ff7800', weight: 1, opacity: 1, fillOpacity: 0.1 },
+            style: {color: '#ff7800', weight: 1, fillOpacity: 0.1},
             onEachFeature: (feature, layer) => {
-              if (!feature.properties.Name) {
-                feature.properties.Name = "Sin nombre";
-              }
-              layer.on('click', (e) => {
-                updateNeighborhoodName(feature.properties.Name);
+              layer.on('click', () => {
+                document.getElementById('neighborhoodName').textContent = `Barrio: ${feature.properties.Name}`;
               });
             }
           }).addTo(map);
-          
-          updateNeighborhoodName("Mapa listo");
-        })
-        .catch(error => {
-          console.error('Error cargando barrios:', error);
-          updateNeighborhoodName("Error cargando barrios");
-          neighborhoodsLayer = L.geoJSON({type: "FeatureCollection", features: []}).addTo(map);
         });
-    }
-
-    // Actualizar nombre del barrio
-    function updateNeighborhoodName(name) {
-      const element = document.getElementById('neighborhoodName');
-      if (element) {
-        element.textContent = `Barrio: ${name}`;
-      }
-    }
-
-    // Encontrar barrio
-    function findNeighborhood(lat, lng) {
-      if (!neighborhoodsLayer || isNaN(lat) || isNaN(lng)) {
-        updateNeighborhoodName("Datos no disponibles");
-        return;
-      }
-
-      const point = L.latLng(lat, lng);
-      let found = false;
-
-      neighborhoodsLayer.eachLayer(layer => {
-        try {
-          if (layer.getBounds().contains(point)) {
-            updateNeighborhoodName(layer.feature.properties.Name || "Barrio sin nombre");
-            found = true;
-          }
-        } catch (e) {
-          console.error('Error verificando barrio:', e);
-        }
-      });
-
-      if (!found) {
-        updateNeighborhoodName("Fuera del área mapeada");
-      }
-    }
-
-    // Actualizar mapa
-    function updateMap(lat, lng) {
-      if (!map || !polyline) return;
-      
-      const newLatLng = L.latLng(lat, lng);
-      if (!isNaN(newLatLng.lat) && !isNaN(newLatLng.lng)) {
-        polyline.addLatLng(newLatLng);
-        const currentZoom = map.getZoom();
-        map.setView(newLatLng, currentZoom || 16);
-      }
     }
 
     // Obtener ubicación
     function getLocation() {
       if (navigator.geolocation) {
-        updateStatus("Buscando señal GPS...");
-        acquireWakeLock();
         watchId = navigator.geolocation.watchPosition(
-          (position) => {
+          position => {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
-            const speed = position.coords.speed;
-            const accuracy = position.coords.accuracy;
-
-            updateStatus(`Ubicación obtenida (Precisión: ${Math.round(accuracy)} m)`);
-            addCoordinate(lat, lng);
+            
+            // Actualizar mapa
             updateMap(lat, lng);
-            updateSpeed(speed);
-            findNeighborhood(lat, lng);
-
+            
+            // Actualizar marcador
             if (!userMarker) {
-              userMarker = L.marker([lat, lng], {
-                icon: L.divIcon({
-                  html: '📍',
-                  iconSize: [30, 30],
-                  className: 'my-div-icon'
-                })
-              }).addTo(map);
+              userMarker = L.marker([lat, lng]).addTo(map);
             } else {
               userMarker.setLatLng([lat, lng]);
             }
-
-            if (precisionCircle) {
-              precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
-            } else {
-              precisionCircle = L.circle([lat, lng], {
-                color: 'cyan',
-                weight: 2,
-                opacity: 1,
-                fillColor: 'cyan',
-                fillOpacity: 0.1,
-                radius: accuracy
-              }).addTo(map);
-            }
+            
+            // Actualizar datos
+            updateSpeed(position.coords.speed);
+            findNeighborhood(lat, lng);
+            document.getElementById('status').textContent = `Ubicación actualizada`;
           },
-          (error) => {
-            let errorMsg = "Error en GPS: ";
-            switch(error.code) {
-              case error.PERMISSION_DENIED:
-                errorMsg += "Permiso denegado";
-                break;
-              case error.POSITION_UNAVAILABLE:
-                errorMsg += "Señal no disponible";
-                break;
-              case error.TIMEOUT:
-                errorMsg += "Tiempo de espera agotado";
-                break;
-              default:
-                errorMsg += "Error desconocido";
-            }
-            updateStatus(errorMsg);
+          error => {
+            document.getElementById('status').textContent = `Error: ${error.message}`;
           },
-          { 
-            enableHighAccuracy: true, 
-            maximumAge: 10000, 
-            timeout: 15000 
-          }
+          {enableHighAccuracy: true}
         );
-      } else {
-        updateStatus("Tu navegador no soporta geolocalización");
       }
+    }
+
+    // Actualizar mapa
+    function updateMap(lat, lng) {
+      coordinates.push([lat, lng]);
+      polyline.addLatLng([lat, lng]);
+      map.setView([lat, lng]);
     }
 
     // Actualizar velocidad
     function updateSpeed(speed) {
-      const speedKmh = speed ? speed * 3.6 : 0;
+      const speedKmh = speed ? (speed * 3.6).toFixed(1) : 0;
+      document.getElementById('currentSpeed').textContent = speedKmh;
       
-      if (speedKmh > 0) {
-        speedValues.push(speedKmh);
-        if (speedValues.length > 100) speedValues.shift();
-      }
-      
-      const avg = speedValues.length > 0 ? 
-        Math.round(speedValues.reduce((a, b) => a + b, 0) / speedValues.length) : 0;
-      
-      document.getElementById('currentSpeed').textContent = Math.round(speedKmh);
+      // Calcular promedio
+      speedValues.push(parseFloat(speedKmh));
+      if (speedValues.length > 10) speedValues.shift();
+      const avg = (speedValues.reduce((a,b) => a + b, 0) / speedValues.length).toFixed(1);
       document.getElementById('averageSpeed').textContent = avg;
     }
 
-    // Resto de funciones (toggleCapture, toggleDarkMode, etc.) permanecen igual
-    // ... [El resto del código JavaScript permanece igual] ...
+    // Encontrar barrio
+    function findNeighborhood(lat, lng) {
+      if (!neighborhoodsLayer) return;
+      
+      const point = L.latLng(lat, lng);
+      neighborhoodsLayer.eachLayer(layer => {
+        if (layer.getBounds().contains(point)) {
+          document.getElementById('neighborhoodName').textContent = 
+            `Barrio: ${layer.feature.properties.Name}`;
+        }
+      });
+    }
 
-    // Inicialización
+    // Event listeners
     document.addEventListener('DOMContentLoaded', () => {
       initMap();
       getLocation();
       
-      document.getElementById('darkModeButton').addEventListener('click', function() {
+      // Modo oscuro
+      document.getElementById('darkModeButton').addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
-        this.textContent = document.body.classList.contains('dark-mode') ? 'Modo claro' : 'Modo oscuro';
-        localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
       });
-
-      if (localStorage.getItem('darkMode') === 'true') {
-        document.body.classList.add('dark-mode');
-        document.getElementById('darkModeButton').textContent = 'Modo claro';
-      }
+      
+      // Pausar/continuar
+      document.getElementById('stopButton').addEventListener('click', () => {
+        isCapturing = !isCapturing;
+        if (isCapturing) {
+          getLocation();
+          document.getElementById('stopButton').textContent = 'Pausar';
+        } else {
+          navigator.geolocation.clearWatch(watchId);
+          document.getElementById('stopButton').textContent = 'Continuar';
+        }
+      });
+      
+      // Limpiar
+      document.getElementById('clearButton').addEventListener('click', () => {
+        coordinates = [];
+        polyline.setLatLngs([]);
+        document.getElementById('distance').textContent = 'Distancia: 0 km';
+      });
     });
   </script>
 </body>
