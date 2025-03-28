@@ -141,26 +141,29 @@
 #speedContainer {
   position: absolute;
   top: 10px;
-  right: 100px; /* Cambiado de 10px a 100px para dejar espacio al lado */
+  right: 10px;
   text-align: center;
   z-index: 1000;
 }
 
 #avgSpeedContainer {
   position: absolute;
-  top: 10px; /* Misma posición vertical que speedContainer */
-  right: 10px; /* Colocado a la derecha del speedContainer */
+  top: 100px;  /* 90px debajo del speedContainer */
+  right: 10px;
   text-align: center;
   z-index: 1000;
 }
 
+/* Solo en orientación horizontal los coloca uno al lado del otro */
 @media (min-width: 601px) and (orientation: landscape) {
   #speedContainer {
-    right: 100px; /* Más espacio en orientación horizontal */
+    top: 10px;
+    right: 100px;
   }
   
   #avgSpeedContainer {
-    right: 10px; /* Posición ajustada en orientación horizontal */
+    top: 10px;
+    right: 10px;
   }
 }
     #avgSpeedIndicator {
