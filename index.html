@@ -410,28 +410,43 @@ body.dark-mode #routeName::placeholder {
         attribution: '© OpenStreetMap contributors'
       }).addTo(map);
       polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
-
+loadNeighborhoods(); 
       // Añadir el control de versión
       L.control.version().addTo(map);
 
-      // Cargar los barrios desde el archivo GeoJSON
-      fetch('https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson')
-  .then(response => {
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return response.json();
-  })
-  .then(data => {
-    if (!data.features || data.features.length === 0) {
-      throw new Error("El GeoJSON no contiene features");
-    }
-    neighborhoodsLayer = L.geoJSON(data, {
-      style: { color: '#ff7800', weight: 1, opacity: 1, fillOpacity: 0.1 },
-      onEachFeature: (feature, layer) => {
-        layer.on('click', (e) => updateNeighborhoodName(feature.properties.Name));
-      }
-    }).addTo(map);
-    updateStatus("Mapa de barrios cargado");
-  })
+function loadNeighborhoods() {
+  updateNeighborhoodName("Cargando mapa de barrios...");
+  
+  fetch('https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson')
+    .then(response => {
+      if (!response.ok) throw new Error('Error HTTP');
+      return response.json();
+    })
+    .then(data => {
+      if (!data.features) throw new Error('Formato GeoJSON inválido');
+      
+      neighborhoodsLayer = L.geoJSON(data, {
+        style: { color: '#ff7800', weight: 1, opacity: 1, fillOpacity: 0.1 },
+        onEachFeature: (feature, layer) => {
+          if (!feature.properties.Name) {
+            feature.properties.Name = "Sin nombre";
+          }
+          layer.on('click', (e) => {
+            updateNeighborhoodName(feature.properties.Name);
+          });
+        }
+      }).addTo(map);
+      
+      console.log('Barrios cargados:', data.features.length); // Debug 4
+      updateNeighborhoodName("Mapa listo");
+    })
+    .catch(error => {
+      console.error('Error cargando barrios:', error);
+      updateNeighborhoodName("Error cargando barrios");
+      // Crear capa vacía como fallback
+      neighborhoodsLayer = L.geoJSON({type: "FeatureCollection", features: []}).addTo(map);
+    });
+}
   .catch(error => {
     console.error("Error cargando barrios:", error);
     updateStatus("Error cargando barrios");
@@ -449,27 +464,38 @@ body.dark-mode #routeName::placeholder {
 
     // Función para encontrar el barrio en el que se encuentra el usuario
 function findNeighborhood(lat, lng) {
-  if (!neighborhoodsLayer || isNaN(lat) || isNaN(lng)) {
-    updateNeighborhoodName("Datos no disponibles");
+  if (!neighborhoodsLayer) {
+    console.warn('neighborhoodsLayer no está definido aún');
+    return;
+  }
+
+  if (isNaN(lat) || isNaN(lng)) {
+    console.warn('Coordenadas inválidas:', lat, lng);
     return;
   }
 
   const point = L.latLng(lat, lng);
-  let neighborhoodFound = false;
+  let found = false;
+  let checkedLayers = 0;
 
   neighborhoodsLayer.eachLayer(layer => {
+    checkedLayers++;
     try {
-      if (layer.getBounds().contains(point)) {
-        updateNeighborhoodName(layer.feature.properties.Name || "Barrio sin nombre");
-        neighborhoodFound = true;
+      if (layer.feature && layer.getBounds().contains(point)) {
+        found = true;
+        const name = layer.feature.properties?.Name || "Área no identificada";
+        updateNeighborhoodName(name);
+        return; // Sale del eachLayer cuando encuentra coincidencia
       }
     } catch (e) {
-      console.error("Error verificando barrio:", e);
+      console.error('Error verificando capa:', e);
     }
   });
 
-  if (!neighborhoodFound) {
-    updateNeighborhoodName("Fuera de área cubierta");
+  console.log(`Capas verificadas: ${checkedLayers}, ¿encontrado?: ${found}`);
+  
+  if (!found) {
+    updateNeighborhoodName("Fuera del área mapeada");
   }
 }
 
@@ -827,6 +853,11 @@ function updateMap(lat, lng) {
 
     // Cargar las rutas guardadas al iniciar la página
     document.addEventListener('DOMContentLoaded', () => {
+      if (!Object.hasOwn) {
+  Object.hasOwn = function(obj, prop) {
+    return Object.prototype.hasOwnProperty.call(obj, prop);
+  };
+}
       initMap();
       loadCoordinates();
       loadMapWithSavedCoordinates();
