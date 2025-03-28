@@ -416,25 +416,27 @@ body.dark-mode #routeName::placeholder {
 
       // Cargar los barrios desde el archivo GeoJSON
       fetch('https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson')
-        .then(response => response.json())
-        .then(data => {
-          neighborhoodsLayer = L.geoJSON(data, {
-            style: function(feature) {
-              return {
-                color: '#ff7800',
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.1
-              };
-            },
-            onEachFeature: function(feature, layer) {
-              layer.on('click', function(e) {
-                updateNeighborhoodName(feature.properties.Name);
-              });
-            }
-          }).addTo(map);
-        })
-        .catch(error => console.error('Error cargando los barrios:', error));
+  .then(response => {
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return response.json();
+  })
+  .then(data => {
+    if (!data.features || data.features.length === 0) {
+      throw new Error("El GeoJSON no contiene features");
+    }
+    neighborhoodsLayer = L.geoJSON(data, {
+      style: { color: '#ff7800', weight: 1, opacity: 1, fillOpacity: 0.1 },
+      onEachFeature: (feature, layer) => {
+        layer.on('click', (e) => updateNeighborhoodName(feature.properties.Name));
+      }
+    }).addTo(map);
+    updateStatus("Mapa de barrios cargado");
+  })
+  .catch(error => {
+    console.error("Error cargando barrios:", error);
+    updateStatus("Error cargando barrios");
+    updateNeighborhoodName("No disponible"); // Mensaje alternativo
+  });
     }
 
     // Función para actualizar el nombre del barrio
@@ -446,20 +448,30 @@ body.dark-mode #routeName::placeholder {
     }
 
     // Función para encontrar el barrio en el que se encuentra el usuario
-    function findNeighborhood(lat, lng) {
-      if (!neighborhoodsLayer) return;
-      const point = L.latLng(lat, lng);
-      let found = false;
-      neighborhoodsLayer.eachLayer(layer => {
-        if (layer.getBounds().contains(point)) {
-          updateNeighborhoodName(layer.feature.properties.Name);
-          found = true;
-        }
-      });
-      if (!found) {
-        updateNeighborhoodName('Desconocido');
+function findNeighborhood(lat, lng) {
+  if (!neighborhoodsLayer || isNaN(lat) || isNaN(lng)) {
+    updateNeighborhoodName("Datos no disponibles");
+    return;
+  }
+
+  const point = L.latLng(lat, lng);
+  let neighborhoodFound = false;
+
+  neighborhoodsLayer.eachLayer(layer => {
+    try {
+      if (layer.getBounds().contains(point)) {
+        updateNeighborhoodName(layer.feature.properties.Name || "Barrio sin nombre");
+        neighborhoodFound = true;
       }
+    } catch (e) {
+      console.error("Error verificando barrio:", e);
     }
+  });
+
+  if (!neighborhoodFound) {
+    updateNeighborhoodName("Fuera de área cubierta");
+  }
+}
 
     // Función para solicitar el Wake Lock
     async function acquireWakeLock() {
