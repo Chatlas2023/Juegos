@@ -642,16 +642,16 @@ function updateSpeed(speed) {
     }
 
     // Actualizar el mapa con nuevas coordenadas
-    function updateMap(lat, lng) {
-      if (!map) return;
-      const newLatLng = [lat, lng];
-      map.setView(newLatLng, 15); // Centra el mapa en la nueva ubicación
-      polyline.addLatLng(newLatLng); // Añade la nueva coordenada a la polilínea
-      // Ajusta el zoom solo si shouldAdjustZoom es true
-      if (shouldAdjustZoom && coordinates.length > 1) {
-        const bounds = polyline.getBounds();
-        map.fitBounds(bounds, { padding: [20, 20] });
-      }
+function updateMap(lat, lng) {
+  if (!map) return;
+  const newLatLng = [lat, lng];
+  polyline.addLatLng(newLatLng);
+  
+  // Mantiene el zoom actual si ya fue ajustado manualmente, 
+  // o usa 16 como valor inicial
+  const currentZoom = map.getZoom();
+  map.setView(newLatLng, currentZoom || 16); 
+}
     }
 
     // Guardar coordenadas en localStorage
