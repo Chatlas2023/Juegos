@@ -116,64 +116,38 @@
     body.dark-mode #avgSpeedIndicator {
       border-color: #c4eef5 !important; /* Color del borde para el indicador de velocidad promedio */
     }
-    #speedContainer {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      text-align: center;
-      z-index: 1000;
-    }
-    #speedIndicator {
-      width: 80px;
-      height: 80px; /* Altura aumentada para incluir la leyenda */
-      background-color: #e4e8d1;
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: black;
-      font-size: 24px; /* Tamaño reducido para acomodar la leyenda */
-      font-weight: bold;
-      border: 3px solid #c4eef5;
-    }
-    #speedValue {
-      font-size: 28px; /* Tamaño del número de velocidad */
-      margin: 0;
-    }
-    #speedUnit {
-      font-size: 16px; /* Tamaño de la leyenda "Km/h" */
-      margin-top: -5px; /* Espaciado entre el número y la leyenda */
-    }
-    #avgSpeedContainer {
-      position: absolute;
-      top: 120px;
-      right: 10px;
-      text-align: center;
-      z-index: 1000;
-    }
-    #avgSpeedIndicator {
-      width: 80px;
-      height: 80px; /* Altura aumentada para incluir la leyenda */
-      background-color: #e4e8d1;
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: black;
-      font-size: 24px; /* Tamaño reducido para acomodar la leyenda */
-      font-weight: bold;
-      border: 3px solid #c4eef5;
-    }
-    #avgSpeedValue {
-      font-size: 28px; /* Tamaño del número de velocidad promedio */
-      margin: 0;
-    }
-    #avgSpeedUnit {
-      font-size: 16px; /* Tamaño de la leyenda "Km/h" */
-      margin-top: -5px; /* Espaciado entre el número y la leyenda */
-    }
+#speedPanel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255,255,255,0.9);
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 1000;
+}
+
+.speed-row {
+  display: flex;
+  align-items: baseline;
+  margin: 3px 0;
+  font-size: 14px;
+}
+
+.speed-value {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 5px;
+}
+
+body.dark-mode #speedPanel {
+  background: rgba(33, 33, 33, 0.9);
+  color: white;
+}
+
+body.dark-mode .speed-value {
+  color: white;
+}
     body.dark-mode #speedValue,
     body.dark-mode #speedUnit,
     body.dark-mode #avgSpeedValue,
@@ -325,18 +299,18 @@ body.dark-mode #routeName::placeholder {
 </head>
 <body>
   <div id="map">
-    <div id="speedContainer">
-      <div id="speedIndicator">
-        <div id="speedValue">0</div>
-        <div id="speedUnit">Km/h</div>
-      </div>
-    </div>
-    <div id="avgSpeedContainer">
-      <div id="avgSpeedIndicator">
-        <div id="avgSpeedValue">0</div>
-        <div id="avgSpeedUnit">Km/h</div>
-      </div>
-    </div>
+<div id="speedPanel">
+  <div class="speed-row">
+    <span>Velocidad:</span>
+    <span class="speed-value" id="currentSpeed">0</span>
+    <span>km/h</span>
+  </div>
+  <div class="speed-row">
+    <span>Promedio:</span>
+    <span class="speed-value" id="averageSpeed">0</span>
+    <span>km/h</span>
+  </div>
+</div>
     <div id="neighborhoodName" style="position: absolute; bottom: 15px; left: 10px; background-color: #e4e8d1; padding: 4px 12px; border-radius: 5px; font-size: 22px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
       Barrio: Cargando...
     </div>
@@ -553,33 +527,20 @@ body.dark-mode #routeName::placeholder {
     }
 
     // Función para actualizar la velocidad en el círculo
-    function updateSpeed(speed) {
-      const speedValue = document.getElementById('speedValue');
-      const speedUnit = document.getElementById('speedUnit');
-      const avgSpeedValue = document.getElementById('avgSpeedValue');
-      const avgSpeedUnit = document.getElementById('avgSpeedUnit');
-      
-      if (!speedValue || !speedUnit || !avgSpeedValue || !avgSpeedUnit) return;
-      
-      const speedKmh = speed ? parseInt(speed * 3.6) : 0;
-      speedValue.textContent = `${speedKmh}`;
-      speedUnit.textContent = "Km/h";
-      
-      // Almacenar el valor de velocidad para calcular el promedio
-      if (speedKmh > 0) {
-        speedValues.push(speedKmh);
-        
-        // Mantener un tamaño razonable del array para el cálculo
-        if (speedValues.length > 100) {
-          speedValues.shift();
-        }
-        
-        // Calcular y actualizar la velocidad promedio
-        avgSpeed = calculateAverageSpeed();
-        avgSpeedValue.textContent = `${Math.round(avgSpeed)}`;
-        avgSpeedUnit.textContent = "Km/h";
-      }
-    }
+function updateSpeed(speed) {
+  const speedKmh = speed ? Math.round(speed * 3.6) : 0;
+  
+  if (speedKmh > 0) {
+    speedValues.push(speedKmh);
+    if (speedValues.length > 100) speedValues.shift();
+  }
+  
+  const avg = speedValues.length > 0 ? 
+    Math.round(speedValues.reduce((a, b) => a + b, 0) / speedValues.length) : 0;
+  
+  document.getElementById('currentSpeed').textContent = speedKmh;
+  document.getElementById('averageSpeed').textContent = avg;
+}
 
     // Detener o reanudar la captura de coordenadas
     function toggleCapture() {
