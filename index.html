@@ -104,7 +104,7 @@
     }
     /* Asegurarse de que los elementos superpuestos no se vean afectados por el filtro */
     body.dark-mode #speedIndicator,
-    body.dark-mode #altitudeIndicator,
+    body.dark-mode #avgSpeedIndicator,
     body.dark-mode #neighborhoodName {
       background-color: rgba(33, 33, 33, 0.9); /* Fondo oscuro */
       color: white; /* Texto blanco */
@@ -113,8 +113,8 @@
     body.dark-mode #speedIndicator {
       border-color: #c4eef5 !important; /* Color del borde para el indicador de velocidad */
     }
-    body.dark-mode #altitudeIndicator {
-      border-color: #c4eef5 !important; /* Color del borde para el indicador de altitud */
+    body.dark-mode #avgSpeedIndicator {
+      border-color: #c4eef5 !important; /* Color del borde para el indicador de velocidad promedio */
     }
     #speedContainer {
       position: absolute;
@@ -145,14 +145,14 @@
       font-size: 16px; /* Tamaño de la leyenda "Km/h" */
       margin-top: -5px; /* Espaciado entre el número y la leyenda */
     }
-    #altitudeContainer {
+    #avgSpeedContainer {
       position: absolute;
       top: 120px;
       right: 10px;
       text-align: center;
       z-index: 1000;
     }
-    #altitudeIndicator {
+    #avgSpeedIndicator {
       width: 80px;
       height: 80px; /* Altura aumentada para incluir la leyenda */
       background-color: #e4e8d1;
@@ -166,18 +166,18 @@
       font-weight: bold;
       border: 3px solid #c4eef5;
     }
-    #altitudeValue {
-      font-size: 28px; /* Tamaño del número de altitud */
+    #avgSpeedValue {
+      font-size: 28px; /* Tamaño del número de velocidad promedio */
       margin: 0;
     }
-    #altitudeUnit {
-      font-size: 16px; /* Tamaño de la leyenda "Metros" */
+    #avgSpeedUnit {
+      font-size: 16px; /* Tamaño de la leyenda "Km/h" */
       margin-top: -5px; /* Espaciado entre el número y la leyenda */
     }
     body.dark-mode #speedValue,
     body.dark-mode #speedUnit,
-    body.dark-mode #altitudeValue,
-    body.dark-mode #altitudeUnit {
+    body.dark-mode #avgSpeedValue,
+    body.dark-mode #avgSpeedUnit {
       color: white !important;
     }
     body.dark-mode {
@@ -198,8 +198,8 @@
     /* Asegurar que los textos dentro de los indicadores cambien de color */
     body.dark-mode #speedIndicator #speedValue,
     body.dark-mode #speedIndicator #speedUnit,
-    body.dark-mode #altitudeIndicator #altitudeValue,
-    body.dark-mode #altitudeIndicator #altitudeUnit {
+    body.dark-mode #avgSpeedIndicator #avgSpeedValue,
+    body.dark-mode #avgSpeedIndicator #avgSpeedUnit {
       color: white !important; /* Asegura que el texto sea blanco en modo oscuro */
     }
     /* Modo oscuro para el contenedor de rutas guardadas */
@@ -331,10 +331,10 @@ body.dark-mode #routeName::placeholder {
         <div id="speedUnit">Km/h</div>
       </div>
     </div>
-    <div id="altitudeContainer">
-      <div id="altitudeIndicator">
-        <div id="altitudeValue">0</div>
-        <div id="altitudeUnit">Metros</div>
+    <div id="avgSpeedContainer">
+      <div id="avgSpeedIndicator">
+        <div id="avgSpeedValue">0</div>
+        <div id="avgSpeedUnit">Km/h</div>
       </div>
     </div>
     <div id="neighborhoodName" style="position: absolute; bottom: 15px; left: 10px; background-color: #e4e8d1; padding: 4px 12px; border-radius: 5px; font-size: 22px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
@@ -374,12 +374,14 @@ body.dark-mode #routeName::placeholder {
     let neighborhoodsLayer;
     let userMarker; // Marcador para la posición del usuario
     let precisionCircle = null; // Círculo de precisión del GPS
+    let speedValues = []; // Array para almacenar valores de velocidad
+    let avgSpeed = 0; // Variable para velocidad promedio
 
     // Definir el ícono personalizado
     const userIcon = L.icon({
       iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
       iconSize: [40, 40], // Tamaño del ícono
-      iconAnchor: [20, 20], // Punto de anclaje del ícono (centro)
+      iconAnchor: [20, 20], // Punto de anclaje del ícono (centro),
     });
 
     // Definir el control de versión
@@ -493,7 +495,15 @@ body.dark-mode #routeName::placeholder {
       }
     }
 
-    // Modificar la función getLocation para capturar la altitud y la precisión
+    // Función para calcular la velocidad promedio
+    function calculateAverageSpeed() {
+      if (speedValues.length === 0) return 0;
+      
+      const sum = speedValues.reduce((a, b) => a + b, 0);
+      return sum / speedValues.length;
+    }
+
+    // Modificar la función getLocation para capturar la velocidad y la precisión
     function getLocation() {
       if (navigator.geolocation) {
         acquireWakeLock();
@@ -502,14 +512,12 @@ body.dark-mode #routeName::placeholder {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             const speed = position.coords.speed;
-            const altitude = position.coords.altitude;
             const accuracy = position.coords.accuracy; // Precisión en metros
 
             addCoordinate(lat, lng);
             updateMap(lat, lng);
             updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
             updateSpeed(speed);
-            updateAltitude(altitude);
             findNeighborhood(lat, lng);
 
             // Actualizar la posición del marcador
@@ -548,20 +556,29 @@ body.dark-mode #routeName::placeholder {
     function updateSpeed(speed) {
       const speedValue = document.getElementById('speedValue');
       const speedUnit = document.getElementById('speedUnit');
-      if (!speedValue || !speedUnit) return;
+      const avgSpeedValue = document.getElementById('avgSpeedValue');
+      const avgSpeedUnit = document.getElementById('avgSpeedUnit');
+      
+      if (!speedValue || !speedUnit || !avgSpeedValue || !avgSpeedUnit) return;
+      
       const speedKmh = speed ? parseInt(speed * 3.6) : 0;
       speedValue.textContent = `${speedKmh}`;
       speedUnit.textContent = "Km/h";
-    }
-
-    // Función para actualizar la altitud en el círculo
-    function updateAltitude(altitude) {
-      const altitudeValue = document.getElementById('altitudeValue');
-      const altitudeUnit = document.getElementById('altitudeUnit');
-      if (!altitudeValue || !altitudeUnit) return;
-      const altitudeMeters = altitude ? Math.round(parseFloat(altitude)) : 0;
-      altitudeValue.textContent = `${altitudeMeters}`;
-      altitudeUnit.textContent = "Metros";
+      
+      // Almacenar el valor de velocidad para calcular el promedio
+      if (speedKmh > 0) {
+        speedValues.push(speedKmh);
+        
+        // Mantener un tamaño razonable del array para el cálculo
+        if (speedValues.length > 100) {
+          speedValues.shift();
+        }
+        
+        // Calcular y actualizar la velocidad promedio
+        avgSpeed = calculateAverageSpeed();
+        avgSpeedValue.textContent = `${Math.round(avgSpeed)}`;
+        avgSpeedUnit.textContent = "Km/h";
+      }
     }
 
     // Detener o reanudar la captura de coordenadas
@@ -702,10 +719,15 @@ body.dark-mode #routeName::placeholder {
     function clearHistory() {
       coordinates = [];
       totalDistance = 0;
+      speedValues = []; // Limpiar también los valores de velocidad
+      avgSpeed = 0; // Reiniciar la velocidad promedio
       polyline.setLatLngs([]);
       saveCoordinates();
       updateDistance();
       updateStatus("Historial limpiado.");
+      // Actualizar los indicadores de velocidad
+      document.getElementById('speedValue').textContent = '0';
+      document.getElementById('avgSpeedValue').textContent = '0';
     }
 
     // Función para iniciar un nuevo recorrido (con confirmación)
@@ -755,7 +777,8 @@ body.dark-mode #routeName::placeholder {
         name: routeName,
         coordinates: coordinates,
         totalDistance: totalDistance,
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
+        avgSpeed: avgSpeed // Guardar también la velocidad promedio
       };
       savedRoutes.push(route);
       localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
@@ -773,7 +796,7 @@ body.dark-mode #routeName::placeholder {
       savedRoutes.forEach((route, index) => {
         const listItem = document.createElement('li');
         listItem.innerHTML = `
-          <span>${route.name} - ${route.totalDistance.toFixed(2)} km - ${new Date(route.date).toLocaleString()}</span>
+          <span>${route.name} - ${route.totalDistance.toFixed(2)} km - ${route.avgSpeed ? Math.round(route.avgSpeed) + ' km/h' : 'N/A'} - ${new Date(route.date).toLocaleString()}</span>
           <button onclick="loadRoute(${index})">Cargar</button>
           <button onclick="deleteRoute(${index})">Eliminar</button>
         `;
@@ -788,6 +811,12 @@ body.dark-mode #routeName::placeholder {
       if (route) {
         coordinates = route.coordinates;
         totalDistance = route.totalDistance;
+        speedValues = []; // Reiniciar los valores de velocidad
+        avgSpeed = route.avgSpeed || 0; // Cargar la velocidad promedio guardada
+        
+        // Actualizar el indicador de velocidad promedio
+        document.getElementById('avgSpeedValue').textContent = `${Math.round(avgSpeed)}`;
+        
         polyline.setLatLngs([]); // Limpiar la polilínea actual
         coordinates.forEach(coord => polyline.addLatLng([coord.lat, coord.lng]));
         if (coordinates.length > 0) {
