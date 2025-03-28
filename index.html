@@ -116,13 +116,6 @@
     body.dark-mode #avgSpeedIndicator {
       border-color: #c4eef5 !important; /* Color del borde para el indicador de velocidad promedio */
     }
-    #speedContainer {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      text-align: center;
-      z-index: 1000;
-    }
     #speedIndicator {
       width: 80px;
       height: 80px; /* Altura aumentada para incluir la leyenda */
@@ -145,13 +138,31 @@
       font-size: 16px; /* Tamaño de la leyenda "Km/h" */
       margin-top: -5px; /* Espaciado entre el número y la leyenda */
     }
-    #avgSpeedContainer {
-      position: absolute;
-      top: 120px;
-      right: 10px;
-      text-align: center;
-      z-index: 1000;
-    }
+#speedContainer {
+  position: absolute;
+  top: 10px;
+  right: 100px; /* Cambiado de 10px a 100px para dejar espacio al lado */
+  text-align: center;
+  z-index: 1000;
+}
+
+#avgSpeedContainer {
+  position: absolute;
+  top: 10px; /* Misma posición vertical que speedContainer */
+  right: 10px; /* Colocado a la derecha del speedContainer */
+  text-align: center;
+  z-index: 1000;
+}
+
+@media (min-width: 601px) and (orientation: landscape) {
+  #speedContainer {
+    right: 180px; /* Más espacio en orientación horizontal */
+  }
+  
+  #avgSpeedContainer {
+    right: 90px; /* Posición ajustada en orientación horizontal */
+  }
+}
     #avgSpeedIndicator {
       width: 80px;
       height: 80px; /* Altura aumentada para incluir la leyenda */
@@ -394,7 +405,7 @@ body.dark-mode #routeName::placeholder {
         div.style.position = "absolute";
         div.style.left = "0";
         div.style.bottom = "0";
-        div.innerHTML = " Ver: 1.1.5 ";
+        div.innerHTML = " Ver: 1.1.6 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
