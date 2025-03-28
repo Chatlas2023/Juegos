@@ -543,17 +543,20 @@ body.dark-mode #routeName::placeholder {
 
     // Función para actualizar la velocidad en el círculo
 function updateSpeed(speed) {
-  const speedKmh = speed ? Math.round(speed * 3.6) : 0;
+  const speedKmh = speed ? speed * 3.6 : 0; // Sin redondear aún
   
   if (speedKmh > 0) {
-    speedValues.push(speedKmh);
+    speedValues.push(speedKmh); // Almacena valores CON decimales
     if (speedValues.length > 100) speedValues.shift();
   }
   
-  const avg = speedValues.length > 0 ? 
-    Math.round(speedValues.reduce((a, b) => a + b, 0) / speedValues.length) : 0;
-  
-  document.getElementById('currentSpeed').textContent = speedKmh;
+  // Calcula promedio con decimales y redondea solo al final
+  const avg = speedValues.length > 0 
+    ? Math.round(speedValues.reduce((a, b) => a + b, 0) / speedValues.length) 
+    : 0;
+
+  // Muestra velocidad actual redondeada y promedio
+  document.getElementById('currentSpeed').textContent = Math.round(speedKmh);
   document.getElementById('averageSpeed').textContent = avg;
 }
 
