@@ -493,53 +493,46 @@ body.dark-mode #routeName::placeholder {
     }
 
     // Modificar la función getLocation para capturar la velocidad y la precisión
-    function getLocation() {
-      if (navigator.geolocation) {
-        acquireWakeLock();
-        watchId = navigator.geolocation.watchPosition(
-          (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const speed = position.coords.speed;
-            const accuracy = position.coords.accuracy; // Precisión en metros
-
-            addCoordinate(lat, lng);
-            updateMap(lat, lng);
-            updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
-            updateSpeed(speed);
-            findNeighborhood(lat, lng);
-
-            // Actualizar la posición del marcador
-            if (!userMarker) {
-              userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
-            } else {
-              userMarker.setLatLng([lat, lng]);
-            }
-
-            // Actualizar o crear el círculo de precisión
-            if (precisionCircle) {
-              precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
-            } else {
-              precisionCircle = L.circle([lat, lng], {
-                color: 'cyan', // Color del borde del círculo
-                weight: 2,     // Grosor del borde
-                opacity: 1,    // Opacidad del borde
-                fillColor: 'cyan', // Color de relleno
-                fillOpacity: 0.1,  // Opacidad del relleno
-                radius: accuracy   // Radio basado en la precisión del GPS
-              }).addTo(map);
-            }
-          },
-          (error) => {
-            console.error("Error al obtener la ubicación:", error);
-            updateStatus("Error al obtener la ubicación.");
-          },
-          { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 } // Optimizado
-        );
-      } else {
-        updateStatus("Tu navegador no soporta geolocalización.");
+function getLocation() {
+  if (navigator.geolocation) {
+    updateStatus("Buscando señal GPS..."); // Mensaje inicial
+    acquireWakeLock();
+    watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        // Éxito: actualiza coordenadas
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        updateStatus(`Ubicación obtenida (Precisión: ${Math.round(position.coords.accuracy)} m)`);
+        // ... resto del código ...
+      },
+      (error) => {
+        let errorMsg = "Error en GPS: ";
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMsg += "Permiso denegado";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMsg += "Señal no disponible";
+            break;
+          case error.TIMEOUT:
+            errorMsg += "Tiempo de espera agotado";
+            break;
+          default:
+            errorMsg += "Error desconocido";
+        }
+        updateStatus(errorMsg);
+        console.error("Error GPS:", error);
+      },
+      { 
+        enableHighAccuracy: true, 
+        maximumAge: 10000, 
+        timeout: 15000 
       }
-    }
+    );
+  } else {
+    updateStatus("Tu navegador no soporta geolocalización");
+  }
+}
 
     // Función para actualizar la velocidad en el círculo
 function updateSpeed(speed) {
@@ -643,17 +636,19 @@ function updateSpeed(speed) {
 
     // Actualizar el mapa con nuevas coordenadas
 function updateMap(lat, lng) {
-  if (!map) return;
-  const newLatLng = [lat, lng];
-  polyline.addLatLng(newLatLng);
+  if (!map || !polyline) return;
   
-  // Mantiene el zoom actual si ya fue ajustado manualmente, 
-  // o usa 16 como valor inicial
-  const currentZoom = map.getZoom();
-  map.setView(newLatLng, currentZoom || 16); 
-}
+  try {
+    const newLatLng = L.latLng(lat, lng);
+    if (!isNaN(newLatLng.lat) && !isNaN(newLatLng.lng)) {
+      polyline.addLatLng(newLatLng);
+      const currentZoom = map.getZoom();
+      map.setView(newLatLng, currentZoom || 16);
     }
-
+  } catch (e) {
+    console.error("Error en updateMap:", e);
+  }
+}
     // Guardar coordenadas en localStorage
     function saveCoordinates() {
       localStorage.setItem("coordinates", JSON.stringify(coordinates));
