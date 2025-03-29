@@ -350,6 +350,8 @@ body.dark-mode #routeName::placeholder {
     let precisionCircle = null; // Círculo de precisión del GPS
     let speedValues = []; // Array para almacenar valores de velocidad
     let avgSpeed = 0; // Variable para velocidad promedio
+    let routeStartTime = null; // Para guardar el momento de inicio
+    let savedSpeeds = []; // Para guardar velocidades cuando la app está en segundo plano
 
     // Definir el ícono personalizado
     const userIcon = L.icon({
@@ -528,45 +530,63 @@ body.dark-mode #routeName::placeholder {
 
     // Función para actualizar la velocidad en el círculo
 function updateSpeed(speed) {
-  const speedKmh = speed ? speed * 3.6 : 0; // Sin redondear aún
+  const speedKmh = speed ? speed * 3.6 : 0;
   
   if (speedKmh > 0) {
-    speedValues.push(speedKmh); // Almacena valores CON decimales
+    speedValues.push(speedKmh);
     if (speedValues.length > 100) speedValues.shift();
+    
+    // Si es el primer punto, guardar el tiempo de inicio
+    if (!routeStartTime && coordinates.length === 1) {
+      routeStartTime = new Date();
+    }
   }
   
-  // Calcula promedio con decimales y redondea solo al final
-  const avg = speedValues.length > 0 
-    ? Math.round(speedValues.reduce((a, b) => a + b, 0) / speedValues.length) 
-    : 0;
+  // Calcular promedio considerando tiempo transcurrido
+  let avg = 0;
+  if (coordinates.length > 1 && routeStartTime) {
+    const currentTime = new Date();
+    const elapsedHours = (currentTime - routeStartTime) / 3600000; // Horas transcurridas
+    avg = elapsedHours > 0 ? totalDistance / elapsedHours : 0;
+  } else {
+    avg = speedValues.length > 0 
+      ? Math.round(speedValues.reduce((a, b) => a + b, 0) / speedValues.length) 
+      : 0;
+  }
 
-  // Muestra velocidad actual redondeada y promedio
   document.getElementById('currentSpeed').textContent = Math.round(speedKmh);
-  document.getElementById('averageSpeed').textContent = avg;
+  document.getElementById('averageSpeed').textContent = Math.round(avg);
 }
 
     // Detener o reanudar la captura de coordenadas
-    function toggleCapture() {
-      const stopButton = document.getElementById('stopButton');
-      if (isCapturing) {
-        if (watchId) {
-          navigator.geolocation.clearWatch(watchId);
-          watchId = null;
-        }
-        stopButton.textContent = "Continuar captura";
-        stopButton.classList.add('continue');
-        updateStatus("Captura de coordenadas detenida.");
-        releaseWakeLock(); // Liberar Wake Lock
-        shouldAdjustZoom = false; // Desactiva el ajuste automático del zoom
-      } else {
-        getLocation();
-        stopButton.textContent = "Detener captura";
-        stopButton.classList.remove('continue');
-        updateStatus("Captura de coordenadas reanudada.");
-        shouldAdjustZoom = true; // Reactiva el ajuste automático del zoom
-      }
-      isCapturing = !isCapturing;
+function toggleCapture() {
+  const stopButton = document.getElementById('stopButton');
+  if (isCapturing) {
+    if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
     }
+    stopButton.textContent = "Continuar captura";
+    stopButton.classList.add('continue');
+    updateStatus("Captura de coordenadas detenida.");
+    releaseWakeLock();
+    shouldAdjustZoom = false;
+    
+    // Guardar velocidades actuales
+    savedSpeeds = [...speedValues];
+  } else {
+    // Restaurar velocidades guardadas
+    speedValues = [...savedSpeeds];
+    savedSpeeds = [];
+    
+    getLocation();
+    stopButton.textContent = "Detener captura";
+    stopButton.classList.remove('continue');
+    updateStatus("Captura de coordenadas reanudada.");
+    shouldAdjustZoom = true;
+  }
+  isCapturing = !isCapturing;
+}
 
     // Función para alternar el modo oscuro
     function toggleDarkMode() {
@@ -675,19 +695,20 @@ function updateMap(lat, lng) {
     }
 
     // Función para limpiar el historial de coordenadas (sin confirmación)
-    function clearHistory() {
-      coordinates = [];
-      totalDistance = 0;
-      speedValues = []; // Limpiar también los valores de velocidad
-      avgSpeed = 0; // Reiniciar la velocidad promedio
-      polyline.setLatLngs([]);
-      saveCoordinates();
-      updateDistance();
-      updateStatus("Historial limpiado.");
-      // Actualizar los indicadores de velocidad
-      document.getElementById('speedValue').textContent = '0';
-      document.getElementById('avgSpeedValue').textContent = '0';
-    }
+function clearHistory() {
+  coordinates = [];
+  totalDistance = 0;
+  speedValues = [];
+  savedSpeeds = [];
+  avgSpeed = 0;
+  routeStartTime = null;
+  polyline.setLatLngs([]);
+  saveCoordinates();
+  updateDistance();
+  updateStatus("Historial limpiado.");
+  document.getElementById('currentSpeed').textContent = '0';
+  document.getElementById('averageSpeed').textContent = '0';
+}
 
     // Función para iniciar un nuevo recorrido (con confirmación)
     function startNewRoute() {
@@ -725,26 +746,27 @@ function updateMap(lat, lng) {
     }
 
     // Función para guardar la ruta con un nombre descriptivo
-    function saveRoute() {
-      const routeName = document.getElementById('routeName').value.trim();
-      if (!routeName) {
-        alert("Por favor, ingresa un nombre para la ruta.");
-        return;
-      }
-      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
-      const route = {
-        name: routeName,
-        coordinates: coordinates,
-        totalDistance: totalDistance,
-        date: new Date().toISOString(),
-        avgSpeed: avgSpeed // Guardar también la velocidad promedio
-      };
-      savedRoutes.push(route);
-      localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
-      alert(`Ruta "${routeName}" guardada correctamente.`);
-      document.getElementById('routeName').value = ''; // Limpiar el campo de entrada
-      loadSavedRoutes(); // Recargar la lista de rutas guardadas
-    }
+function saveRoute() {
+  const routeName = document.getElementById('routeName').value.trim();
+  if (!routeName) {
+    alert("Por favor, ingresa un nombre para la ruta.");
+    return;
+  }
+  const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
+  const route = {
+    name: routeName,
+    coordinates: coordinates,
+    totalDistance: totalDistance,
+    date: new Date().toISOString(),
+    avgSpeed: avgSpeed,
+    startTime: routeStartTime.toISOString() // Guardar tiempo de inicio
+  };
+  savedRoutes.push(route);
+  localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
+  alert(`Ruta "${routeName}" guardada correctamente.`);
+  document.getElementById('routeName').value = '';
+  loadSavedRoutes();
+}
 
     // Función para cargar y mostrar las rutas guardadas
     function loadSavedRoutes() {
@@ -764,27 +786,29 @@ function updateMap(lat, lng) {
     }
 
     // Función para cargar una ruta específica en el mapa
-    function loadRoute(index) {
-      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
-      const route = savedRoutes[index];
-      if (route) {
-        coordinates = route.coordinates;
-        totalDistance = route.totalDistance;
-        speedValues = []; // Reiniciar los valores de velocidad
-        avgSpeed = route.avgSpeed || 0; // Cargar la velocidad promedio guardada
-        
-        // Actualizar el indicador de velocidad promedio
-        document.getElementById('avgSpeedValue').textContent = `${Math.round(avgSpeed)}`;
-        
-        polyline.setLatLngs([]); // Limpiar la polilínea actual
-        coordinates.forEach(coord => polyline.addLatLng([coord.lat, coord.lng]));
-        if (coordinates.length > 0) {
-          const lastCoord = coordinates[coordinates.length - 1];
-          map.setView([lastCoord.lat, lastCoord.lng], 13);
-        }
-        updateDistance();
-        updateStatus(`Ruta "${route.name}" cargada correctamente.`);
-      }
+function loadRoute(index) {
+  const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
+  const route = savedRoutes[index];
+  if (route) {
+    coordinates = route.coordinates;
+    totalDistance = route.totalDistance;
+    speedValues = [];
+    avgSpeed = route.avgSpeed || 0;
+    routeStartTime = new Date(route.startTime); // Restaurar tiempo de inicio
+    
+    polyline.setLatLngs([]);
+    coordinates.forEach(coord => polyline.addLatLng([coord.lat, coord.lng]));
+    if (coordinates.length > 0) {
+      const lastCoord = coordinates[coordinates.length - 1];
+      map.setView([lastCoord.lat, lastCoord.lng], 13);
+    }
+    updateDistance();
+    updateStatus(`Ruta "${route.name}" cargada correctamente.`);
+    
+    // Actualizar velocidad promedio basada en tiempo transcurrido
+    updateSpeed(0);
+  }
+}
     }
 
     // Función para eliminar una ruta guardada
