@@ -99,9 +99,10 @@
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
     /* Aplicar el filtro de negativo al mapa en modo oscuro */
-    body.dark-mode #map {
-      filter: invert(1) hue-rotate(180deg); /* Invierte los colores y ajusta el tono */
-    }
+body.dark-mode #map {
+  filter: invert(1) hue-rotate(180deg); /* Invierte los colores y ajusta el tono */
+  border-color: #333 !important;
+}
     /* Asegurarse de que los elementos superpuestos no se vean afectados por el filtro */
     body.dark-mode #speedIndicator,
     body.dark-mode #avgSpeedIndicator,
@@ -152,18 +153,9 @@ body.dark-mode #speedPanel .speed-row span {
 body.dark-mode #speedPanel .speed-value {
   color: white !important;
 }
-    body.dark-mode #speedValue,
-    body.dark-mode #speedUnit,
-    body.dark-mode #avgSpeedValue,
-    body.dark-mode #avgSpeedUnit {
-      color: white !important;
-    }
     body.dark-mode {
       background-color: #121212;
       color: #ffffff !important;
-    }
-    body.dark-mode #map {
-      border-color: #333 !important;
     }
     body.dark-mode .buttons button {
       background-color: #444 !important;
