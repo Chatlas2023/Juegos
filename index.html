@@ -100,17 +100,22 @@
     }
     /* Aplicar el filtro de negativo al mapa en modo oscuro */
 body.dark-mode #map {
-  filter: invert(1) hue-rotate(180deg); /* Invierte los colores y ajusta el tono */
-  border-color: #333 !important;
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Añade estas nuevas reglas para el panel de velocidad en modo oscuro */
+body.dark-mode #speedPanel {
+  background: rgba(33, 33, 33, 0.9) !important;
+  filter: none !important; /* Esto es clave para anular el filtro del mapa */
 }
     /* Asegurarse de que los elementos superpuestos no se vean afectados por el filtro */
-    body.dark-mode #speedIndicator,
-    body.dark-mode #avgSpeedIndicator,
-    body.dark-mode #neighborhoodName {
-      background-color: rgba(33, 33, 33, 0.9); /* Fondo oscuro */
-      color: white; /* Texto blanco */
-      box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2); /* Sombra ajustada */
-    }
+body.dark-mode #speedPanel,
+body.dark-mode #speedPanel .speed-row,
+body.dark-mode #speedPanel .speed-row span,
+body.dark-mode #speedPanel .speed-value {
+  color: white !important;
+  text-shadow: none !important;
+}
     body.dark-mode #speedIndicator {
       border-color: #c4eef5 !important; /* Color del borde para el indicador de velocidad */
     }
@@ -125,7 +130,7 @@ body.dark-mode #map {
   padding: 10px;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  z-index: 1000;
+  z-index: 1001;
 }
 
 .speed-row {
@@ -585,14 +590,20 @@ function toggleCapture() {
 }
 
     // Función para alternar el modo oscuro
-    function toggleDarkMode() {
-      const body = document.body;
-      const darkModeButton = document.getElementById('darkModeButton');
-      body.classList.toggle('dark-mode');
-      const isDarkMode = body.classList.contains('dark-mode');
-      localStorage.setItem('darkMode', isDarkMode);
-      darkModeButton.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
-    }
+function toggleDarkMode() {
+  const body = document.body;
+  const darkModeButton = document.getElementById('darkModeButton');
+  body.classList.toggle('dark-mode');
+  const isDarkMode = body.classList.contains('dark-mode');
+  localStorage.setItem('darkMode', isDarkMode);
+  darkModeButton.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
+  
+  // Forzar redibujado del panel de velocidad
+  const speedPanel = document.getElementById('speedPanel');
+  speedPanel.style.display = 'none';
+  speedPanel.offsetHeight; // Trigger reflow
+  speedPanel.style.display = '';
+}
 
     // Aplicar el modo oscuro al cargar la página
     function applyDarkModePreference() {
