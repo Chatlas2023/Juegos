@@ -349,6 +349,8 @@ body.dark-mode #routeName::placeholder {
     <ul id="savedRoutesList"></ul>
   </div>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-rotatedmarker"></script> 
+
   <script>
     // Variables globales
     let map;
@@ -413,11 +415,6 @@ const userIcon = L.icon({
 function initMap() {
   map = L.map('map', {
     zoomControl: false,
-    // Habilitar rotación
-    inertia: false,
-    inertiaDeceleration: 0,
-    inertiaMaxSpeed: 1,
-    easeLinearity: 0.35
   }).setView([0, 0], 15);
   
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -508,53 +505,88 @@ function initMap() {
     }
 
     // Modificar la función getLocation para capturar la velocidad y la precisión
-    function getLocation() {
-      if (navigator.geolocation) {
-        acquireWakeLock();
-        watchId = navigator.geolocation.watchPosition(
-          (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const speed = position.coords.speed;
-            const accuracy = position.coords.accuracy; // Precisión en metros
-
-            addCoordinate(lat, lng);
-            updateMap(lat, lng);
-            updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
-            updateSpeed(speed);
-            findNeighborhood(lat, lng);
-
-            // Actualizar la posición del marcador
-            if (!userMarker) {
-              userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
-            } else {
-              userMarker.setLatLng([lat, lng]);
-            }
-
-            // Actualizar o crear el círculo de precisión
-            if (precisionCircle) {
-              precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
-            } else {
-              precisionCircle = L.circle([lat, lng], {
-                color: 'cyan', // Color del borde del círculo
-                weight: 2,     // Grosor del borde
-                opacity: 1,    // Opacidad del borde
-                fillColor: 'cyan', // Color de relleno
-                fillOpacity: 0.1,  // Opacidad del relleno
-                radius: accuracy   // Radio basado en la precisión del GPS
-              }).addTo(map);
-            }
-          },
-          (error) => {
-            console.error("Error al obtener la ubicación:", error);
-            updateStatus("Error al obtener la ubicación.");
-          },
-          { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 } // Optimizado
-        );
-      } else {
-        updateStatus("Tu navegador no soporta geolocalización.");
+function getLocation() {
+  if (navigator.geolocation) {
+    updateStatus("Solicitando permisos de ubicación...");
+    
+    // Primero verificamos permisos
+    navigator.permissions.query({name: 'geolocation'}).then(permissionStatus => {
+      console.log('Estado del permiso:', permissionStatus.state);
+      
+      if (permissionStatus.state === 'denied') {
+        updateStatus("Permiso de ubicación denegado. Por favor habilítalo en la configuración de tu navegador.");
+        return;
       }
-    }
+      
+      // Si tenemos permiso o es prompt, procedemos
+      acquireWakeLock();
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          const speed = position.coords.speed;
+          const accuracy = position.coords.accuracy;
+
+          console.log('Nueva posición:', lat, lng, 'Precisión:', accuracy, 'm');
+          
+          addCoordinate(lat, lng);
+          updateMap(lat, lng);
+          updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
+          updateSpeed(speed);
+          findNeighborhood(lat, lng);
+
+          if (!userMarker) {
+            userMarker = L.marker([lat, lng], { 
+              icon: userIcon,
+              rotationAngle: 0 // Inicializar con ángulo 0
+            }).addTo(map);
+          } else {
+            userMarker.setLatLng([lat, lng]);
+          }
+
+          if (precisionCircle) {
+            precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
+          } else {
+            precisionCircle = L.circle([lat, lng], {
+              color: 'cyan',
+              weight: 2,
+              opacity: 1,
+              fillColor: 'cyan',
+              fillOpacity: 0.1,
+              radius: accuracy
+            }).addTo(map);
+          }
+        },
+        (error) => {
+          let errorMessage = "Error al obtener la ubicación: ";
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage += "Permiso denegado por el usuario";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage += "La información de ubicación no está disponible";
+              break;
+            case error.TIMEOUT:
+              errorMessage += "La solicitud de ubicación ha caducado";
+              break;
+            case error.UNKNOWN_ERROR:
+              errorMessage += "Error desconocido";
+              break;
+          }
+          console.error(errorMessage, error);
+          updateStatus(errorMessage);
+        },
+        { 
+          enableHighAccuracy: true, 
+          maximumAge: 10000, 
+          timeout: 15000 
+        }
+      );
+    });
+  } else {
+    updateStatus("Tu navegador no soporta geolocalización.");
+  }
+}
 
     // Función para actualizar la velocidad en el círculo
 function updateSpeed(speed) {
@@ -697,9 +729,6 @@ function updateMap(lat, lng) {
     // Suavizar la rotación
     headingSmooth = headingSmooth * 0.7 + heading * 0.3;
     
-    // Rotar el mapa
-    map.setBearing(headingSmooth);
-    
     // Rotar el marcador del usuario si existe
     if (userMarker) {
       userMarker.setRotationAngle(headingSmooth);
@@ -708,7 +737,8 @@ function updateMap(lat, lng) {
     lastHeading = heading;
   }
   
-  map.setView(newLatLng, 16); // Zoom fijo en nivel 16
+  // Centrar el mapa manteniendo el zoom actual
+  map.setView(newLatLng, map.getZoom());
 }
 
     // Cargar coordenadas guardadas y mostrarlas en el mapa
