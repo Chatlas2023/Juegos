@@ -22,3 +22,4 @@ Aplicación de registro de localizaciones
 1.1.5  Se elimina el aviso sonoro de los 80Km/h porque no funciona y corrige modo oscuro en algunos textos
 1.1.6  Se elimina el dato de la altitud y en su lugar se muestra la velocidad promedio
 1.1.8  Corrige problema en el dato de la velocidad promedio
+1.1.10 Rotación del mapa según desplazamiento móvil
