@@ -100,17 +100,28 @@
     }
     /* Aplicar el filtro de negativo al mapa en modo oscuro */
 body.dark-mode #map {
-  filter: invert(1) hue-rotate(180deg);
+  filter: invert(1) hue-rotate(180deg) brightness(0.6) contrast(1.2);
+}
+    #speedPanel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255,255,255,0.9);
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 1001;
+  /* Añade esto para aislar el panel del filtro del mapa */
+  isolation: isolate;
 }
 
 /* Añade estas nuevas reglas para el panel de velocidad en modo oscuro */
 body.dark-mode #speedPanel {
-  background: rgba(33, 33, 33, 0.9) !important;
-  filter: none !important; /* Esto es clave para anular el filtro del mapa */
+  background: rgba(33, 33, 33, 0.95) !important;
+  color: white !important;
+  /* Esto es clave: desactiva cualquier herencia de filtro */
+  filter: none !important;
 }
-    /* Asegurarse de que los elementos superpuestos no se vean afectados por el filtro */
-body.dark-mode #speedPanel,
-body.dark-mode #speedPanel .speed-row,
 body.dark-mode #speedPanel .speed-row span,
 body.dark-mode #speedPanel .speed-value {
   color: white !important;
@@ -593,16 +604,18 @@ function toggleCapture() {
 function toggleDarkMode() {
   const body = document.body;
   const darkModeButton = document.getElementById('darkModeButton');
+  const speedPanel = document.getElementById('speedPanel');
+  
   body.classList.toggle('dark-mode');
   const isDarkMode = body.classList.contains('dark-mode');
+  
+  // Forzar actualización del panel de velocidad
+  speedPanel.style.display = 'none';
+  void speedPanel.offsetWidth; // Trigger reflow
+  speedPanel.style.display = '';
+  
   localStorage.setItem('darkMode', isDarkMode);
   darkModeButton.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
-  
-  // Forzar redibujado del panel de velocidad
-  const speedPanel = document.getElementById('speedPanel');
-  speedPanel.style.display = 'none';
-  speedPanel.offsetHeight; // Trigger reflow
-  speedPanel.style.display = '';
 }
 
     // Aplicar el modo oscuro al cargar la página
