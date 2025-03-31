@@ -410,46 +410,47 @@ const userIcon = L.icon({
     };
 
     // Inicializar el mapa
-    function initMap() {
-      map = L.map('map', {
-        zoomControl: false
-            // Habilitar rotación
+function initMap() {
+  map = L.map('map', {
+    zoomControl: false,
+    // Habilitar rotación
     inertia: false,
     inertiaDeceleration: 0,
     inertiaMaxSpeed: 1,
     easeLinearity: 0.35
   }).setView([0, 0], 15);
-      }).setView([0, 0], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+  
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+  
+  polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
+
+  // Añadir el control de versión
+  L.control.version().addTo(map);
+
+  // Cargar los barrios desde el archivo GeoJSON
+  fetch('https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson')
+    .then(response => response.json())
+    .then(data => {
+      neighborhoodsLayer = L.geoJSON(data, {
+        style: function(feature) {
+          return {
+            color: '#ff7800',
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.1
+          };
+        },
+        onEachFeature: function(feature, layer) {
+          layer.on('click', function(e) {
+            updateNeighborhoodName(feature.properties.Name);
+          });
+        }
       }).addTo(map);
-      polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
-
-      // Añadir el control de versión
-      L.control.version().addTo(map);
-
-      // Cargar los barrios desde el archivo GeoJSON
-      fetch('https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson')
-        .then(response => response.json())
-        .then(data => {
-          neighborhoodsLayer = L.geoJSON(data, {
-            style: function(feature) {
-              return {
-                color: '#ff7800',
-                weight: 1,
-                opacity: 1,
-                fillOpacity: 0.1
-              };
-            },
-            onEachFeature: function(feature, layer) {
-              layer.on('click', function(e) {
-                updateNeighborhoodName(feature.properties.Name);
-              });
-            }
-          }).addTo(map);
-        })
-        .catch(error => console.error('Error cargando los barrios:', error));
-    }
+    })
+    .catch(error => console.error('Error cargando los barrios:', error));
+}
 
     // Función para actualizar el nombre del barrio
     function updateNeighborhoodName(name) {
