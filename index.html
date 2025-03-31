@@ -769,21 +769,21 @@ function saveRoute() {
 }
 
     // Función para cargar y mostrar las rutas guardadas
-    function loadSavedRoutes() {
-      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
-      const savedRoutesList = document.getElementById('savedRoutesList');
-      savedRoutesList.innerHTML = ''; // Limpiar la lista antes de cargar
+function loadSavedRoutes() {
+  const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
+  const savedRoutesList = document.getElementById('savedRoutesList');
+  savedRoutesList.innerHTML = ''; // Limpiar la lista antes de cargar
 
-      savedRoutes.forEach((route, index) => {
-        const listItem = document.createElement('li');
-        listItem.innerHTML = `
-          <span>${route.name} - ${route.totalDistance.toFixed(2)} km - ${route.avgSpeed ? Math.round(route.avgSpeed) + ' km/h' : 'N/A'} - ${new Date(route.date).toLocaleString()}</span>
-          <button onclick="loadRoute(${index})">Cargar</button>
-          <button onclick="deleteRoute(${index})">Eliminar</button>
-        `;
-        savedRoutesList.appendChild(listItem);
-      });
-    }
+  savedRoutes.forEach((route, index) => {
+    const listItem = document.createElement('li');
+    listItem.innerHTML = `
+      <span>${route.name} - ${route.totalDistance.toFixed(2)} km - ${Math.round(route.avgSpeed || 0)} km/h - ${new Date(route.date).toLocaleString()}</span>
+      <button onclick="loadRoute(${index})">Cargar</button>
+      <button onclick="deleteRoute(${index})">Eliminar</button>
+    `;
+    savedRoutesList.appendChild(listItem);
+  });
+}
 
     // Función para cargar una ruta específica en el mapa
 function loadRoute(index) {
@@ -794,7 +794,7 @@ function loadRoute(index) {
     totalDistance = route.totalDistance;
     speedValues = [];
     avgSpeed = route.avgSpeed || 0;
-    routeStartTime = new Date(route.startTime); // Restaurar tiempo de inicio
+    routeStartTime = new Date(route.startTime);
     
     polyline.setLatLngs([]);
     coordinates.forEach(coord => polyline.addLatLng([coord.lat, coord.lng]));
@@ -805,9 +805,10 @@ function loadRoute(index) {
     updateDistance();
     updateStatus(`Ruta "${route.name}" cargada correctamente.`);
     
-    // Actualizar velocidad promedio basada en tiempo transcurrido
-    updateSpeed(0);
+    // Actualizar los indicadores de velocidad
+    document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
   }
+}
 
     }
 
