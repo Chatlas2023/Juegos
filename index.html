@@ -133,6 +133,11 @@ body.dark-mode #speedPanel .speed-value {
     body.dark-mode #avgSpeedIndicator {
       border-color: #c4eef5 !important; /* Color del borde para el indicador de velocidad promedio */
     }
+        /* Añadir aquí el estilo para el marcador rotativo */
+    .rotating-marker {
+      transition: transform 0.5s ease;
+      transform-origin: center center;
+    }
 #speedPanel {
   position: absolute;
   top: 10px;
@@ -364,13 +369,17 @@ body.dark-mode #routeName::placeholder {
     let avgSpeed = 0; // Variable para velocidad promedio
     let routeStartTime = null; // Para guardar el momento de inicio
     let savedSpeeds = []; // Para guardar velocidades cuando la app está en segundo plano
+    let lastHeading = 0; // Para almacenar el último ángulo de dirección
+    let headingSmooth = 0; // Para suavizar la rotación
 
     // Definir el ícono personalizado
-    const userIcon = L.icon({
-      iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
-      iconSize: [40, 40], // Tamaño del ícono
-      iconAnchor: [20, 20], // Punto de anclaje del ícono (centro),
-    });
+const userIcon = L.icon({
+  iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+  // Añadir esta propiedad para que el ícono pueda rotar
+  className: 'rotating-marker'
+});
 
     // Definir el control de versión
     L.Control.Version = L.Control.extend({
@@ -404,6 +413,12 @@ body.dark-mode #routeName::placeholder {
     function initMap() {
       map = L.map('map', {
         zoomControl: false
+            // Habilitar rotación
+    inertia: false,
+    inertiaDeceleration: 0,
+    inertiaMaxSpeed: 1,
+    easeLinearity: 0.35
+  }).setView([0, 0], 15);
       }).setView([0, 0], 15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
@@ -669,28 +684,31 @@ function toggleDarkMode() {
     // Actualizar el mapa con nuevas coordenadas
 function updateMap(lat, lng) {
   if (!map) return;
+  
   const newLatLng = [lat, lng];
   polyline.addLatLng(newLatLng);
+  
+  // Calcular el heading (rumbo) si tenemos suficientes coordenadas
+  if (coordinates.length > 1) {
+    const prevCoord = coordinates[coordinates.length - 2];
+    const heading = calculateBearing(prevCoord.lat, prevCoord.lng, lat, lng);
+    
+    // Suavizar la rotación
+    headingSmooth = headingSmooth * 0.7 + heading * 0.3;
+    
+    // Rotar el mapa
+    map.setBearing(headingSmooth);
+    
+    // Rotar el marcador del usuario si existe
+    if (userMarker) {
+      userMarker.setRotationAngle(headingSmooth);
+    }
+    
+    lastHeading = heading;
+  }
+  
   map.setView(newLatLng, 16); // Zoom fijo en nivel 16
 }
-
-    // Guardar coordenadas en localStorage
-    function saveCoordinates() {
-      localStorage.setItem("coordinates", JSON.stringify(coordinates));
-      localStorage.setItem("totalDistance", totalDistance.toString());
-    }
-
-    // Cargar coordenadas desde localStorage
-    function loadCoordinates() {
-      const savedCoordinates = localStorage.getItem("coordinates");
-      const savedDistance = localStorage.getItem("totalDistance");
-      if (savedCoordinates) {
-        coordinates = JSON.parse(savedCoordinates);
-      }
-      if (savedDistance) {
-        totalDistance = parseFloat(savedDistance);
-      }
-    }
 
     // Cargar coordenadas guardadas y mostrarlas en el mapa
     function loadMapWithSavedCoordinates() {
@@ -839,6 +857,21 @@ function loadRoute(index) {
         loadSavedRoutes(); // Recargar la lista de rutas guardadas
       }
     }
+    
+    function calculateBearing(lat1, lng1, lat2, lng2) {
+  // Convertir grados a radianes
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δλ = (lng2 - lng1) * Math.PI / 180;
+
+  // Calcular el rumbo
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  const θ = Math.atan2(y, x);
+
+  // Convertir a grados y normalizar (0-360)
+  return (θ * 180 / Math.PI + 360) % 360;
+}
 
     // Cargar las rutas guardadas al iniciar la página
     document.addEventListener('DOMContentLoaded', () => {
