@@ -413,40 +413,46 @@ const userIcon = L.icon({
 
     // Inicializar el mapa
 function initMap() {
-  map = L.map('map', {
-    zoomControl: false,
-  }).setView([0, 0], 15);
+  // Usar coordenadas de Buenos Aires como fallback
+  const defaultPosition = [-34.6037, -58.3816];
   
+  map = L.map('map', {
+    zoomControl: false
+  }).setView(defaultPosition, 15);
+
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
   
   polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
-
-  // Añadir el control de versión
   L.control.version().addTo(map);
 
-  // Cargar los barrios desde el archivo GeoJSON
+  // Cargar barrios
+  loadNeighborhoods();
+}
+
+function loadNeighborhoods() {
   fetch('https://raw.githubusercontent.com/Chatlas2023/Seguime/main/Barrios_AMBA.geojson')
     .then(response => response.json())
     .then(data => {
       neighborhoodsLayer = L.geoJSON(data, {
-        style: function(feature) {
-          return {
-            color: '#ff7800',
-            weight: 1,
-            opacity: 1,
-            fillOpacity: 0.1
-          };
+        style: {
+          color: '#ff7800',
+          weight: 1,
+          opacity: 1,
+          fillOpacity: 0.1
         },
-        onEachFeature: function(feature, layer) {
-          layer.on('click', function(e) {
+        onEachFeature: (feature, layer) => {
+          layer.on('click', (e) => {
             updateNeighborhoodName(feature.properties.Name);
           });
         }
       }).addTo(map);
     })
-    .catch(error => console.error('Error cargando los barrios:', error));
+    .catch(error => {
+      console.error('Error cargando barrios:', error);
+      updateNeighborhoodName('No se cargaron barrios');
+    });
 }
 
     // Función para actualizar el nombre del barrio
@@ -509,85 +515,113 @@ function getLocation() {
   if (navigator.geolocation) {
     updateStatus("Solicitando permisos de ubicación...");
     
-    // Primero verificamos permisos
-    navigator.permissions.query({name: 'geolocation'}).then(permissionStatus => {
-      console.log('Estado del permiso:', permissionStatus.state);
-      
-      if (permissionStatus.state === 'denied') {
-        updateStatus("Permiso de ubicación denegado. Por favor habilítalo en la configuración de tu navegador.");
-        return;
-      }
-      
-      // Si tenemos permiso o es prompt, procedemos
-      acquireWakeLock();
-      watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          const speed = position.coords.speed;
-          const accuracy = position.coords.accuracy;
-
-          console.log('Nueva posición:', lat, lng, 'Precisión:', accuracy, 'm');
-          
-          addCoordinate(lat, lng);
-          updateMap(lat, lng);
-          updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
-          updateSpeed(speed);
-          findNeighborhood(lat, lng);
-
-          if (!userMarker) {
-            userMarker = L.marker([lat, lng], { 
-              icon: userIcon,
-              rotationAngle: 0 // Inicializar con ángulo 0
-            }).addTo(map);
-          } else {
-            userMarker.setLatLng([lat, lng]);
-          }
-
-          if (precisionCircle) {
-            precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
-          } else {
-            precisionCircle = L.circle([lat, lng], {
-              color: 'cyan',
-              weight: 2,
-              opacity: 1,
-              fillColor: 'cyan',
-              fillOpacity: 0.1,
-              radius: accuracy
-            }).addTo(map);
-          }
-        },
-        (error) => {
-          let errorMessage = "Error al obtener la ubicación: ";
-          switch(error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage += "Permiso denegado por el usuario";
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage += "La información de ubicación no está disponible";
-              break;
-            case error.TIMEOUT:
-              errorMessage += "La solicitud de ubicación ha caducado";
-              break;
-            case error.UNKNOWN_ERROR:
-              errorMessage += "Error desconocido";
-              break;
-          }
-          console.error(errorMessage, error);
-          updateStatus(errorMessage);
-        },
-        { 
-          enableHighAccuracy: true, 
-          maximumAge: 10000, 
-          timeout: 15000 
+    // Primero verificamos el estado del permiso
+    navigator.permissions && navigator.permissions.query({name: 'geolocation'})
+      .then(permissionStatus => {
+        console.log('Estado inicial del permiso:', permissionStatus.state);
+        
+        if (permissionStatus.state === 'denied') {
+          updateStatus("Permiso denegado. Active la ubicación en configuración.");
+          return;
         }
-      );
-    });
+        
+        startWatchingPosition();
+        
+        // Escuchar cambios en los permisos
+        permissionStatus.onchange = () => {
+          console.log('El estado del permiso cambió a:', permissionStatus.state);
+          if (permissionStatus.state === 'denied') {
+            updateStatus("Permiso denegado. Active la ubicación.");
+            if (watchId) {
+              navigator.geolocation.clearWatch(watchId);
+              watchId = null;
+            }
+          }
+        };
+      })
+      .catch(() => {
+        // Si el navegador no soporta permissions.query, proceder directamente
+        startWatchingPosition();
+      });
   } else {
-    updateStatus("Tu navegador no soporta geolocalización.");
+    updateStatus("Geolocalización no soportada en este navegador");
   }
 }
 
+function startWatchingPosition() {
+  updateStatus("Obteniendo ubicación...");
+  
+  // Liberar cualquier watch anterior
+  if (watchId) {
+    navigator.geolocation.clearWatch(watchId);
+  }
+  
+  acquireWakeLock();
+  
+  watchId = navigator.geolocation.watchPosition(
+    position => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      const speed = position.coords.speed;
+      const accuracy = position.coords.accuracy;
+      
+      console.log('Nueva posición:', lat, lng, 'Precisión:', accuracy, 'm');
+      
+      addCoordinate(lat, lng);
+      updateMap(lat, lng);
+      updateStatus(`Ubicación obtenida | Precisión: ${Math.round(accuracy)} m`);
+      updateSpeed(speed);
+      findNeighborhood(lat, lng);
+
+      if (!userMarker) {
+        userMarker = L.marker([lat, lng], { 
+          icon: userIcon,
+          rotationAngle: 0
+        }).addTo(map);
+      } else {
+        userMarker.setLatLng([lat, lng]);
+      }
+
+      if (precisionCircle) {
+        precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
+      } else {
+        precisionCircle = L.circle([lat, lng], {
+          color: 'cyan',
+          weight: 2,
+          opacity: 1,
+          fillColor: 'cyan',
+          fillOpacity: 0.1,
+          radius: accuracy
+        }).addTo(map);
+      }
+    },
+    error => {
+      let errorMessage = "Error: ";
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          errorMessage = "Permiso denegado. Active la ubicación en configuración del navegador.";
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMessage = "Ubicación no disponible. Verifique su conexión/GPS.";
+          break;
+        case error.TIMEOUT:
+          errorMessage = "Tiempo de espera agotado. Intentando nuevamente...";
+          // Reintentar después de un breve retraso
+          setTimeout(() => getLocation(), 2000);
+          break;
+        default:
+          errorMessage = "Error desconocido al obtener ubicación.";
+      }
+      console.error(errorMessage, error);
+      updateStatus(errorMessage);
+    },
+    { 
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 10000
+    }
+  );
+}
     // Función para actualizar la velocidad en el círculo
 function updateSpeed(speed) {
   const speedKmh = speed ? speed * 3.6 : 0;
@@ -721,15 +755,12 @@ function updateMap(lat, lng) {
   const newLatLng = [lat, lng];
   polyline.addLatLng(newLatLng);
   
-  // Calcular el heading (rumbo) si tenemos suficientes coordenadas
   if (coordinates.length > 1) {
     const prevCoord = coordinates[coordinates.length - 2];
     const heading = calculateBearing(prevCoord.lat, prevCoord.lng, lat, lng);
     
-    // Suavizar la rotación
     headingSmooth = headingSmooth * 0.7 + heading * 0.3;
     
-    // Rotar el marcador del usuario si existe
     if (userMarker) {
       userMarker.setRotationAngle(headingSmooth);
     }
@@ -737,8 +768,12 @@ function updateMap(lat, lng) {
     lastHeading = heading;
   }
   
-  // Centrar el mapa manteniendo el zoom actual
-  map.setView(newLatLng, map.getZoom());
+  // Mover el mapa suavemente
+  map.panTo(newLatLng, {
+    animate: true,
+    duration: 1,
+    easeLinearity: 0.25
+  });
 }
 
     // Cargar coordenadas guardadas y mostrarlas en el mapa
@@ -905,33 +940,34 @@ function loadRoute(index) {
 }
 
     // Cargar las rutas guardadas al iniciar la página
-    document.addEventListener('DOMContentLoaded', () => {
-      initMap();
-      loadCoordinates();
-      loadMapWithSavedCoordinates();
-      updateDistance();
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  loadCoordinates();
+  updateDistance();
+  applyDarkModePreference();
+  loadSavedRoutes();
+
+  // Esperar un breve momento antes de solicitar ubicación
+  setTimeout(() => {
+    getLocation();
+  }, 500);
+
+  // Event listeners
+  document.getElementById('clearButton').addEventListener('click', startNewRoute);
+  document.getElementById('stopButton').addEventListener('click', toggleCapture);
+  document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
+  document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
+  document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && isCapturing) {
       getLocation();
-      applyDarkModePreference();
-      loadSavedRoutes(); // Cargar las rutas guardadas
-      document.getElementById('clearButton').addEventListener('click', startNewRoute);
-      document.getElementById('stopButton').addEventListener('click', toggleCapture);
-      document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
-      document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
-      document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          if (isCapturing) {
-            getLocation();
-          }
-        } else {
-          releaseWakeLock();
-          if (watchId) {
-            navigator.geolocation.clearWatch(watchId);
-            watchId = null;
-          }
-        }
-      });
-    });
+    } else if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+    }
+  });
+});
   </script>
 </body>
 </html>
