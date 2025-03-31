@@ -809,9 +809,6 @@ function loadRoute(index) {
     document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
   }
 }
-
-    }
-
     // Función para eliminar una ruta guardada
     function deleteRoute(index) {
       const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
