@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GPS Tracker Minimalista</title>
+  <title>Mapa con Rotación</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
     body {
       margin: 0;
       padding: 0;
+      overflow: hidden;
     }
     #map {
       width: 100vw;
       height: 100vh;
     }
-    .rotating-marker {
-      transition: transform 0.5s ease;
-      transform-origin: center center;
+    .fixed-marker {
+      transition: none;
     }
   </style>
 </head>
@@ -24,28 +24,32 @@
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-rotatedmarker"></script>
-
   <script>
     // Variables globales
     let map;
     let polyline;
     let coordinates = [];
     let userMarker;
-    let headingSmooth = 0;
+    let currentBearing = 0;
+    let targetBearing = 0;
+    let rotationInterval;
+    const ROTATION_SPEED = 0.2; // Velocidad de rotación del mapa (0-1)
 
-    // Ícono personalizado para el marcador
+    // Ícono personalizado para el marcador (fijo)
     const userIcon = L.icon({
       iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
       iconSize: [40, 40],
       iconAnchor: [20, 20],
-      className: 'rotating-marker'
+      className: 'fixed-marker'
     });
 
     // Inicializar el mapa
     function initMap() {
       // Posición por defecto (Buenos Aires)
-      map = L.map('map').setView([-34.6037, -58.3816], 15);
+      map = L.map('map', {
+        zoomControl: false,
+        inertia: false
+      }).setView([-34.6037, -58.3816], 15);
       
       // Capa del mapa
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -55,8 +59,32 @@
       // Línea para mostrar la ruta
       polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
       
+      // Iniciar animación de rotación
+      startRotationAnimation();
+      
       // Iniciar el seguimiento de la ubicación
       startTracking();
+    }
+
+    // Función para animar la rotación del mapa
+    function startRotationAnimation() {
+      rotationInterval = setInterval(() => {
+        if (Math.abs(currentBearing - targetBearing) > 1) {
+          // Calcular la diferencia más corta entre ángulos
+          let diff = targetBearing - currentBearing;
+          if (diff > 180) diff -= 360;
+          if (diff < -180) diff += 360;
+          
+          // Aplicar rotación suavizada
+          currentBearing += diff * ROTATION_SPEED;
+          
+          // Normalizar el ángulo
+          currentBearing = (currentBearing + 360) % 360;
+          
+          // Rotar el mapa
+          map.setBearing(currentBearing);
+        }
+      }, 50);
     }
 
     // Función para iniciar el seguimiento de la ubicación
@@ -66,18 +94,15 @@
         return;
       }
 
-      // Opciones para la geolocalización
       const options = {
         enableHighAccuracy: true,
         maximumAge: 0,
         timeout: 10000
       };
 
-      // Primero intentamos con getCurrentPosition para forzar el diálogo de permisos
       navigator.geolocation.getCurrentPosition(
         (position) => {
           handlePosition(position);
-          // Luego iniciamos watchPosition para actualizaciones continuas
           navigator.geolocation.watchPosition(handlePosition, handleError, options);
         },
         handleError,
@@ -90,40 +115,52 @@
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
       const heading = position.coords.heading;
-      const accuracy = position.coords.accuracy;
+      const speed = position.coords.speed;
 
-      console.log("Nueva posición:", lat, lng, "Dirección:", heading);
+      console.log("Nueva posición:", lat, lng, "Dirección:", heading, "Velocidad:", speed);
 
       // Agregar coordenada a la ruta
       coordinates.push([lat, lng]);
       polyline.addLatLng([lat, lng]);
 
-      // Actualizar o crear marcador
+      // Actualizar o crear marcador (sin rotación)
       if (!userMarker) {
-        userMarker = L.marker([lat, lng], {
-          icon: userIcon,
-          rotationAngle: heading || 0
-        }).addTo(map);
+        userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
       } else {
         userMarker.setLatLng([lat, lng]);
+      }
+
+      // Calcular nueva dirección si hay suficiente velocidad (> 1 m/s)
+      if (speed > 1 && coordinates.length > 1) {
+        const prevCoord = coordinates[coordinates.length - 2];
+        const newBearing = calculateBearing(prevCoord[0], prevCoord[1], lat, lng);
         
-        // Rotar el marcador según la dirección
+        // Usar heading del GPS si está disponible y es confiable
         if (heading !== null && !isNaN(heading)) {
-          // Usar el heading del GPS si está disponible
-          userMarker.setRotationAngle(heading);
-        } else if (coordinates.length > 1) {
-          // Calcular dirección basada en las últimas posiciones
-          const prevCoord = coordinates[coordinates.length - 2];
-          const bearing = calculateBearing(prevCoord[0], prevCoord[1], lat, lng);
-          
-          // Suavizar la rotación
-          headingSmooth = headingSmooth * 0.7 + bearing * 0.3;
-          userMarker.setRotationAngle(headingSmooth);
+          targetBearing = -heading; // Negativo porque Leaflet gira en sentido contrario
+        } else {
+          targetBearing = -newBearing;
         }
       }
 
       // Centrar el mapa en la nueva posición
-      map.setView([lat, lng]);
+      map.setView([lat, lng], map.getZoom(), {
+        animate: true,
+        duration: 1
+      });
+    }
+
+    // Calcular dirección entre dos puntos geográficos
+    function calculateBearing(lat1, lng1, lat2, lng2) {
+      const φ1 = lat1 * Math.PI / 180;
+      const φ2 = lat2 * Math.PI / 180;
+      const Δλ = (lng2 - lng1) * Math.PI / 180;
+
+      const y = Math.sin(Δλ) * Math.cos(φ2);
+      const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+      const θ = Math.atan2(y, x);
+
+      return (θ * 180 / Math.PI + 360) % 360;
     }
 
     // Manejar errores de geolocalización
@@ -145,18 +182,21 @@
       console.error(errorMsg);
     }
 
-    // Calcular dirección entre dos puntos geográficos
-    function calculateBearing(lat1, lng1, lat2, lng2) {
-      const φ1 = lat1 * Math.PI / 180; // φ, λ en radianes
-      const φ2 = lat2 * Math.PI / 180;
-      const Δλ = (lng2 - lng1) * Math.PI / 180;
-
-      const y = Math.sin(Δλ) * Math.cos(φ2);
-      const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-      const θ = Math.atan2(y, x);
-
-      return (θ * 180 / Math.PI + 360) % 360; // en grados
-    }
+    // Extender Leaflet para soportar rotación de mapa
+    L.Map.include({
+      setBearing: function(bearing) {
+        this._bearing = bearing;
+        this._update();
+      },
+      
+      _update: function() {
+        if (this._mapPane) {
+          const bearing = this._bearing || 0;
+          this._mapPane.style.transform = `rotate(${bearing}deg)`;
+        }
+        L.Map.prototype._update.call(this);
+      }
+    });
 
     // Iniciar la aplicación cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', initMap);
