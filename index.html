@@ -564,11 +564,12 @@ function startWatchingPosition() {
       const lng = position.coords.longitude;
       const speed = position.coords.speed;
       const accuracy = position.coords.accuracy;
+      const heading = position.coords.heading; // Obtener la dirección (heading)
       
-      console.log('Nueva posición:', lat, lng, 'Precisión:', accuracy, 'm');
+      console.log('Nueva posición:', lat, lng, 'Precisión:', accuracy, 'm', 'Dirección:', heading);
       
       addCoordinate(lat, lng);
-      updateMap(lat, lng);
+      updateMap(lat, lng, heading); // Pasar el heading a updateMap
       updateStatus(`Ubicación obtenida | Precisión: ${Math.round(accuracy)} m`);
       updateSpeed(speed);
       findNeighborhood(lat, lng);
@@ -576,10 +577,13 @@ function startWatchingPosition() {
       if (!userMarker) {
         userMarker = L.marker([lat, lng], { 
           icon: userIcon,
-          rotationAngle: 0
+          rotationAngle: heading || 0 // Usar heading si está disponible
         }).addTo(map);
       } else {
         userMarker.setLatLng([lat, lng]);
+        if (heading !== null && !isNaN(heading)) {
+          userMarker.setRotationAngle(heading);
+        }
       }
 
       if (precisionCircle) {
@@ -622,6 +626,7 @@ function startWatchingPosition() {
     }
   );
 }
+
     // Función para actualizar la velocidad en el círculo
 function updateSpeed(speed) {
   const speedKmh = speed ? speed * 3.6 : 0;
@@ -749,23 +754,28 @@ function toggleDarkMode() {
     }
 
     // Actualizar el mapa con nuevas coordenadas
-function updateMap(lat, lng) {
+function updateMap(lat, lng, heading) {
   if (!map) return;
   
   const newLatLng = [lat, lng];
   polyline.addLatLng(newLatLng);
   
-  if (coordinates.length > 1) {
+  // Si tenemos heading (dirección) del GPS, usarlo para rotar el marcador
+  if (heading !== null && !isNaN(heading) {
+    if (userMarker) {
+      userMarker.setRotationAngle(heading);
+    }
+  } else if (coordinates.length > 1) {
+    // Si no tenemos heading, calcularlo basado en las últimas dos posiciones
     const prevCoord = coordinates[coordinates.length - 2];
-    const heading = calculateBearing(prevCoord.lat, prevCoord.lng, lat, lng);
+    const bearing = calculateBearing(prevCoord.lat, prevCoord.lng, lat, lng);
     
-    headingSmooth = headingSmooth * 0.7 + heading * 0.3;
+    // Suavizar la rotación para evitar cambios bruscos
+    headingSmooth = headingSmooth * 0.7 + bearing * 0.3;
     
     if (userMarker) {
       userMarker.setRotationAngle(headingSmooth);
     }
-    
-    lastHeading = heading;
   }
   
   // Mover el mapa suavemente
@@ -775,6 +785,19 @@ function updateMap(lat, lng) {
     easeLinearity: 0.25
   });
 }
+
+    // Función para calcular el rumbo entre dos puntos
+    function calculateBearing(lat1, lng1, lat2, lng2) {
+      const φ1 = lat1 * Math.PI / 180; // φ, λ en radianes
+      const φ2 = lat2 * Math.PI / 180;
+      const Δλ = (lng2 - lng1) * Math.PI / 180;
+      
+      const y = Math.sin(Δλ) * Math.cos(φ2);
+      const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+      const θ = Math.atan2(y, x);
+      
+      return (θ * 180 / Math.PI + 360) % 360; // en grados
+    }
 
     // Cargar coordenadas guardadas y mostrarlas en el mapa
     function loadMapWithSavedCoordinates() {
@@ -913,6 +936,7 @@ function loadRoute(index) {
     document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
   }
 }
+
     // Función para eliminar una ruta guardada
     function deleteRoute(index) {
       const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
@@ -923,21 +947,6 @@ function loadRoute(index) {
         loadSavedRoutes(); // Recargar la lista de rutas guardadas
       }
     }
-    
-    function calculateBearing(lat1, lng1, lat2, lng2) {
-  // Convertir grados a radianes
-  const φ1 = lat1 * Math.PI / 180;
-  const φ2 = lat2 * Math.PI / 180;
-  const Δλ = (lng2 - lng1) * Math.PI / 180;
-
-  // Calcular el rumbo
-  const y = Math.sin(Δλ) * Math.cos(φ2);
-  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-  const θ = Math.atan2(y, x);
-
-  // Convertir a grados y normalizar (0-360)
-  return (θ * 180 / Math.PI + 360) % 360;
-}
 
     // Cargar las rutas guardadas al iniciar la página
 document.addEventListener('DOMContentLoaded', () => {
