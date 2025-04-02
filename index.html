@@ -16,6 +16,9 @@
       width: 100vw;
       height: 100vh;
     }
+    .leaflet-container {
+      background: #222 !important;
+    }
   </style>
 </head>
 <body>
@@ -32,9 +35,9 @@
     let currentBearing = 0;
     let targetBearing = 0;
     let rotationInterval;
-    const ROTATION_SPEED = 0.2; // Velocidad de rotación del mapa (0-1)
+    const ROTATION_SPEED = 0.2;
 
-    // Ícono personalizado para el marcador
+    // Ícono personalizado
     const userIcon = L.icon({
       iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
       iconSize: [40, 40],
@@ -43,79 +46,78 @@
 
     // Inicializar el mapa
     function initMap() {
-      // Necesitarás un token de acceso de Mapbox (reemplaza 'your.mapbox.access.token')
-      const mapboxToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
-      
-      // Crear mapa con Mapbox
+      // Crear mapa con rotación simulada
       map = L.map('map', {
         center: [-34.6037, -58.3816], // Buenos Aires
         zoom: 15,
         zoomControl: false,
-        inertia: false,
-        // Habilitar rotación
-        rotate: true,
-        bearing: 0
+        inertia: false
       });
 
-      // Capa del mapa de Mapbox
-      L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{z}/{x}/{y}?access_token=${mapboxToken}`, {
-        attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        tileSize: 512,
-        zoomOffset: -1
+      // Capa base de OpenStreetMap
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
       }).addTo(map);
       
-      // Línea para mostrar la ruta
+      // Línea para la ruta
       polyline = L.polyline([], { color: 'blue', weight: 6 }).addTo(map);
       
-      // Iniciar animación de rotación
+      // Iniciar animación
       startRotationAnimation();
       
-      // Iniciar el seguimiento de la ubicación
-      startTracking();
+      // Simular movimiento (para prueba)
+      simulateMovement();
+      
+      // Para usar GPS real, descomenta esto:
+      // startTracking();
     }
 
-    // Función para animar la rotación del mapa
+    // Función para animar la rotación
     function startRotationAnimation() {
       rotationInterval = setInterval(() => {
         if (Math.abs(currentBearing - targetBearing) > 1) {
-          // Calcular la diferencia más corta entre ángulos
           let diff = targetBearing - currentBearing;
           if (diff > 180) diff -= 360;
           if (diff < -180) diff += 360;
           
-          // Aplicar rotación suavizada
           currentBearing += diff * ROTATION_SPEED;
-          
-          // Normalizar el ángulo
           currentBearing = (currentBearing + 360) % 360;
           
-          // Rotar el mapa
-          map.setBearing(currentBearing);
+          rotateMap(currentBearing);
         }
       }, 50);
     }
 
-    // Función para iniciar el seguimiento de la ubicación
-    function startTracking() {
-      if (!navigator.geolocation) {
-        console.error("Geolocalización no soportada en este navegador");
-        return;
+    // Rotar el mapa (simulación para OSM)
+    function rotateMap(bearing) {
+      const mapPane = map.getPane('mapPane');
+      if (mapPane) {
+        mapPane.style.transform = `rotate(${bearing}deg)`;
+        mapPane.style['transform-origin'] = 'center';
       }
+    }
 
-      const options = {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 10000
-      };
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          handlePosition(position);
-          navigator.geolocation.watchPosition(handlePosition, handleError, options);
-        },
-        handleError,
-        options
-      );
+    // Simular movimiento (para pruebas sin GPS)
+    function simulateMovement() {
+      let lat = -34.6037;
+      let lng = -58.3816;
+      let angle = 0;
+      
+      setInterval(() => {
+        angle += 5;
+        const rad = angle * Math.PI / 180;
+        const newLat = lat + 0.0005 * Math.cos(rad);
+        const newLng = lng + 0.0005 * Math.sin(rad);
+        
+        handlePosition({
+          coords: {
+            latitude: newLat,
+            longitude: newLng,
+            heading: angle,
+            speed: 5
+          }
+        });
+      }, 500);
     }
 
     // Manejar nueva posición
@@ -125,13 +127,11 @@
       const heading = position.coords.heading;
       const speed = position.coords.speed;
 
-      console.log("Nueva posición:", lat, lng, "Dirección:", heading, "Velocidad:", speed);
-
-      // Agregar coordenada a la ruta
+      // Agregar a la ruta
       coordinates.push([lat, lng]);
       polyline.addLatLng([lat, lng]);
 
-      // Actualizar o crear marcador (con rotación si hay heading)
+      // Actualizar marcador
       if (!userMarker) {
         userMarker = L.marker([lat, lng], { 
           icon: userIcon,
@@ -144,27 +144,23 @@
         }
       }
 
-      // Calcular nueva dirección si hay suficiente velocidad (> 1 m/s)
+      // Calcular dirección
       if (speed > 1 && coordinates.length > 1) {
         const prevCoord = coordinates[coordinates.length - 2];
         const newBearing = calculateBearing(prevCoord[0], prevCoord[1], lat, lng);
         
-        // Usar heading del GPS si está disponible y es confiable
         if (heading !== null && !isNaN(heading)) {
-          targetBearing = heading; // Mapbox usa el mismo sentido que el GPS
+          targetBearing = heading;
         } else {
           targetBearing = newBearing;
         }
       }
 
-      // Centrar el mapa en la nueva posición
-      map.setView([lat, lng], map.getZoom(), {
-        animate: true,
-        duration: 1
-      });
+      // Centrar el mapa
+      map.setView([lat, lng]);
     }
 
-    // Calcular dirección entre dos puntos geográficos
+    // Calcular dirección
     function calculateBearing(lat1, lng1, lat2, lng2) {
       const φ1 = lat1 * Math.PI / 180;
       const φ2 = lat2 * Math.PI / 180;
@@ -177,48 +173,13 @@
       return (θ * 180 / Math.PI + 360) % 360;
     }
 
-    // Manejar errores de geolocalización
+    // Manejar errores
     function handleError(error) {
-      let errorMsg = "Error al obtener ubicación: ";
-      switch(error.code) {
-        case error.PERMISSION_DENIED:
-          errorMsg += "Permiso denegado. Por favor habilita la ubicación.";
-          break;
-        case error.POSITION_UNAVAILABLE:
-          errorMsg += "Ubicación no disponible.";
-          break;
-        case error.TIMEOUT:
-          errorMsg += "Tiempo de espera agotado.";
-          break;
-        default:
-          errorMsg += "Error desconocido.";
-      }
-      console.error(errorMsg);
+      console.error("Error de geolocalización:", error.message);
     }
 
-    // Extender Leaflet para soportar rotación de mapa (compatible con Mapbox)
-    L.Map.include({
-      setBearing: function(bearing) {
-        this._bearing = bearing;
-        if (this._rotateHandler) {
-          this._rotateHandler._update();
-        }
-        this.fire('rotate', { bearing: bearing });
-      },
-      
-      getBearing: function() {
-        return this._bearing || 0;
-      }
-    });
-
-    // Iniciar la aplicación cuando el DOM esté listo
-    document.addEventListener('DOMContentLoaded', function() {
-      // Cargar el script de Mapbox para rotación
-      const script = document.createElement('script');
-      script.src = 'https://api.mapbox.com/mapbox.js/plugins/leaflet-rotate/v0.1.0/leaflet-rotate.js';
-      script.onload = initMap;
-      document.head.appendChild(script);
-    });
+    // Iniciar cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', initMap);
   </script>
 </body>
 </html>
