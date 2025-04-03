@@ -322,6 +322,7 @@ body.dark-mode #routeName::placeholder {
     <span class="speed-value" id="averageSpeed">0</span>
     <span>km/h</span>
   </div>
+      <div id="samplingMode" style="font-size: 12px; margin-top: 5px; text-align: center;">Modo: --</div>
 </div>
     <div id="neighborhoodName" style="position: absolute; bottom: 15px; left: 10px; background-color: #e4e8d1; padding: 4px 12px; border-radius: 5px; font-size: 22px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
       Barrio: Cargando...
@@ -492,53 +493,71 @@ body.dark-mode #routeName::placeholder {
     }
 
     // Modificar la función getLocation para capturar la velocidad y la precisión
-    function getLocation() {
-      if (navigator.geolocation) {
-        acquireWakeLock();
-        watchId = navigator.geolocation.watchPosition(
-          (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            const speed = position.coords.speed;
-            const accuracy = position.coords.accuracy; // Precisión en metros
+function getLocation() {
+  if (navigator.geolocation) {
+    acquireWakeLock();
+    watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const now = Date.now();
+        const speedKmh = position.coords.speed ? position.coords.speed * 3.6 : 0;
+        
+        // Muestreo adaptativo basado en velocidad
+        const minInterval = speedKmh < 5 ? 15000 :  // 15 segundos si está lento
+                          speedKmh < 20 ? 7000 :   // 7 segundos en velocidad media
+                          3000;                    // 3 segundos si va rápido
 
-            addCoordinate(lat, lng);
-            updateMap(lat, lng);
-            updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
-            updateSpeed(speed);
-            findNeighborhood(lat, lng);
-
-            // Actualizar la posición del marcador
-            if (!userMarker) {
-              userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
-            } else {
-              userMarker.setLatLng([lat, lng]);
-            }
-
-            // Actualizar o crear el círculo de precisión
-            if (precisionCircle) {
-              precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
-            } else {
-              precisionCircle = L.circle([lat, lng], {
-                color: 'cyan', // Color del borde del círculo
-                weight: 2,     // Grosor del borde
-                opacity: 1,    // Opacidad del borde
-                fillColor: 'cyan', // Color de relleno
-                fillOpacity: 0.1,  // Opacidad del relleno
-                radius: accuracy   // Radio basado en la precisión del GPS
-              }).addTo(map);
-            }
-          },
-          (error) => {
-            console.error("Error al obtener la ubicación:", error);
-            updateStatus("Error al obtener la ubicación.");
-          },
-          { enableHighAccuracy: true, maximumAge: 30000, timeout: 10000 } // Optimizado
-        );
-      } else {
-        updateStatus("Tu navegador no soporta geolocalización.");
+        if (!lastPositionTime || now - lastPositionTime >= minInterval) {
+          processPosition(position);
+          lastPositionTime = now;
+        }
+      },
+      (error) => {
+        console.error("Error al obtener la ubicación:", error);
+        updateStatus("Error al obtener la ubicación.");
+      },
+      { 
+        enableHighAccuracy: true,
+        maximumAge: 60000,  // Acepta datos de hasta 1 minuto de antigüedad
+        timeout: 20000      // Mayor tiempo de espera
       }
-    }
+    );
+  } else {
+    updateStatus("Tu navegador no soporta geolocalización.");
+  }
+}
+
+// Nueva función para procesar posiciones
+function processPosition(position) {
+  const lat = position.coords.latitude;
+  const lng = position.coords.longitude;
+  const speed = position.coords.speed;
+  const accuracy = position.coords.accuracy;
+
+  addCoordinate(lat, lng, speed);
+  updateMap(lat, lng);
+  updateStatus(`Ubicación: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+  updateSpeed(speed);
+  findNeighborhood(lat, lng);
+
+  // Actualizar marcador y círculo de precisión
+  if (!userMarker) {
+    userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
+  } else {
+    userMarker.setLatLng([lat, lng]);
+  }
+
+  if (precisionCircle) {
+    precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
+  } else {
+    precisionCircle = L.circle([lat, lng], {
+      color: 'cyan',
+      weight: 2,
+      fillColor: 'cyan',
+      fillOpacity: 0.1,
+      radius: accuracy
+    }).addTo(map);
+  }
+}
 
     // Función para actualizar la velocidad en el círculo
 function updateSpeed(speed) {
@@ -552,6 +571,14 @@ function updateSpeed(speed) {
     if (!routeStartTime && coordinates.length === 1) {
       routeStartTime = new Date();
     }
+      // Mostrar modo de muestreo actual
+  const speedKmh = speed ? speed * 3.6 : 0;
+  let mode;
+  if (speedKmh < 5) mode = "🟢 Eco (15s)";
+  else if (speedKmh < 20) mode = "🟡 Normal (7s)";
+  else mode = "🔴 Precisión (3s)";
+  
+  document.getElementById('samplingMode').textContent = `Modo: ${mode}`;
   }
   
   // Calcular promedio considerando tiempo transcurrido
@@ -633,25 +660,43 @@ function toggleDarkMode() {
     }
 
     // Agregar una nueva coordenada
-    function addCoordinate(lat, lng) {
-      if (coordinates.length >= MAX_COORDINATES) {
-        coordinates.shift();
-      }
-      if (coordinates.length > 0) {
-        const lastCoord = coordinates[coordinates.length - 1];
-        const distance = calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng);
-        if (distance < MIN_DISTANCE_METERS) {
-          return;
-        }
-        totalDistance += distance / 1000;
-      }
+function addCoordinate(lat, lng, speed) {
+  if (coordinates.length >= MAX_COORDINATES) {
+    coordinates.shift();
+  }
+
+  // Solo agregar coordenadas si:
+  // - Es el primer punto O
+  // - Hay movimiento significativo (>10m) O
+  // - Cambio brusco de dirección (ángulo > 30°)
+  if (coordinates.length === 0) {
+    coordinates.push({ lat, lng });
+  } else {
+    const last = coordinates[coordinates.length - 1];
+    const distance = calculateDistance(last.lat, last.lng, lat, lng);
+    
+    // Umbral dinámico basado en velocidad
+    const minDistance = speed > 10 ? 20 : 10;
+    
+    if (distance > minDistance || isDirectionChange(last, {lat, lng})) {
       coordinates.push({ lat, lng });
+      totalDistance += distance / 1000;
       saveCoordinates();
       updateDistance();
-      if (coordinates.length > 1) {
-        shouldAdjustZoom = false;
-      }
     }
+  }
+}
+
+// Función auxiliar para detectar cambios de dirección
+function isDirectionChange(prev, current, next, threshold = 30) {
+  if (!prev || !next) return false;
+  
+  const angle1 = Math.atan2(current.lng - prev.lng, current.lat - prev.lat);
+  const angle2 = Math.atan2(next.lng - current.lng, next.lat - current.lat);
+  const angleDiff = Math.abs(angle1 - angle2) * (180 / Math.PI);
+  
+  return angleDiff > threshold;
+}
 
     // Calcular la distancia entre dos coordenadas
     function calculateDistance(lat1, lng1, lat2, lng2) {
@@ -669,9 +714,16 @@ function toggleDarkMode() {
     // Actualizar el mapa con nuevas coordenadas
 function updateMap(lat, lng) {
   if (!map) return;
+  
   const newLatLng = [lat, lng];
   polyline.addLatLng(newLatLng);
-  map.setView(newLatLng, 16); // Zoom fijo en nivel 16
+  
+  // Solo ajustar la vista si hay cambios significativos
+  if (coordinates.length < 5 || 
+      coordinates.length % 10 === 0 || 
+      calculateDistance(map.getCenter().lat, map.getCenter().lng, lat, lng) > 50) {
+    map.setView(newLatLng, 16);
+  }
 }
 
     // Guardar coordenadas en localStorage
@@ -854,20 +906,19 @@ function loadRoute(index) {
       document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
       document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
       document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          if (isCapturing) {
-            getLocation();
-          }
-        } else {
-          releaseWakeLock();
-          if (watchId) {
-            navigator.geolocation.clearWatch(watchId);
-            watchId = null;
-          }
-        }
-      });
-    });
+// Modificar el event listener de visibilitychange
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    releaseWakeLock();
+    if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
+      watchId = null;
+    }
+  } else if (isCapturing) {
+    acquireWakeLock();
+    getLocation();
+  }
+});
   </script>
 </body>
 </html>
