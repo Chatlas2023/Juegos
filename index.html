@@ -572,7 +572,6 @@ function updateSpeed(speed) {
       routeStartTime = new Date();
     }
       // Mostrar modo de muestreo actual
-  const speedKmh = speed ? speed * 3.6 : 0;
   let mode;
   if (speedKmh < 5) mode = "🟢 Eco (15s)";
   else if (speedKmh < 20) mode = "🟡 Normal (7s)";
@@ -678,7 +677,8 @@ function addCoordinate(lat, lng, speed) {
     // Umbral dinámico basado en velocidad
     const minDistance = speed > 10 ? 20 : 10;
     
-    if (distance > minDistance || isDirectionChange(last, {lat, lng})) {
+      if (distance > minDistance || isDirectionChange(coordinates[coordinates.length-2], last, {lat, lng})) {
+
       coordinates.push({ lat, lng });
       totalDistance += distance / 1000;
       saveCoordinates();
@@ -918,6 +918,7 @@ document.addEventListener('visibilitychange', () => {
     acquireWakeLock();
     getLocation();
   }
+ });
 });
   </script>
 </body>
