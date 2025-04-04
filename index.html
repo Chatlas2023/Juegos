@@ -25,6 +25,24 @@
       margin-bottom: 5px;
       position: relative;
     }
+    /* Estilo para el modo de muestreo */
+#samplingMode {
+  font-size: 16px;            /* Texto más grande */
+  font-weight: bold;          /* Negrita */
+  margin-top: 10px;           /* Más espacio superior */
+  text-align: center;
+  padding: 6px;               /* Relleno interno */
+  background-color: rgba(255, 255, 255, 0.85); /* Fondo semitransparente */
+  border-radius: 5px;         /* Bordes redondeados */
+  border: 1px solid #ddd;     /* Borde sutil */
+}
+
+/* Estilo para modo oscuro */
+body.dark-mode #samplingMode {
+  background-color: rgba(40, 40, 40, 0.9) !important;
+  color: #fff !important;
+  border-color: #555 !important;
+}
     #infoContainer {
       display: flex;
       flex-direction: column;
@@ -322,7 +340,7 @@ body.dark-mode #routeName::placeholder {
     <span class="speed-value" id="averageSpeed">0</span>
     <span>km/h</span>
   </div>
-      <div id="samplingMode" style="font-size: 12px; margin-top: 5px; text-align: center;">Modo: --</div>
+      <div id="samplingMode" >Modo: --</div>
 </div>
     <div id="neighborhoodName" style="position: absolute; bottom: 15px; left: 10px; background-color: #e4e8d1; padding: 4px 12px; border-radius: 5px; font-size: 22px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
       Barrio: Cargando...
