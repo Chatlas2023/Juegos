@@ -571,29 +571,29 @@ function updateSpeed(speed) {
     if (!routeStartTime && coordinates.length === 1) {
       routeStartTime = new Date();
     }
-      // Mostrar modo de muestreo actual
-  let mode;
-  if (speedKmh < 5) mode = "🟢 Eco (15s)";
-  else if (speedKmh < 20) mode = "🟡 Normal (7s)";
-  else mode = "🔴 Precisión (3s)";
-  
-  document.getElementById('samplingMode').textContent = `Modo: ${mode}`;
+    
+    // Mostrar modo de muestreo actual
+    let mode;
+    if (speedKmh < 5) mode = "🟢 Eco (15s)";
+    else if (speedKmh < 20) mode = "🟡 Normal (7s)";
+    else mode = "🔴 Precisión (3s)";
+    
+    document.getElementById('samplingMode').textContent = `Modo: ${mode}`;
   }
   
   // Calcular promedio considerando tiempo transcurrido
-  let avg = 0;
   if (coordinates.length > 1 && routeStartTime) {
     const currentTime = new Date();
     const elapsedHours = (currentTime - routeStartTime) / 3600000; // Horas transcurridas
-    avg = elapsedHours > 0 ? totalDistance / elapsedHours : 0;
+    avgSpeed = elapsedHours > 0 ? totalDistance / elapsedHours : 0;
   } else {
-    avg = speedValues.length > 0 
-      ? Math.round(speedValues.reduce((a, b) => a + b, 0) / speedValues.length) 
+    avgSpeed = speedValues.length > 0 
+      ? speedValues.reduce((a, b) => a + b, 0) / speedValues.length 
       : 0;
   }
 
   document.getElementById('currentSpeed').textContent = Math.round(speedKmh);
-  document.getElementById('averageSpeed').textContent = Math.round(avg);
+  document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
 }
 
     // Detener o reanudar la captura de coordenadas
@@ -824,15 +824,25 @@ function saveRoute() {
     alert("Por favor, ingresa un nombre para la ruta.");
     return;
   }
+  
+  // Calcular velocidad promedio basada en tiempo y distancia
+  let calculatedAvgSpeed = 0;
+  if (routeStartTime && coordinates.length > 1) {
+    const currentTime = new Date();
+    const elapsedHours = (currentTime - routeStartTime) / 3600000;
+    calculatedAvgSpeed = elapsedHours > 0 ? totalDistance / elapsedHours : 0;
+  }
+  
   const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
   const route = {
     name: routeName,
     coordinates: coordinates,
     totalDistance: totalDistance,
     date: new Date().toISOString(),
-    avgSpeed: avgSpeed,
-    startTime: routeStartTime.toISOString() // Guardar tiempo de inicio
+    avgSpeed: calculatedAvgSpeed || avgSpeed, // Usar el cálculo o el valor de avgSpeed
+    startTime: routeStartTime ? routeStartTime.toISOString() : new Date().toISOString()
   };
+  
   savedRoutes.push(route);
   localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
   alert(`Ruta "${routeName}" guardada correctamente.`);
@@ -879,6 +889,7 @@ function loadRoute(index) {
     
     // Actualizar los indicadores de velocidad
     document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
+    document.getElementById('currentSpeed').textContent = '0'; // Resetear velocidad actual
   }
 }
     // Función para eliminar una ruta guardada
