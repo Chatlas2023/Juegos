@@ -23,3 +23,4 @@ Aplicación de registro de localizaciones
 1.1.6  Se elimina el dato de la altitud y en su lugar se muestra la velocidad promedio
 1.1.8  Corrige problema en el dato de la velocidad promedio
 1.1.10 Mejorar el consumo de batería
+1.1.11 Mejora exportación de ruta por whatsapp con tinyurl
