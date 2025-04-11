@@ -25,24 +25,6 @@
       margin-bottom: 5px;
       position: relative;
     }
-    /* Estilo para el modo de muestreo */
-#samplingMode {
-  font-size: 16px;            /* Texto más grande */
-  font-weight: bold;          /* Negrita */
-  margin-top: 5px;           /* Más espacio superior */
-  text-align: center;
-  padding: 4px;               /* Relleno interno */
-  background-color: rgba(255, 255, 255, 0.85); /* Fondo semitransparente */
-  border-radius: 5px;         /* Bordes redondeados */
-  border: 1px solid #ddd;     /* Borde sutil */
-}
-
-/* Estilo para modo oscuro */
-body.dark-mode #samplingMode {
-  background-color: rgba(40, 40, 40, 0.9) !important;
-  color: #fff !important;
-  border-color: #555 !important;
-}
     #infoContainer {
       display: flex;
       flex-direction: column;
@@ -117,81 +99,95 @@ body.dark-mode #samplingMode {
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
     /* Aplicar el filtro de negativo al mapa en modo oscuro */
-body.dark-mode #map {
-  filter: invert(1) hue-rotate(180deg) brightness(0.6) contrast(1.2);
-}
-    #speedPanel {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(255,255,255,0.9);
-  padding: 8px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  z-index: 1001;
-  /* Añade esto para aislar el panel del filtro del mapa */
-  isolation: isolate;
-}
-
-/* Añade estas nuevas reglas para el panel de velocidad en modo oscuro */
-body.dark-mode #speedPanel {
-  background: rgba(33, 33, 33, 0.95) !important;
-  color: white !important;
-  /* Esto es clave: desactiva cualquier herencia de filtro */
-  filter: none !important;
-}
-body.dark-mode #speedPanel .speed-row span,
-body.dark-mode #speedPanel .speed-value {
-  color: white !important;
-  text-shadow: none !important;
-}
+    body.dark-mode #map {
+      filter: invert(1) hue-rotate(180deg); /* Invierte los colores y ajusta el tono */
+    }
+    /* Asegurarse de que los elementos superpuestos no se vean afectados por el filtro */
+    body.dark-mode #speedIndicator,
+    body.dark-mode #altitudeIndicator,
+    body.dark-mode #neighborhoodName {
+      background-color: rgba(33, 33, 33, 0.9); /* Fondo oscuro */
+      color: white; /* Texto blanco */
+      box-shadow: 0 2px 5px rgba(255, 255, 255, 0.2); /* Sombra ajustada */
+    }
     body.dark-mode #speedIndicator {
       border-color: #c4eef5 !important; /* Color del borde para el indicador de velocidad */
     }
-    body.dark-mode #avgSpeedIndicator {
-      border-color: #c4eef5 !important; /* Color del borde para el indicador de velocidad promedio */
+    body.dark-mode #altitudeIndicator {
+      border-color: #c4eef5 !important; /* Color del borde para el indicador de altitud */
     }
-#speedPanel {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(255,255,255,0.9);
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  z-index: 1001;
-}
-
-.speed-row {
-  display: flex;
-  align-items: baseline;
-  margin: 3px 0;
-  font-size: 18px;
-}
-
-.speed-value {
-  font-size: 24px;
-  font-weight: bold;
-  margin: 0 8px;
-}
-
-body.dark-mode #speedPanel {
-  background: rgba(33, 33, 33, 0.9) !important;
-  color: white !important;
-}
-
-body.dark-mode #speedPanel .speed-row span {
-  color: white !important;
-}
-
-body.dark-mode #speedPanel .speed-value {
-  color: white !important;
-}
+    #speedContainer {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      text-align: center;
+      z-index: 1000;
+    }
+    #speedIndicator {
+      width: 80px;
+      height: 80px; /* Altura aumentada para incluir la leyenda */
+      background-color: #e4e8d1;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: black;
+      font-size: 24px; /* Tamaño reducido para acomodar la leyenda */
+      font-weight: bold;
+      border: 3px solid #c4eef5;
+    }
+    #speedValue {
+      font-size: 28px; /* Tamaño del número de velocidad */
+      margin: 0;
+    }
+    #speedUnit {
+      font-size: 16px; /* Tamaño de la leyenda "Km/h" */
+      margin-top: -5px; /* Espaciado entre el número y la leyenda */
+    }
+    #altitudeContainer {
+      position: absolute;
+      top: 120px;
+      right: 10px;
+      text-align: center;
+      z-index: 1000;
+    }
+    #altitudeIndicator {
+      width: 80px;
+      height: 80px; /* Altura aumentada para incluir la leyenda */
+      background-color: #e4e8d1;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: black;
+      font-size: 24px; /* Tamaño reducido para acomodar la leyenda */
+      font-weight: bold;
+      border: 3px solid #c4eef5;
+    }
+    #altitudeValue {
+      font-size: 28px; /* Tamaño del número de altitud */
+      margin: 0;
+    }
+    #altitudeUnit {
+      font-size: 16px; /* Tamaño de la leyenda "Metros" */
+      margin-top: -5px; /* Espaciado entre el número y la leyenda */
+    }
+    body.dark-mode #speedValue,
+    body.dark-mode #speedUnit,
+    body.dark-mode #altitudeValue,
+    body.dark-mode #altitudeUnit {
+      color: white !important;
+    }
     body.dark-mode {
       background-color: #121212;
       color: #ffffff !important;
     }
-    body.dark-mode .buttons button:not(#clearButton):not(#stopButton):not(#shareButton):not(#darkModeButton):not(#saveRouteButton) {
+    body.dark-mode #map {
+      border-color: #333 !important;
+    }
+    body.dark-mode .buttons button {
       background-color: #444 !important;
       color: #ffffff;
     }
@@ -202,42 +198,10 @@ body.dark-mode #speedPanel .speed-value {
     /* Asegurar que los textos dentro de los indicadores cambien de color */
     body.dark-mode #speedIndicator #speedValue,
     body.dark-mode #speedIndicator #speedUnit,
-    body.dark-mode #avgSpeedIndicator #avgSpeedValue,
-    body.dark-mode #avgSpeedIndicator #avgSpeedUnit {
+    body.dark-mode #altitudeIndicator #altitudeValue,
+    body.dark-mode #altitudeIndicator #altitudeUnit {
       color: white !important; /* Asegura que el texto sea blanco en modo oscuro */
     }
-    /* Modo oscuro para el contenedor de rutas guardadas */
-body.dark-mode #savedRoutesContainer {
-  background-color: #333;
-  border-color: #555;
-}
-
-body.dark-mode #savedRoutesContainer h3 {
-  color: white;
-}
-
-body.dark-mode #savedRoutesList li {
-  background-color: #444;
-  border-color: #666;
-  color: white;
-}
-
-body.dark-mode #savedRoutesList li button {
-  background-color: #555;
-  color: white;
-  border: none;
-}
-    body.dark-mode #routeName {
-  background-color: #444 !important;
-  color: white !important;
-  border: 1px solid #555 !important;
-}
-
-/* Cambiar el color del placeholder en modo oscuro */
-body.dark-mode #routeName::placeholder {
-  color: #bbb !important;
-  opacity: 1; /* Asegura que el placeholder sea visible */
-}
     @media (max-width: 600px) {
       h1 {
         font-size: 14px;
@@ -329,19 +293,18 @@ body.dark-mode #routeName::placeholder {
 </head>
 <body>
   <div id="map">
-<div id="speedPanel">
-  <div class="speed-row">
-    <span>Velocidad:</span>
-    <span class="speed-value" id="currentSpeed">0</span>
-    <span>km/h</span>
-  </div>
-  <div class="speed-row">
-    <span>Promedio:</span>
-    <span class="speed-value" id="averageSpeed">0</span>
-    <span>km/h</span>
-  </div>
-      <div id="samplingMode" >Modo: --</div>
-</div>
+    <div id="speedContainer">
+      <div id="speedIndicator">
+        <div id="speedValue">0</div>
+        <div id="speedUnit">Km/h</div>
+      </div>
+    </div>
+    <div id="altitudeContainer">
+      <div id="altitudeIndicator">
+        <div id="altitudeValue">0</div>
+        <div id="altitudeUnit">Metros</div>
+      </div>
+    </div>
     <div id="neighborhoodName" style="position: absolute; bottom: 15px; left: 10px; background-color: #e4e8d1; padding: 4px 12px; border-radius: 5px; font-size: 22px; font-weight: bold; color: black; z-index: 1000; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);">
       Barrio: Cargando...
     </div>
@@ -370,7 +333,7 @@ body.dark-mode #routeName::placeholder {
     let coordinates = [];
     let totalDistance = 0;
     const MAX_COORDINATES = 1000;
-    const MIN_DISTANCE_METERS = 15;
+    const MIN_DISTANCE_METERS = 45;
     let watchId;
     let wakeLockSentinel = null;
     let lastPositionTime = null;
@@ -378,17 +341,12 @@ body.dark-mode #routeName::placeholder {
     let shouldAdjustZoom = true; // Controla si se debe ajustar el zoom automáticamente
     let neighborhoodsLayer;
     let userMarker; // Marcador para la posición del usuario
-    let precisionCircle = null; // Círculo de precisión del GPS
-    let speedValues = []; // Array para almacenar valores de velocidad
-    let avgSpeed = 0; // Variable para velocidad promedio
-    let routeStartTime = null; // Para guardar el momento de inicio
-    let savedSpeeds = []; // Para guardar velocidades cuando la app está en segundo plano
 
     // Definir el ícono personalizado
     const userIcon = L.icon({
       iconUrl: 'https://raw.githubusercontent.com/Chatlas2023/Iconos/main/Auto_Rojo.png',
       iconSize: [40, 40], // Tamaño del ícono
-      iconAnchor: [20, 20], // Punto de anclaje del ícono (centro),
+      iconAnchor: [20, 20], // Punto de anclaje del ícono (centro)
     });
 
     // Definir el control de versión
@@ -401,7 +359,7 @@ body.dark-mode #routeName::placeholder {
         div.style.position = "absolute";
         div.style.left = "0";
         div.style.bottom = "0";
-        div.innerHTML = " Ver: 1.1.11 ";
+        div.innerHTML = " Ver: 1.1.1 ";
         div.style.padding = "0px";
         div.style.margin = "0";
         div.style.background = "rgba(255, 255, 255, 0.8)";
@@ -502,165 +460,93 @@ body.dark-mode #routeName::placeholder {
       }
     }
 
-    // Función para calcular la velocidad promedio
-    function calculateAverageSpeed() {
-      if (speedValues.length === 0) return 0;
-      
-      const sum = speedValues.reduce((a, b) => a + b, 0);
-      return sum / speedValues.length;
-    }
+    // Modificar la función getLocation para capturar la altitud
+    function getLocation() {
+      if (navigator.geolocation) {
+        acquireWakeLock();
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const speed = position.coords.speed;
+            const altitude = position.coords.altitude;
+            addCoordinate(lat, lng);
+            updateMap(lat, lng);
+            updateStatus(`Ubicación: Lat: ${lat.toFixed(4)}, Long: ${lng.toFixed(4)}`);
+            updateSpeed(speed);
+            updateAltitude(altitude);
+            findNeighborhood(lat, lng);
 
-    // Modificar la función getLocation para capturar la velocidad y la precisión
-function getLocation() {
-  if (navigator.geolocation) {
-    acquireWakeLock();
-    watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const now = Date.now();
-        const speedKmh = position.coords.speed ? position.coords.speed * 3.6 : 0;
-        
-        // Muestreo adaptativo basado en velocidad
-        const minInterval = speedKmh < 5 ? 15000 :  // 15 segundos si está lento
-                          speedKmh < 20 ? 7000 :   // 7 segundos en velocidad media
-                          3000;                    // 3 segundos si va rápido
-
-        if (!lastPositionTime || now - lastPositionTime >= minInterval) {
-          processPosition(position);
-          lastPositionTime = now;
-        }
-      },
-      (error) => {
-        console.error("Error al obtener la ubicación:", error);
-        updateStatus("Error al obtener la ubicación.");
-      },
-      { 
-        enableHighAccuracy: true,
-        maximumAge: 60000,  // Acepta datos de hasta 1 minuto de antigüedad
-        timeout: 20000      // Mayor tiempo de espera
+            // Actualizar la posición del marcador
+            if (!userMarker) {
+              userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
+            } else {
+              userMarker.setLatLng([lat, lng]);
+            }
+          },
+          (error) => {
+            console.error("Error al obtener la ubicación:", error);
+            updateStatus("Error al obtener la ubicación.");
+          },
+          { enableHighAccuracy: false, maximumAge: 30000, timeout: 10000 } // Optimizado
+        );
+      } else {
+        updateStatus("Tu navegador no soporta geolocalización.");
       }
-    );
-  } else {
-    updateStatus("Tu navegador no soporta geolocalización.");
-  }
-}
-
-// Nueva función para procesar posiciones
-function processPosition(position) {
-  const lat = position.coords.latitude;
-  const lng = position.coords.longitude;
-  const speed = position.coords.speed;
-  const accuracy = position.coords.accuracy;
-
-  addCoordinate(lat, lng, speed);
-  updateMap(lat, lng);
-  updateStatus(`Ubicación: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-  updateSpeed(speed);
-  findNeighborhood(lat, lng);
-
-  // Actualizar marcador y círculo de precisión
-  if (!userMarker) {
-    userMarker = L.marker([lat, lng], { icon: userIcon }).addTo(map);
-  } else {
-    userMarker.setLatLng([lat, lng]);
-  }
-
-  if (precisionCircle) {
-    precisionCircle.setLatLng([lat, lng]).setRadius(accuracy);
-  } else {
-    precisionCircle = L.circle([lat, lng], {
-      color: 'cyan',
-      weight: 2,
-      fillColor: 'cyan',
-      fillOpacity: 0.1,
-      radius: accuracy
-    }).addTo(map);
-  }
-}
+    }
 
     // Función para actualizar la velocidad en el círculo
-function updateSpeed(speed) {
-  const speedKmh = speed ? speed * 3.6 : 0;
-  
-  if (speedKmh > 0) {
-    speedValues.push(speedKmh);
-    if (speedValues.length > 100) speedValues.shift();
-    
-    // Si es el primer punto, guardar el tiempo de inicio
-    if (!routeStartTime && coordinates.length === 1) {
-      routeStartTime = new Date();
+    function updateSpeed(speed) {
+      const speedValue = document.getElementById('speedValue');
+      const speedUnit = document.getElementById('speedUnit');
+      if (!speedValue || !speedUnit) return;
+      const speedKmh = speed ? parseInt(speed * 3.6) : 0;
+      speedValue.textContent = `${speedKmh}`;
+      speedUnit.textContent = "Km/h";
     }
-    
-    // Mostrar modo de muestreo actual
-    let mode;
-    if (speedKmh < 5) mode = "🟢 Eco (15s)";
-    else if (speedKmh < 20) mode = "🟡 Normal (7s)";
-    else mode = "🔴 Precisión (3s)";
-    
-    document.getElementById('samplingMode').textContent = `Modo: ${mode}`;
-  }
-  
-  // Calcular promedio considerando tiempo transcurrido
-  if (coordinates.length > 1 && routeStartTime) {
-    const currentTime = new Date();
-    const elapsedHours = (currentTime - routeStartTime) / 3600000; // Horas transcurridas
-    avgSpeed = elapsedHours > 0 ? totalDistance / elapsedHours : 0;
-  } else {
-    avgSpeed = speedValues.length > 0 
-      ? speedValues.reduce((a, b) => a + b, 0) / speedValues.length 
-      : 0;
-  }
 
-  document.getElementById('currentSpeed').textContent = Math.round(speedKmh);
-  document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
-}
+    // Función para actualizar la altitud en el círculo
+    function updateAltitude(altitude) {
+      const altitudeValue = document.getElementById('altitudeValue');
+      const altitudeUnit = document.getElementById('altitudeUnit');
+      if (!altitudeValue || !altitudeUnit) return;
+      const altitudeMeters = altitude ? Math.round(parseFloat(altitude)) : 0;
+      altitudeValue.textContent = `${altitudeMeters}`;
+      altitudeUnit.textContent = "Metros";
+    }
 
     // Detener o reanudar la captura de coordenadas
-function toggleCapture() {
-  const stopButton = document.getElementById('stopButton');
-  if (isCapturing) {
-    if (watchId) {
-      navigator.geolocation.clearWatch(watchId);
-      watchId = null;
+    function toggleCapture() {
+      const stopButton = document.getElementById('stopButton');
+      if (isCapturing) {
+        if (watchId) {
+          navigator.geolocation.clearWatch(watchId);
+          watchId = null;
+        }
+        stopButton.textContent = "Continuar captura";
+        stopButton.classList.add('continue');
+        updateStatus("Captura de coordenadas detenida.");
+        releaseWakeLock(); // Liberar Wake Lock
+        shouldAdjustZoom = false; // Desactiva el ajuste automático del zoom
+      } else {
+        getLocation();
+        stopButton.textContent = "Detener captura";
+        stopButton.classList.remove('continue');
+        updateStatus("Captura de coordenadas reanudada.");
+        shouldAdjustZoom = true; // Reactiva el ajuste automático del zoom
+      }
+      isCapturing = !isCapturing;
     }
-    stopButton.textContent = "Continuar captura";
-    stopButton.classList.add('continue');
-    updateStatus("Captura de coordenadas detenida.");
-    releaseWakeLock();
-    shouldAdjustZoom = false;
-    
-    // Guardar velocidades actuales
-    savedSpeeds = [...speedValues];
-  } else {
-    // Restaurar velocidades guardadas
-    speedValues = [...savedSpeeds];
-    savedSpeeds = [];
-    
-    getLocation();
-    stopButton.textContent = "Detener captura";
-    stopButton.classList.remove('continue');
-    updateStatus("Captura de coordenadas reanudada.");
-    shouldAdjustZoom = true;
-  }
-  isCapturing = !isCapturing;
-}
 
     // Función para alternar el modo oscuro
-function toggleDarkMode() {
-  const body = document.body;
-  const darkModeButton = document.getElementById('darkModeButton');
-  const speedPanel = document.getElementById('speedPanel');
-  
-  body.classList.toggle('dark-mode');
-  const isDarkMode = body.classList.contains('dark-mode');
-  
-  // Forzar actualización del panel de velocidad
-  speedPanel.style.display = 'none';
-  void speedPanel.offsetWidth; // Trigger reflow
-  speedPanel.style.display = '';
-  
-  localStorage.setItem('darkMode', isDarkMode);
-  darkModeButton.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
-}
+    function toggleDarkMode() {
+      const body = document.body;
+      const darkModeButton = document.getElementById('darkModeButton');
+      body.classList.toggle('dark-mode');
+      const isDarkMode = body.classList.contains('dark-mode');
+      localStorage.setItem('darkMode', isDarkMode);
+      darkModeButton.textContent = isDarkMode ? 'Modo claro' : 'Modo oscuro';
+    }
 
     // Aplicar el modo oscuro al cargar la página
     function applyDarkModePreference() {
@@ -677,44 +563,25 @@ function toggleDarkMode() {
     }
 
     // Agregar una nueva coordenada
-function addCoordinate(lat, lng, speed) {
-  if (coordinates.length >= MAX_COORDINATES) {
-    coordinates.shift();
-  }
-
-  // Solo agregar coordenadas si:
-  // - Es el primer punto O
-  // - Hay movimiento significativo (>10m) O
-  // - Cambio brusco de dirección (ángulo > 30°)
-  if (coordinates.length === 0) {
-    coordinates.push({ lat, lng });
-  } else {
-    const last = coordinates[coordinates.length - 1];
-    const distance = calculateDistance(last.lat, last.lng, lat, lng);
-    
-    // Umbral dinámico basado en velocidad
-    const minDistance = speed > 10 ? 20 : 10;
-    
-      if (distance > minDistance || isDirectionChange(coordinates[coordinates.length-2], last, {lat, lng})) {
-
+    function addCoordinate(lat, lng) {
+      if (coordinates.length >= MAX_COORDINATES) {
+        coordinates.shift();
+      }
+      if (coordinates.length > 0) {
+        const lastCoord = coordinates[coordinates.length - 1];
+        const distance = calculateDistance(lastCoord.lat, lastCoord.lng, lat, lng);
+        if (distance < MIN_DISTANCE_METERS) {
+          return;
+        }
+        totalDistance += distance / 1000;
+      }
       coordinates.push({ lat, lng });
-      totalDistance += distance / 1000;
       saveCoordinates();
       updateDistance();
+      if (coordinates.length > 1) {
+        shouldAdjustZoom = false;
+      }
     }
-  }
-}
-
-// Función auxiliar para detectar cambios de dirección
-function isDirectionChange(prev, current, next, threshold = 30) {
-  if (!prev || !next) return false;
-  
-  const angle1 = Math.atan2(current.lng - prev.lng, current.lat - prev.lat);
-  const angle2 = Math.atan2(next.lng - current.lng, next.lat - current.lat);
-  const angleDiff = Math.abs(angle1 - angle2) * (180 / Math.PI);
-  
-  return angleDiff > threshold;
-}
 
     // Calcular la distancia entre dos coordenadas
     function calculateDistance(lat1, lng1, lat2, lng2) {
@@ -730,19 +597,17 @@ function isDirectionChange(prev, current, next, threshold = 30) {
     }
 
     // Actualizar el mapa con nuevas coordenadas
-function updateMap(lat, lng) {
-  if (!map) return;
-  
-  const newLatLng = [lat, lng];
-  polyline.addLatLng(newLatLng);
-  
-  // Solo ajustar la vista si hay cambios significativos
-  if (coordinates.length < 5 || 
-      coordinates.length % 10 === 0 || 
-      calculateDistance(map.getCenter().lat, map.getCenter().lng, lat, lng) > 50) {
-    map.setView(newLatLng, 16);
-  }
-}
+    function updateMap(lat, lng) {
+      if (!map) return;
+      const newLatLng = [lat, lng];
+      map.setView(newLatLng, 15); // Centra el mapa en la nueva ubicación
+      polyline.addLatLng(newLatLng); // Añade la nueva coordenada a la polilínea
+      // Ajusta el zoom solo si shouldAdjustZoom es true
+      if (shouldAdjustZoom && coordinates.length > 1) {
+        const bounds = polyline.getBounds();
+        map.fitBounds(bounds, { padding: [20, 20] });
+      }
+    }
 
     // Guardar coordenadas en localStorage
     function saveCoordinates() {
@@ -785,20 +650,14 @@ function updateMap(lat, lng) {
     }
 
     // Función para limpiar el historial de coordenadas (sin confirmación)
-function clearHistory() {
-  coordinates = [];
-  totalDistance = 0;
-  speedValues = [];
-  savedSpeeds = [];
-  avgSpeed = 0;
-  routeStartTime = null;
-  polyline.setLatLngs([]);
-  saveCoordinates();
-  updateDistance();
-  updateStatus("Historial limpiado.");
-  document.getElementById('currentSpeed').textContent = '0';
-  document.getElementById('averageSpeed').textContent = '0';
-}
+    function clearHistory() {
+      coordinates = [];
+      totalDistance = 0;
+      polyline.setLatLngs([]);
+      saveCoordinates();
+      updateDistance();
+      updateStatus("Historial limpiado.");
+    }
 
     // Función para iniciar un nuevo recorrido (con confirmación)
     function startNewRoute() {
@@ -824,114 +683,73 @@ function clearHistory() {
     }
 
     // Función para compartir el enlace por WhatsApp
-async function shareViaWhatsApp() {
-  try {
-    // 1. Generar el enlace de Google Maps
-    const longLink = generateGoogleMapsLink();
-    if (!longLink) {
-      alert("No hay coordenadas para compartir.");
-      return;
+    function shareViaWhatsApp() {
+      const link = generateGoogleMapsLink();
+      if (link) {
+        const message = `Aquí está mi recorrido: ${link}`;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+      } else {
+        alert("No hay coordenadas para compartir.");
+      }
     }
-
-    // 2. Acortar el enlace (con fallback al original si falla)
-    let finalLink;
-    try {
-      const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longLink)}`);
-      finalLink = await response.text();
-      
-      // Verificar que TinyURL no devuelva un error en formato texto
-      if (finalLink.startsWith("Error")) throw new Error("Fallo en TinyURL");
-    } catch (error) {
-      console.error("Error al acortar:", error);
-      finalLink = longLink; // Usar el enlace original si falla el acortador
-    }
-
-    // 3. Crear mensaje con emojis y formato claro
-    const message = `📍 *Mi recorrido*\n\n- Distancia: ${totalDistance.toFixed(2)} km\n- Velocidad promedio: ${Math.round(avgSpeed)} km/h\n\n🗺️ Abrir en Maps: ${finalLink}`;
-    
-    // 4. Compartir vía WhatsApp
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-  } catch (error) {
-    console.error("Error al compartir:", error);
-    alert("Ocurrió un error al generar el enlace. Intenta nuevamente.");
-  }
-}
 
     // Función para guardar la ruta con un nombre descriptivo
-function saveRoute() {
-  const routeName = document.getElementById('routeName').value.trim();
-  if (!routeName) {
-    alert("Por favor, ingresa un nombre para la ruta.");
-    return;
-  }
-  
-  // Calcular velocidad promedio basada en tiempo y distancia
-  let calculatedAvgSpeed = 0;
-  if (routeStartTime && coordinates.length > 1) {
-    const currentTime = new Date();
-    const elapsedHours = (currentTime - routeStartTime) / 3600000;
-    calculatedAvgSpeed = elapsedHours > 0 ? totalDistance / elapsedHours : 0;
-  }
-  
-  const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
-  const route = {
-    name: routeName,
-    coordinates: coordinates,
-    totalDistance: totalDistance,
-    date: new Date().toISOString(),
-    avgSpeed: calculatedAvgSpeed || avgSpeed, // Usar el cálculo o el valor de avgSpeed
-    startTime: routeStartTime ? routeStartTime.toISOString() : new Date().toISOString()
-  };
-  
-  savedRoutes.push(route);
-  localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
-  alert(`Ruta "${routeName}" guardada correctamente.`);
-  document.getElementById('routeName').value = '';
-  loadSavedRoutes();
-}
+    function saveRoute() {
+      const routeName = document.getElementById('routeName').value.trim();
+      if (!routeName) {
+        alert("Por favor, ingresa un nombre para la ruta.");
+        return;
+      }
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
+      const route = {
+        name: routeName,
+        coordinates: coordinates,
+        totalDistance: totalDistance,
+        date: new Date().toISOString()
+      };
+      savedRoutes.push(route);
+      localStorage.setItem('savedRoutes', JSON.stringify(savedRoutes));
+      alert(`Ruta "${routeName}" guardada correctamente.`);
+      document.getElementById('routeName').value = ''; // Limpiar el campo de entrada
+      loadSavedRoutes(); // Recargar la lista de rutas guardadas
+    }
 
     // Función para cargar y mostrar las rutas guardadas
-function loadSavedRoutes() {
-  const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
-  const savedRoutesList = document.getElementById('savedRoutesList');
-  savedRoutesList.innerHTML = ''; // Limpiar la lista antes de cargar
+    function loadSavedRoutes() {
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
+      const savedRoutesList = document.getElementById('savedRoutesList');
+      savedRoutesList.innerHTML = ''; // Limpiar la lista antes de cargar
 
-  savedRoutes.forEach((route, index) => {
-    const listItem = document.createElement('li');
-    listItem.innerHTML = `
-      <span>${route.name} - ${route.totalDistance.toFixed(2)} km - ${Math.round(route.avgSpeed || 0)} km/h - ${new Date(route.date).toLocaleString()}</span>
-      <button onclick="loadRoute(${index})">Cargar</button>
-      <button onclick="deleteRoute(${index})">Eliminar</button>
-    `;
-    savedRoutesList.appendChild(listItem);
-  });
-}
+      savedRoutes.forEach((route, index) => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+          <span>${route.name} - ${route.totalDistance.toFixed(2)} km - ${new Date(route.date).toLocaleString()}</span>
+          <button onclick="loadRoute(${index})">Cargar</button>
+          <button onclick="deleteRoute(${index})">Eliminar</button>
+        `;
+        savedRoutesList.appendChild(listItem);
+      });
+    }
 
     // Función para cargar una ruta específica en el mapa
-function loadRoute(index) {
-  const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
-  const route = savedRoutes[index];
-  if (route) {
-    coordinates = route.coordinates;
-    totalDistance = route.totalDistance;
-    speedValues = [];
-    avgSpeed = route.avgSpeed || 0;
-    routeStartTime = new Date(route.startTime);
-    
-    polyline.setLatLngs([]);
-    coordinates.forEach(coord => polyline.addLatLng([coord.lat, coord.lng]));
-    if (coordinates.length > 0) {
-      const lastCoord = coordinates[coordinates.length - 1];
-      map.setView([lastCoord.lat, lastCoord.lng], 13);
+    function loadRoute(index) {
+      const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
+      const route = savedRoutes[index];
+      if (route) {
+        coordinates = route.coordinates;
+        totalDistance = route.totalDistance;
+        polyline.setLatLngs([]); // Limpiar la polilínea actual
+        coordinates.forEach(coord => polyline.addLatLng([coord.lat, coord.lng]));
+        if (coordinates.length > 0) {
+          const lastCoord = coordinates[coordinates.length - 1];
+          map.setView([lastCoord.lat, lastCoord.lng], 13);
+        }
+        updateDistance();
+        updateStatus(`Ruta "${route.name}" cargada correctamente.`);
+      }
     }
-    updateDistance();
-    updateStatus(`Ruta "${route.name}" cargada correctamente.`);
-    
-    // Actualizar los indicadores de velocidad
-    document.getElementById('averageSpeed').textContent = Math.round(avgSpeed);
-    document.getElementById('currentSpeed').textContent = '0'; // Resetear velocidad actual
-  }
-}
+
     // Función para eliminar una ruta guardada
     function deleteRoute(index) {
       const savedRoutes = JSON.parse(localStorage.getItem('savedRoutes')) || [];
@@ -957,20 +775,20 @@ function loadRoute(index) {
       document.getElementById('shareButton').addEventListener('click', shareViaWhatsApp);
       document.getElementById('darkModeButton').addEventListener('click', toggleDarkMode);
       document.getElementById('saveRouteButton').addEventListener('click', saveRoute);
-// Modificar el event listener de visibilitychange
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') {
-    releaseWakeLock();
-    if (watchId) {
-      navigator.geolocation.clearWatch(watchId);
-      watchId = null;
-    }
-  } else if (isCapturing) {
-    acquireWakeLock();
-    getLocation();
-  }
- });
-});
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          if (isCapturing) {
+            getLocation();
+          }
+        } else {
+          releaseWakeLock();
+          if (watchId) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+          }
+        }
+      });
+    });
   </script>
 </body>
 </html>
