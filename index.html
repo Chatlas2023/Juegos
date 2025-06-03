@@ -308,15 +308,21 @@
         // Generar números aleatorios
         function generateNumbers() {
             numbers = [];
-            const possibleNumbers = Array.from({length: 15}, (_, i) => i + 1);
+            // Creamos un array con números del 1 al 16
+            let possibleNumbers = Array.from({length: 16}, (_, i) => i + 1);
             
-            // Elegir posición aleatoria para el 5
+            // Eliminamos el 5 original (posición 4 porque el array es base 0)
+            possibleNumbers.splice(4, 1);
+            
+            // Elegimos una posición aleatoria para insertar el 5
             const fivePosition = Math.floor(Math.random() * 16);
             
+            // Insertamos el 5 en la posición elegida
             for (let i = 0; i < 16; i++) {
                 if (i === fivePosition) {
                     numbers.push(5);
                 } else {
+                    // Tomamos números aleatorios del array possibleNumbers
                     const randomIndex = Math.floor(Math.random() * possibleNumbers.length);
                     numbers.push(possibleNumbers.splice(randomIndex, 1)[0]);
                 }
