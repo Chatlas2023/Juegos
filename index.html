@@ -113,11 +113,9 @@
         }
         
         #controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
             width: 100%;
             max-width: 400px;
+            text-align: center;
         }
         
         button {
@@ -129,6 +127,7 @@
             border: none;
             border-radius: 5px;
             transition: all 0.3s;
+            width: 100%;
         }
         
         button:hover {
@@ -169,11 +168,10 @@
         <div class="grid" id="grid"></div>
     </div>
     
-    <div id="message">Preparado...</div>
+    <div id="message">Presiona Jugar para comenzar</div>
     
     <div id="controls">
-        <button id="start-btn">Comenzar Juego</button>
-        <button id="restart-btn" disabled>Jugar de nuevo</button>
+        <button id="play-btn">Jugar</button>
     </div>
 
     <script>
@@ -191,12 +189,10 @@
         const message = document.getElementById('message');
         const scoreDisplay = document.getElementById('score-display');
         const timerDisplay = document.getElementById('timer');
-        const startBtn = document.getElementById('start-btn');
-        const restartBtn = document.getElementById('restart-btn');
+        const playBtn = document.getElementById('play-btn');
         
         // Event Listeners
-        startBtn.addEventListener('click', startGame);
-        restartBtn.addEventListener('click', startGame);
+        playBtn.addEventListener('click', toggleGame);
         
         // Inicializar el juego
         function initialize() {
@@ -217,15 +213,22 @@
             }
         }
         
+        // Alternar juego (iniciar/detener)
+        function toggleGame() {
+            if (isGameRunning) {
+                endGame();
+            } else {
+                startGame();
+            }
+        }
+        
         // Comenzar el juego
         function startGame() {
-            if (isGameRunning) return;
-            
             score = 0;
             displayTime = 2.0; // Resetear tiempo a 2 segundos
             isGameRunning = true;
-            startBtn.disabled = true;
-            restartBtn.disabled = true;
+            playBtn.textContent = 'Detener';
+            playBtn.style.backgroundColor = '#d32f2f';
             updateScoreDisplay();
             updateTimerDisplay();
             
@@ -387,8 +390,8 @@
         // Finalizar el juego
         function endGame() {
             isGameRunning = false;
-            startBtn.disabled = false;
-            restartBtn.disabled = false;
+            playBtn.textContent = 'Jugar';
+            playBtn.style.backgroundColor = '#2c3e50';
             
             // Mostrar todos los números
             const cells = document.querySelectorAll('.cell');
