@@ -256,6 +256,11 @@
             updateScoreDisplay();
             createEmptyGrid();
         }
+                function resetTimer() {
+            clearInterval(timer);
+            timerDisplay.textContent = 'Tiempo: 0s';
+        }
+        
         
         // Crear cuadrícula vacía
         function createEmptyGrid() {
@@ -273,6 +278,7 @@
         function startGame() {
             if (isGameRunning) return;
             
+            resetTimer(); // Resetear el temporizador al comenzar nuevo juego
             score = 0;
             isGameRunning = true;
             startBtn.disabled = true;
@@ -432,6 +438,7 @@
         function handleTimeOut() {
             if (!isGameRunning) return;
             
+            resetTimer(); // Detener y resetear el temporizador
             showFeedback(-1, false);
             message.textContent = `Tiempo agotado! Puntuación: ${score}`;
             updateScoreDisplay();
@@ -446,6 +453,8 @@
             isGameRunning = false;
             startBtn.disabled = false;
             restartBtn.disabled = false;
+               // Detener y resetear el temporizador
+            resetTimer();
             
             // Mostrar todos los números
             const cells = document.querySelectorAll('.cell');
