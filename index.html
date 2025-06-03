@@ -3,25 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Encuentra el 5</title>
+    <title>Encuentra el 5 - Juego de Memoria</title>
     <style>
         body {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-align: center;
         }
         
         #game-container {
             position: relative;
-            width: 400px;
+            width: 100%;
+            max-width: 400px;
             height: 400px;
-            border: 1px solid #000;
+            border: 2px solid #2c3e50;
+            border-radius: 10px;
             background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
         
         .grid {
@@ -31,168 +43,423 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             grid-template-rows: repeat(4, 1fr);
+            gap: 1px;
+            background-color: #2c3e50;
         }
         
         .cell {
-            border: 1px solid #000;
+            background-color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 36px;
+            font-weight: bold;
             cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        
+        .cell:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .cell.correct {
+            background-color: #a5d6a7;
+            transform: scale(0.95);
+        }
+        
+        .cell.incorrect {
+            background-color: #ffab91;
+            animation: shake 0.5s;
+        }
+        
+        .cell.target {
+            background-color: #81d4fa;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        
+        #stats-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            margin: 15px 0;
+        }
+        
+        #score-display, #timer {
+            background-color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        #timer {
+            color: #d32f2f;
         }
         
         #message {
-            margin-top: 20px;
+            margin: 15px 0;
             font-size: 24px;
             text-align: center;
+            min-height: 36px;
+            color: #2c3e50;
         }
         
-        #restart-btn {
-            margin-top: 20px;
-            padding: 10px 20px;
+        #controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        button {
+            padding: 12px 20px;
             font-size: 18px;
             cursor: pointer;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background-color: #1a252f;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #difficulty-settings {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+        
+        #difficulty-settings h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        
+        .difficulty-option {
+            margin: 8px 0;
+        }
+        
+        .difficulty-option label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .difficulty-option input {
+            margin-right: 8px;
+        }
+        
+        @media (max-width: 480px) {
+            .grid {
+                gap: 0.5px;
+            }
+            
+            .cell {
+                font-size: 28px;
+            }
+            
+            #game-container {
+                height: 350px;
+            }
         }
     </style>
 </head>
 <body>
     <h1>Encuentra el 5</h1>
+    
+    <div id="stats-container">
+        <div id="score-display">Aciertos: 0 | Récord: 0</div>
+        <div id="timer">Tiempo: 0s</div>
+    </div>
+    
     <div id="game-container">
         <div class="grid" id="grid"></div>
     </div>
-    <div id="message"></div>
-    <button id="restart-btn" style="display: none;">Jugar de nuevo</button>
+    
+    <div id="message">Preparado...</div>
+    
+    <div id="controls">
+        <div id="difficulty-settings">
+            <h3>Dificultad</h3>
+            <div class="difficulty-option">
+                <label>
+                    <input type="radio" name="difficulty" value="easy" checked> Fácil (2s para memorizar)
+                </label>
+            </div>
+            <div class="difficulty-option">
+                <label>
+                    <input type="radio" name="difficulty" value="medium"> Medio (1.5s para memorizar)
+                </label>
+            </div>
+            <div class="difficulty-option">
+                <label>
+                    <input type="radio" name="difficulty" value="hard"> Difícil (1s para memorizar)
+                </label>
+            </div>
+        </div>
+        
+        <button id="start-btn">Comenzar Juego</button>
+        <button id="restart-btn" disabled>Jugar de nuevo</button>
+    </div>
 
     <script>
-        // Configuración del juego
-        const WIDTH = 400;
-        const HEIGHT = 400;
-        const CELL_SIZE = WIDTH / 4;
-        const GRID_SIZE = 4;
+        // Variables del juego
+        let numbers = [];
+        let score = 0;
+        let highScore = localStorage.getItem('highScore') || 0;
+        let timer;
+        let gameTimeout;
+        let isGameRunning = false;
         
         // Elementos del DOM
         const grid = document.getElementById('grid');
         const message = document.getElementById('message');
+        const scoreDisplay = document.getElementById('score-display');
+        const timerDisplay = document.getElementById('timer');
+        const startBtn = document.getElementById('start-btn');
         const restartBtn = document.getElementById('restart-btn');
+        const difficultySettings = document.querySelectorAll('input[name="difficulty"]');
         
-        // Variables del juego
-        let numbers = [];
-        let correctAnswers = 0;
-        let attempts = 1;
-        let gameTimeout;
+        // Configuración de dificultad
+        const difficultySettingsMap = {
+            easy: { displayTime: 2, answerTime: 1.5 },
+            medium: { displayTime: 1.5, answerTime: 1 },
+            hard: { displayTime: 1, answerTime: 0.7 }
+        };
+        
+        // Event Listeners
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
         
         // Inicializar el juego
-        function initGame() {
+        function initialize() {
+            updateScoreDisplay();
+            createEmptyGrid();
+        }
+        
+        // Crear cuadrícula vacía
+        function createEmptyGrid() {
             grid.innerHTML = '';
-            message.textContent = '';
-            correctAnswers = 0;
-            attempts = 1;
-            restartBtn.style.display = 'none';
+            for (let i = 0; i < 16; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+                cell.textContent = '';
+                grid.appendChild(cell);
+            }
+        }
+        
+        // Comenzar el juego
+        function startGame() {
+            if (isGameRunning) return;
             
-            playGame();
+            score = 0;
+            isGameRunning = true;
+            startBtn.disabled = true;
+            restartBtn.disabled = true;
+            updateScoreDisplay();
+            
+            playRound();
+        }
+        
+        // Jugar una ronda
+        function playRound() {
+            if (!isGameRunning) return;
+            
+            // Obtener configuración de dificultad
+            const difficulty = document.querySelector('input[name="difficulty"]:checked').value;
+            const { displayTime, answerTime } = difficultySettingsMap[difficulty];
+            
+            // Generar números aleatorios (asegurando que haya un 5)
+            generateNumbers();
+            
+            // Mostrar números
+            showNumbers();
+            message.textContent = 'Memoriza los números...';
+            
+            // Ocultar números después del tiempo configurado
+            setTimeout(() => {
+                hideNumbers();
+                message.textContent = '¡Encuentra el 5!';
+                startTimer(answerTime);
+            }, displayTime * 1000);
+        }
+        
+        // Generar números aleatorios
+        function generateNumbers() {
+            numbers = [];
+            const possibleNumbers = Array.from({length: 15}, (_, i) => i + 1);
+            
+            // Elegir posición aleatoria para el 5
+            const fivePosition = Math.floor(Math.random() * 16);
+            
+            for (let i = 0; i < 16; i++) {
+                if (i === fivePosition) {
+                    numbers.push(5);
+                } else {
+                    const randomIndex = Math.floor(Math.random() * possibleNumbers.length);
+                    numbers.push(possibleNumbers.splice(randomIndex, 1)[0]);
+                }
+            }
         }
         
         // Mostrar números en la cuadrícula
-        function showNumbers(nums) {
-            grid.innerHTML = '';
-            
-            for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.textContent = nums[i];
-                grid.appendChild(cell);
-            }
+        function showNumbers() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, index) => {
+                cell.textContent = numbers[index];
+                cell.classList.remove('correct', 'incorrect', 'target');
+                cell.removeEventListener('click', handleCellClick);
+            });
         }
         
         // Ocultar números y preparar para la selección
         function hideNumbers() {
-            grid.innerHTML = '';
-            
-            for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.dataset.index = i;
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, index) => {
+                cell.textContent = '';
+                cell.dataset.index = index;
                 cell.addEventListener('click', handleCellClick);
-                grid.appendChild(cell);
-            }
+            });
         }
         
         // Manejar clic en una celda
         function handleCellClick(event) {
-            const cellIndex = parseInt(event.target.dataset.index);
+            if (!isGameRunning) return;
             
-            if (numbers[cellIndex] === 5) {
-                correctAnswers++;
-                message.textContent = '¡Correcto!';
+            clearTimeout(timer);
+            clearTimeout(gameTimeout);
+            
+            const cellIndex = parseInt(event.target.dataset.index);
+            const isCorrect = numbers[cellIndex] === 5;
+            
+            // Mostrar retroalimentación visual
+            showFeedback(cellIndex, isCorrect);
+            
+            // Actualizar puntuación
+            if (isCorrect) {
+                score++;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('highScore', highScore);
+                }
+                message.textContent = '¡Correcto! +1 punto';
             } else {
-                message.textContent = 'Incorrecto. Era el 5.';
+                message.textContent = `Incorrecto. Era el 5 (Puntuación: ${score})`;
             }
             
-            clearTimeout(gameTimeout);
-            attempts++;
+            updateScoreDisplay();
             
-            // Mostrar todos los números para que el jugador vea dónde estaba el 5
-            showNumbers(numbers);
-            
-            // Esperar un segundo y continuar con el siguiente intento
+            // Esperar un segundo y continuar o terminar
             setTimeout(() => {
-                if (correctAnswers === attempts - 1) {
-                    playGame();
+                if (isCorrect) {
+                    playRound();
                 } else {
                     endGame();
                 }
-            }, 1000);
+            }, 1500);
         }
         
-        // Jugar una ronda
-        function playGame() {
-            // Generar números aleatorios
-            numbers = [];
-            const possibleNumbers = Array.from({length: GRID_SIZE * GRID_SIZE}, (_, i) => i + 1);
+        // Mostrar retroalimentación visual
+        function showFeedback(clickedIndex, isCorrect) {
+            const cells = document.querySelectorAll('.cell');
             
-            while (possibleNumbers.length > 0) {
-                const randomIndex = Math.floor(Math.random() * possibleNumbers.length);
-                numbers.push(possibleNumbers.splice(randomIndex, 1)[0]);
-            }
-            
-            // Mostrar números por 1.5 segundos
-            showNumbers(numbers);
-            message.textContent = 'Memoriza los números...';
-            
-            // Ocultar números después de 1.5 segundos
-            setTimeout(() => {
-                hideNumbers();
-                message.textContent = 'Haz clic en el número 5';
+            cells.forEach((cell, index) => {
+                cell.classList.remove('correct', 'incorrect', 'target');
                 
-                // Tiempo límite para responder (1 segundo como en el original)
-                gameTimeout = setTimeout(() => {
-                    message.textContent = 'Tiempo agotado. Era el 5.';
-                    showNumbers(numbers);
-                    
-                    setTimeout(() => {
-                        attempts++;
-                        if (correctAnswers === attempts - 1) {
-                            playGame();
-                        } else {
-                            endGame();
-                        }
-                    }, 1000);
-                }, 1000);
+                // Resaltar el 5
+                if (numbers[index] === 5) {
+                    cell.classList.add('target');
+                    cell.textContent = numbers[index];
+                }
+                
+                // Resaltar la celda clickeada
+                if (index === clickedIndex) {
+                    cell.classList.add(isCorrect ? 'correct' : 'incorrect');
+                    cell.textContent = numbers[index];
+                }
+            });
+        }
+        
+        // Iniciar temporizador
+        function startTimer(duration) {
+            let timeLeft = duration;
+            updateTimerDisplay(timeLeft);
+            
+            timer = setInterval(() => {
+                timeLeft -= 0.1;
+                updateTimerDisplay(timeLeft);
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleTimeOut();
+                }
+            }, 100);
+        }
+        
+        // Actualizar display del temporizador
+        function updateTimerDisplay(time) {
+            timerDisplay.textContent = `Tiempo: ${time.toFixed(1)}s`;
+        }
+        
+        // Manejar tiempo agotado
+        function handleTimeOut() {
+            if (!isGameRunning) return;
+            
+            showFeedback(-1, false);
+            message.textContent = `Tiempo agotado! Puntuación: ${score}`;
+            updateScoreDisplay();
+            
+            setTimeout(() => {
+                endGame();
             }, 1500);
         }
         
         // Finalizar el juego
         function endGame() {
-            message.textContent = `Fin. Aciertos = ${correctAnswers}`;
-            restartBtn.style.display = 'block';
+            isGameRunning = false;
+            startBtn.disabled = false;
+            restartBtn.disabled = false;
+            
+            // Mostrar todos los números
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, index) => {
+                cell.textContent = numbers[index];
+                if (numbers[index] === 5) {
+                    cell.classList.add('target');
+                }
+            });
+            
+            message.textContent = `Juego terminado. Puntuación final: ${score}`;
         }
         
-        // Evento para reiniciar el juego
-        restartBtn.addEventListener('click', initGame);
+        // Actualizar display de puntuación
+        function updateScoreDisplay() {
+            scoreDisplay.textContent = `Aciertos: ${score} | Récord: ${highScore}`;
+        }
         
-        // Iniciar el juego al cargar la página
-        window.addEventListener('DOMContentLoaded', initGame);
+        // Inicializar el juego cuando se carga la página
+        window.addEventListener('DOMContentLoaded', initialize);
     </script>
 </body>
 </html>
