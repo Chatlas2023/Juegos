@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Snake Móvil</title>
+    <title>Snake Móvil v1.1</title>
     <style>
         body {
             margin: 0;
@@ -135,6 +135,14 @@
             text-align: center;
         }
         
+        .version {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: #888;
+        }
+        
         @media (max-height: 700px) {
             #controls {
                 margin-top: 10px;
@@ -147,6 +155,7 @@
     </style>
 </head>
 <body>
+    <div class="version">v1.1</div>
     <h1>Snake Móvil</h1>
     <div id="score">Puntuación: 0</div>
     <div id="high-score">Máxima puntuación: 0</div>
@@ -168,7 +177,7 @@
     </div>
 
     <script>
-        // Configuración del juego
+        // Configuración del juego - v1.1
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d');
         const gameOverDiv = document.getElementById('game-over');
@@ -181,6 +190,7 @@
         // Obtener máxima puntuación almacenada
         let highScore = localStorage.getItem('snakeHighScore') || 0;
         highScoreDisplay.textContent = `Máxima puntuación: ${highScore}`;
+        finalHighScoreDisplay.textContent = `Máxima puntuación: ${highScore}`;
         
         // Ajustar tamaño del canvas para móviles
         function resizeCanvas() {
