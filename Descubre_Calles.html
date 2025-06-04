@@ -1161,38 +1161,38 @@
                 }
             }
             
-            makeGuess(guess) {
-                if (this.guessedLetters.has(guess) || this.attempts <= 0) {
-                    return;
-                }
-                
-                this.guessedLetters.add(guess);
-                this.updateGuessedLettersDisplay();
-                
-                // Actualizar tecla en el teclado
-                const keys = document.querySelectorAll('.key');
-                keys.forEach(key => {
-                    if (key.textContent === guess) {
-                        key.classList.add('used');
-                        key.disabled = true;
-                    }
-                });
-                
-                if (this.wordToGuess.includes(guess)) {
-                    const currentDisplay = this.displayWord();
-                    if (!currentDisplay.includes('-')) {
-                        this.showMessage('¡Felicidades!', `¡Has adivinado la palabra: ${this.wordToGuess}!`);
-                        this.nextWordBtn.disabled = false;
-                    }
-                } else {
-                    this.attempts--;
-                    this.updateAttemptsDisplay();
-                    if (this.attempts <= 0) {
-                        this.showMessage('¡Perdiste!', `¡Te has quedado sin intentos! La palabra era: ${this.wordToGuess}`);
-                        this.nextWordBtn.disabled = false;
-                    }
-                }
-            }
+makeGuess(guess) {
+    if (this.guessedLetters.has(guess) || this.attempts <= 0) {
+        return;
+    }
+    
+    this.guessedLetters.add(guess);
+    this.updateGuessedLettersDisplay();
+    
+    // Actualizar tecla en el teclado
+    const keys = document.querySelectorAll('.key');
+    keys.forEach(key => {
+        if (key.textContent === guess) {
+            key.classList.add('used');
+            key.disabled = true;
+        }
+    });
+    
+    if (this.wordToGuess.includes(guess)) {
+        const currentDisplay = this.displayWord();
+        if (!currentDisplay.includes('-')) {
+            // Eliminado el popup de felicitaciones
+            this.nextWordBtn.disabled = false;
+        }
+    } else {
+        this.attempts--;
+        this.updateAttemptsDisplay();
+        if (this.attempts <= 0) {
+            this.showMessage('¡Perdiste!', `¡Te has quedado sin intentos! La palabra era: ${this.wordToGuess}`);
+            this.nextWordBtn.disabled = false;
+        }
+    }
+}
             
             showMessage(title, message) {
                 alert(`${title}\n${message}`);
