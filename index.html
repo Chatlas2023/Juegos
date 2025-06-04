@@ -56,8 +56,14 @@
             font-weight: bold;
         }
         
+        #high-score {
+            margin: 5px 0;
+            font-size: 16px;
+            color: #555;
+        }
+        
         .btn {
-            margin: 8px;
+            margin: 8px auto;
             padding: 10px 15px;
             background-color: #4CAF50;
             color: white;
@@ -67,6 +73,7 @@
             cursor: pointer;
             width: 80%;
             max-width: 200px;
+            display: block;
         }
         
         .btn:hover {
@@ -142,13 +149,14 @@
 <body>
     <h1>Snake Móvil</h1>
     <div id="score">Puntuación: 0</div>
+    <div id="high-score">Máxima puntuación: 0</div>
     <div id="game-container">
         <canvas id="game-canvas" width="400" height="400"></canvas>
         <div id="game-over">
             <h2>¡Game Over!</h2>
             <div id="final-score">Puntuación: 0</div>
-            <button class="btn" id="restart-btn">Reiniciar</button>
-            <button class="btn" id="quit-btn">Salir</button>
+            <div id="final-high-score">Máxima puntuación: 0</div>
+            <button class="btn" id="restart-btn">Jugar de nuevo</button>
         </div>
     </div>
     
@@ -165,9 +173,14 @@
         const ctx = canvas.getContext('2d');
         const gameOverDiv = document.getElementById('game-over');
         const scoreDisplay = document.getElementById('score');
+        const highScoreDisplay = document.getElementById('high-score');
         const finalScoreDisplay = document.getElementById('final-score');
+        const finalHighScoreDisplay = document.getElementById('final-high-score');
         const restartBtn = document.getElementById('restart-btn');
-        const quitBtn = document.getElementById('quit-btn');
+        
+        // Obtener máxima puntuación almacenada
+        let highScore = localStorage.getItem('snakeHighScore') || 0;
+        highScoreDisplay.textContent = `Máxima puntuación: ${highScore}`;
         
         // Ajustar tamaño del canvas para móviles
         function resizeCanvas() {
@@ -189,10 +202,10 @@
         // Estado del juego
         let snake = [{x: 5, y: 5}];
         let snakeDirection = {x: 1, y: 0};
-        let nextDirection = {x: 1, y: 0}; // Para manejar mejor los controles táctiles
+        let nextDirection = {x: 1, y: 0};
         let food = generateFood();
         let score = 0;
-        let gameSpeed = 150; // ms entre actualizaciones
+        let gameSpeed = 150;
         let gameInterval;
         let gameRunning = true;
         
@@ -241,7 +254,7 @@
         
         // Actualizar el estado del juego
         function update() {
-            // Actualizar dirección (para evitar cambios opuestos rápidos)
+            // Actualizar dirección
             snakeDirection = {...nextDirection};
             
             // Mover la serpiente
@@ -293,7 +306,16 @@
         function gameOver() {
             clearInterval(gameInterval);
             gameRunning = false;
+            
+            // Actualizar máxima puntuación
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('snakeHighScore', highScore);
+                highScoreDisplay.textContent = `Máxima puntuación: ${highScore}`;
+            }
+            
             finalScoreDisplay.textContent = `Puntuación: ${score}`;
+            finalHighScoreDisplay.textContent = `Máxima puntuación: ${highScore}`;
             gameOverDiv.style.display = 'block';
         }
         
@@ -311,6 +333,7 @@
             
             clearInterval(gameInterval);
             gameInterval = setInterval(gameLoop, gameSpeed);
+            draw();
         }
         
         // Bucle principal del juego
@@ -377,40 +400,8 @@
             }
         });
         
-        // Controles de teclado (opcional)
-        document.addEventListener('keydown', event => {
-            if (!gameRunning) return;
-            
-            switch (event.key) {
-                case 'ArrowUp':
-                    if (snakeDirection.y === 0) {
-                        nextDirection = {x: 0, y: -1};
-                    }
-                    break;
-                case 'ArrowDown':
-                    if (snakeDirection.y === 0) {
-                        nextDirection = {x: 0, y: 1};
-                    }
-                    break;
-                case 'ArrowLeft':
-                    if (snakeDirection.x === 0) {
-                        nextDirection = {x: -1, y: 0};
-                    }
-                    break;
-                case 'ArrowRight':
-                    if (snakeDirection.x === 0) {
-                        nextDirection = {x: 1, y: 0};
-                    }
-                    break;
-            }
-        });
-        
-        // Botones de reinicio y salida
+        // Botón de reinicio
         restartBtn.addEventListener('click', restartGame);
-        quitBtn.addEventListener('click', () => {
-            // En móviles no podemos cerrar la ventana, así que mostramos un mensaje
-            alert('Gracias por jugar. Recarga la página para jugar de nuevo.');
-        });
         
         // Iniciar el juego
         gameInterval = setInterval(gameLoop, gameSpeed);
