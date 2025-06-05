@@ -228,11 +228,7 @@
                     this.update();
                 });
                 
-                document.getElementById('down').addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    this.tetris.move(1, 0);
-                    this.update();
-                });
+
                 
                 document.getElementById('rotate').addEventListener('touchstart', (e) => {
                     e.preventDefault();
@@ -251,15 +247,54 @@
                     this.update();
                 });
                 
-                document.getElementById('down').addEventListener('click', () => {
-                    this.tetris.move(1, 0);
-                    this.update();
-                });
+
                 
                 document.getElementById('rotate').addEventListener('click', () => {
                     this.tetris.rotate();
                     this.update();
                 });
+                const downBtn = document.getElementById('down');
+let longPressTimer = null;
+let isLongPress = false;
+
+const handleDownStart = (e) => {
+    if (e) e.preventDefault();
+    isLongPress = false;
+    longPressTimer = setTimeout(() => {
+        isLongPress = true;
+        // Hard drop - mover hasta el fondo
+        while (!this.tetris.game_over && 
+               this.tetris.get_tetromino_coords().every(([r, c]) => 
+                  this.tetris.is_cell_free(r + 1, c))) {
+            this.tetris.move(1, 0);
+        }
+        this.update();
+    }, 500); // 500ms = medio segundo
+};
+
+const handleDownEnd = (e) => {
+    if (e) e.preventDefault();
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
+    if (!isLongPress) {
+        // Movimiento normal si no fue un long press
+        this.tetris.move(1, 0);
+        this.update();
+    }
+    isLongPress = false;
+};
+
+// Eventos táctiles
+downBtn.addEventListener('touchstart', handleDownStart);
+downBtn.addEventListener('touchend', handleDownEnd);
+downBtn.addEventListener('touchcancel', handleDownEnd);
+
+// Eventos de ratón (para compatibilidad)
+downBtn.addEventListener('mousedown', handleDownStart);
+downBtn.addEventListener('mouseup', handleDownEnd);
+downBtn.addEventListener('mouseleave', handleDownEnd);
                 
                 // Reiniciar juego al tocar el mensaje de game over
                 this.gameOverMsg.addEventListener('click', () => {
