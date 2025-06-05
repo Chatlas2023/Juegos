@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tetris Móvil</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            touch-action: manipulation;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+        }
+        #canvas {
+            background-color: black;
+            border: 2px solid #333;
+        }
+        #status {
+            color: white;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 18px;
+        }
+        #game-over {
+            color: red;
+            text-align: center;
+            font-size: 24px;
+            margin-top: 10px;
+            display: none;
+        }
+        #controls {
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+            width: 80%;
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 0 5px;
+            font-size: 16px;
+            flex: 1;
+            text-align: center;
+        }
+        .btn:active {
+            background-color: #555;
+        }
+        .btn-rotate {
+            background-color: #4CAF50;
+        }
+        .btn-down {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="canvas"></canvas>
+        <div id="status">Score: 0<br>Level: 0</div>
+        <div id="game-over">GAME OVER.<br>Tap to reset</div>
+        <div id="controls">
+            <div class="row">
+                <button class="btn" id="left">←</button>
+                <button class="btn btn-rotate" id="rotate">↻</button>
+                <button class="btn" id="right">→</button>
+            </div>
+            <div class="row">
+                <button class="btn btn-down" id="down">↓</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const COLORS = ['#000000', '#4CAF50', '#E91E63', '#2196F3', '#FF9800', '#9C27B0'];
+        
+        class Tetris {
+            constructor() {
+                this.FIELD_HEIGHT = 20;
+                this.FIELD_WIDTH = 10;
+                this.SCORE_PER_ELIMINATED_LINES = [0, 40, 100, 300, 1200];
+                this.TETROMINOS = [
+                    [[0, 0], [0, 1], [1, 0], [1,1]], // O
+                    [[0, 0], [0, 1], [1, 1], [2,1]], // L
+                    [[0, 1], [1, 1], [2, 1], [2,0]], // J 
+                    [[0, 1], [1, 0], [1, 1], [2,0]], // Z
+                    [[0, 1], [1, 0], [1, 1], [2,1]], // T
+                    [[0, 0], [1, 0], [1, 1], [2,1]], // S
+                    [[0, 1], [1, 1], [2, 1], [3,1]], // I
+                ];
+                
+                this.resetGame();
+            }
+            
+            resetGame() {
+                this.field = Array(this.FIELD_HEIGHT).fill().map(() => Array(this.FIELD_WIDTH).fill(0));
+                this.score = 0;
+                this.level = 0;
+                this.total_lines_eliminated = 0;
+                this.game_over = false;
+                this.reset_tetromino();
+            }
+            
+            reset_tetromino() {
+                this.tetromino = JSON.parse(JSON.stringify(this.TETROMINOS[Math.floor(Math.random() * this.TETROMINOS.length)]));
+                this.tetromino_color = 1 + Math.floor(Math.random() * (COLORS.length - 1));
+                this.tetromino_offset = [-2, Math.floor(this.FIELD_WIDTH / 2)];
+                this.game_over = !this.get_tetromino_coords().every(([r, c]) => this.is_cell_free(r, c));
+            }
+            
+            get_tetromino_coords() {
+                return this.tetromino.map(([r, c]) => [r + this.tetromino_offset[0], c + this.tetromino_offset[1]]);
+            }
+            
+            apply_tetromino() {
+                this.get_tetromino_coords().forEach(([r, c]) => {
+                    this.field[r][c] = this.tetromino_color;
+                });
+                
+                const new_field = this.field.filter(row => row.some(tile => tile === 0));
+                const lines_eliminated = this.field.length - new_field.length;
+                this.total_lines_eliminated += lines_eliminated;
+                this.field = [...Array(lines_eliminated).fill().map(() => Array(this.FIELD_WIDTH).fill(0)), ...new_field];
+                this.score += this.SCORE_PER_ELIMINATED_LINES[lines_eliminated] * (this.level + 1);
+                this.level = Math.floor(this.total_lines_eliminated / 10);
+                this.reset_tetromino();
+            }
+            
+            get_color(r, c) {
+                return this.get_tetromino_coords().some(([tr, tc]) => tr === r && tc === c) ? 
+                    this.tetromino_color : this.field[r][c];
+            }
+            
+            is_cell_free(r, c) {
+                return r < this.FIELD_HEIGHT && c >= 0 && c < this.FIELD_WIDTH && (r < 0 || this.field[r][c] === 0);
+            }
+            
+            move(dr, dc) {
+                if (this.game_over) return;
+                
+                if (this.get_tetromino_coords().every(([r, c]) => this.is_cell_free(r + dr, c + dc))) {
+                    this.tetromino_offset[0] += dr;
+                    this.tetromino_offset[1] += dc;
+                } else if (dr === 1 && dc === 0) {
+                    this.game_over = this.get_tetromino_coords().some(([r, c]) => r < 0);
+                    if (!this.game_over) {
+                        this.apply_tetromino();
+                    }
+                }
+            }
+            
+            rotate() {
+                if (this.game_over) {
+                    this.resetGame();
+                    return;
+                }
+                
+                const ys = this.tetromino.map(([r, c]) => r);
+                const xs = this.tetromino.map(([r, c]) => c);
+                const size = Math.max(Math.max(...ys) - Math.min(...ys), Math.max(...xs) - Math.min(...xs));
+                const rotated_tetromino = this.tetromino.map(([r, c]) => [c, size - r]);
+                const wallkick_offset = [...this.tetromino_offset];
+                const tetromino_coord = rotated_tetromino.map(([r, c]) => [r + wallkick_offset[0], c + wallkick_offset[1]]);
+                
+                const min_x = Math.min(...tetromino_coord.map(([r, c]) => c));
+                const max_x = Math.max(...tetromino_coord.map(([r, c]) => c));
+                const max_y = Math.max(...tetromino_coord.map(([r, c]) => r));
+                
+                wallkick_offset[1] -= Math.min(0, min_x);
+                wallkick_offset[1] += Math.min(0, this.FIELD_WIDTH - (1 + max_x));
+                wallkick_offset[0] += Math.min(0, this.FIELD_HEIGHT - (1 + max_y));
+                
+                const new_coords = rotated_tetromino.map(([r, c]) => [r + wallkick_offset[0], c + wallkick_offset[1]]);
+                if (new_coords.every(([r, c]) => this.is_cell_free(r, c))) {
+                    this.tetromino = rotated_tetromino;
+                    this.tetromino_offset = wallkick_offset;
+                }
+            }
+        }
+        
+        class Game {
+            constructor() {
+                this.tetris = new Tetris();
+                this.canvas = document.getElementById('canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.status = document.getElementById('status');
+                this.gameOverMsg = document.getElementById('game-over');
+                
+                // Ajustar tamaño del canvas para dispositivos móviles
+                const pieceSize = Math.min(
+                    window.innerWidth * 0.8 / this.tetris.FIELD_WIDTH,
+                    window.innerHeight * 0.5 / this.tetris.FIELD_HEIGHT
+                );
+                
+                this.canvas.width = pieceSize * this.tetris.FIELD_WIDTH;
+                this.canvas.height = pieceSize * this.tetris.FIELD_HEIGHT;
+                this.pieceSize = pieceSize;
+                
+                // Controles táctiles
+                document.getElementById('left').addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.tetris.move(0, -1);
+                    this.update();
+                });
+                
+                document.getElementById('right').addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.tetris.move(0, 1);
+                    this.update();
+                });
+                
+                document.getElementById('down').addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.tetris.move(1, 0);
+                    this.update();
+                });
+                
+                document.getElementById('rotate').addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    this.tetris.rotate();
+                    this.update();
+                });
+                
+                // También agregamos eventos de clic para mayor compatibilidad
+                document.getElementById('left').addEventListener('click', () => {
+                    this.tetris.move(0, -1);
+                    this.update();
+                });
+                
+                document.getElementById('right').addEventListener('click', () => {
+                    this.tetris.move(0, 1);
+                    this.update();
+                });
+                
+                document.getElementById('down').addEventListener('click', () => {
+                    this.tetris.move(1, 0);
+                    this.update();
+                });
+                
+                document.getElementById('rotate').addEventListener('click', () => {
+                    this.tetris.rotate();
+                    this.update();
+                });
+                
+                // Reiniciar juego al tocar el mensaje de game over
+                this.gameOverMsg.addEventListener('click', () => {
+                    this.tetris.resetGame();
+                    this.gameOverMsg.style.display = 'none';
+                    this.update();
+                });
+                
+                // Controles de teclado para dispositivos con teclado físico
+                document.addEventListener('keydown', (e) => {
+                    switch(e.key) {
+                        case 'ArrowLeft':
+                            this.tetris.move(0, -1);
+                            break;
+                        case 'ArrowRight':
+                            this.tetris.move(0, 1);
+                            break;
+                        case 'ArrowDown':
+                            this.tetris.move(1, 0);
+                            break;
+                        case 'ArrowUp':
+                            this.tetris.rotate();
+                            break;
+                    }
+                    this.update();
+                });
+                
+                this.lastTime = 0;
+                this.updateInterval = 1000; // ms
+                this.gameLoop(0);
+            }
+            
+            gameLoop(timestamp) {
+                if (timestamp - this.lastTime > this.updateInterval * Math.pow(0.66, this.tetris.level)) {
+                    this.tetris.move(1, 0);
+                    this.update();
+                    this.lastTime = timestamp;
+                }
+                requestAnimationFrame((ts) => this.gameLoop(ts));
+            }
+            
+            update() {
+                // Dibujar el campo
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                for (let r = 0; r < this.tetris.FIELD_HEIGHT; r++) {
+                    for (let c = 0; c < this.tetris.FIELD_WIDTH; c++) {
+                        const color = COLORS[this.tetris.get_color(r, c)];
+                        this.ctx.fillStyle = color;
+                        this.ctx.fillRect(
+                            c * this.pieceSize, 
+                            r * this.pieceSize, 
+                            this.pieceSize, 
+                            this.pieceSize
+                        );
+                        
+                        // Borde para mejor visibilidad
+                        this.ctx.strokeStyle = '#333';
+                        this.ctx.strokeRect(
+                            c * this.pieceSize, 
+                            r * this.pieceSize, 
+                            this.pieceSize, 
+                            this.pieceSize
+                        );
+                    }
+                }
+                
+                // Actualizar estado
+                this.status.textContent = `Score: ${this.tetris.score}\nLevel: ${this.tetris.level}`;
+                
+                // Mostrar mensaje de game over si es necesario
+                if (this.tetris.game_over) {
+                    this.gameOverMsg.style.display = 'block';
+                }
+            }
+        }
+        
+        // Iniciar el juego cuando la página se cargue
+        window.onload = () => {
+            new Game();
+        };
+    </script>
+</body>
+</html>
