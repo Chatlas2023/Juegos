@@ -214,20 +214,55 @@
                 this.canvas.width = pieceSize * this.tetris.FIELD_WIDTH;
                 this.canvas.height = pieceSize * this.tetris.FIELD_HEIGHT;
                 this.pieceSize = pieceSize;
-                
-                // Controles táctiles
-                document.getElementById('left').addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    this.tetris.move(0, -1);
-                    this.update();
-                });
-                
-                document.getElementById('right').addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    this.tetris.move(0, 1);
-                    this.update();
-                });
-                
+
+const setupContinuousMove = (buttonId, direction) => {
+    const button = document.getElementById(buttonId);
+    let moveInterval = null;
+    let initialDelay = null;
+    const moveDelay = 100; // Tiempo entre movimientos después del inicial
+    
+    const startMove = (e) => {
+        if (e) e.preventDefault();
+        
+        // Movimiento inicial inmediato
+        this.tetris.move(direction[0], direction[1]);
+        this.update();
+        
+        // Configurar retardo inicial antes del movimiento continuo
+        initialDelay = setTimeout(() => {
+            // Movimiento continuo
+            moveInterval = setInterval(() => {
+                this.tetris.move(direction[0], direction[1]);
+                this.update();
+            }, moveDelay);
+        }, 300); // 300ms antes de empezar el movimiento continuo
+    };
+    
+    const stopMove = (e) => {
+        if (e) e.preventDefault();
+        if (initialDelay) {
+            clearTimeout(initialDelay);
+            initialDelay = null;
+        }
+        if (moveInterval) {
+            clearInterval(moveInterval);
+            moveInterval = null;
+        }
+    };
+        // Eventos táctiles
+    button.addEventListener('touchstart', startMove);
+    button.addEventListener('touchend', stopMove);
+    button.addEventListener('touchcancel', stopMove);
+    
+    // Eventos de ratón
+    button.addEventListener('mousedown', startMove);
+    button.addEventListener('mouseup', stopMove);
+    button.addEventListener('mouseleave', stopMove);
+};
+
+// Configurar los botones
+setupContinuousMove('left', [0, -1]);  // Mover izquierda
+setupContinuousMove('right', [0, 1]);  // Mover derecha
 
                 
                 document.getElementById('rotate').addEventListener('touchstart', (e) => {
@@ -235,19 +270,6 @@
                     this.tetris.rotate();
                     this.update();
                 });
-                
-                // También agregamos eventos de clic para mayor compatibilidad
-                document.getElementById('left').addEventListener('click', () => {
-                    this.tetris.move(0, -1);
-                    this.update();
-                });
-                
-                document.getElementById('right').addEventListener('click', () => {
-                    this.tetris.move(0, 1);
-                    this.update();
-                });
-                
-
                 
                 document.getElementById('rotate').addEventListener('click', () => {
                     this.tetris.rotate();
