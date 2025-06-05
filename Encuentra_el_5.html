@@ -183,6 +183,7 @@
         let gameTimeout;
         let isGameRunning = false;
         let displayTime = 2.0; // Tiempo inicial de visualización
+        let hideNumbersTimeout;
         
         // Elementos del DOM
         const grid = document.getElementById('grid');
@@ -236,23 +237,21 @@
         }
         
         // Jugar una ronda
-        function playRound() {
-            if (!isGameRunning) return;
-            
-            // Generar números aleatorios (asegurando que haya un 5)
-            generateNumbers();
-            
-            // Mostrar números
-            showNumbers();
-            message.textContent = 'Memoriza los números...';
-            
-            // Ocultar números después del tiempo configurado
-            setTimeout(() => {
-                hideNumbers();
-                message.textContent = '¡Encuentra el 5!';
-                startAnswerTimer();
-            }, displayTime * 1000);
+function playRound() {
+    if (!isGameRunning) return;
+    
+    generateNumbers();
+    showNumbers();
+    message.textContent = 'Memoriza los números...';
+    
+    hideNumbersTimeout = setTimeout(() => {
+        if (!document.querySelector('.cell.target')) { // Solo ocultar si no se ha encontrado el 5
+            hideNumbers();
+            message.textContent = '¡Encuentra el 5!';
+            startAnswerTimer();
         }
+    }, displayTime * 1000);
+}
         
         // Generar números aleatorios
         function generateNumbers() {
@@ -279,64 +278,69 @@
         }
         
         // Mostrar números en la cuadrícula
-        function showNumbers() {
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach((cell, index) => {
-                cell.textContent = numbers[index];
-                cell.classList.remove('correct', 'incorrect', 'target');
-                cell.removeEventListener('click', handleCellClick);
+function showNumbers() {
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach((cell, index) => {
+        cell.textContent = numbers[index];
+        cell.classList.remove('correct', 'incorrect', 'target');
+        // Quitar cualquier listener existente primero para evitar duplicados
+        cell.replaceWith(cell.cloneNode(true));
+        // Agregar el event listener para permitir clics tempranos
+        cell = document.querySelector(`.cell[data-index="${index}"]`);
+        cell.addEventListener('click', handleCellClick);
             });
         }
         
         // Ocultar números y preparar para la selección
         function hideNumbers() {
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach((cell, index) => {
-                cell.textContent = '';
-                cell.dataset.index = index;
-                cell.addEventListener('click', handleCellClick);
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach((cell, index) => {
+        cell.textContent = '';
             });
         }
         
         // Manejar clic en una celda
-        function handleCellClick(event) {
-            if (!isGameRunning) return;
-            
-            clearTimeout(gameTimeout);
-            
-            const cellIndex = parseInt(event.target.dataset.index);
-            const isCorrect = numbers[cellIndex] === 5;
-            
-            // Mostrar retroalimentación visual
-            showFeedback(cellIndex, isCorrect);
-            
-            // Actualizar puntuación
-            if (isCorrect) {
-                score++;
-                if (score > highScore) {
-                    highScore = score;
-                    localStorage.setItem('highScore', highScore);
-                }
-                message.textContent = '¡Correcto! +1 punto';
-                
-                // Disminuir el tiempo para la próxima ronda (mínimo 0.5 segundos)
-                displayTime = Math.max(0.5, displayTime - 0.1);
-                updateTimerDisplay();
-            } else {
-                message.textContent = `Incorrecto. Era el 5 (Puntuación: ${score})`;
-            }
-            
-            updateScoreDisplay();
-            
-            // Esperar un segundo y continuar o terminar
-            setTimeout(() => {
-                if (isCorrect) {
-                    playRound();
-                } else {
-                    endGame();
-                }
-            }, 1500);
+function handleCellClick(event) {
+    if (!isGameRunning) return;
+    
+    clearTimeout(gameTimeout);
+    
+    const cellIndex = parseInt(event.target.dataset.index);
+    const isCorrect = numbers[cellIndex] === 5;
+    
+    // Mostrar retroalimentación visual
+    showFeedback(cellIndex, isCorrect);
+    
+    // Actualizar puntuación
+    if (isCorrect) {
+        score++;
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('highScore', highScore);
         }
+        message.textContent = '¡Correcto! +1 punto';
+        
+        // Disminuir el tiempo para la próxima ronda (mínimo 0.5 segundos)
+        displayTime = Math.max(0.5, displayTime - 0.1);
+        updateTimerDisplay();
+    } else {
+        message.textContent = `Incorrecto. Era el 5 (Puntuación: ${score})`;
+    }
+    
+    updateScoreDisplay();
+    
+    // Cancelar el temporizador de ocultación si aún está pendiente
+    clearTimeout(hideNumbersTimeout);
+    
+    // Esperar un segundo y continuar o terminar
+    setTimeout(() => {
+        if (isCorrect) {
+            playRound();
+        } else {
+            endGame();
+        }
+    }, 1500);
+}
         
         // Mostrar retroalimentación visual
         function showFeedback(clickedIndex, isCorrect) {
