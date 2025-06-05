@@ -99,11 +99,6 @@
             cursor: not-allowed;
         }
 
-        #quit-btn {
-            background-color: #f44336;
-            color: white;
-        }
-
         button:hover:not(:disabled) {
             opacity: 0.9;
         }
@@ -125,7 +120,7 @@
         
         <div class="buttons">
             <button id="next-word-btn" disabled>Siguiente palabra</button>
-            <button id="quit-btn">Salir</button>
+
         </div>
     </div>
 
@@ -1107,12 +1102,10 @@
                 this.attemptsDisplay = document.getElementById('attempts');
                 this.guessedLettersDisplay = document.getElementById('guessed-letters');
                 this.nextWordBtn = document.getElementById('next-word-btn');
-                this.quitBtn = document.getElementById('quit-btn');
                 this.keyboard = document.querySelector('.keyboard');
                 
                 // Event listeners
-                this.nextWordBtn.addEventListener('click', () => this.nextWord());
-                this.quitBtn.addEventListener('click', () => window.close());
+                this.nextWordBtn.addEventListener('click', () => this.nextWord());             
                 document.addEventListener('keydown', (e) => this.handleKeyPress(e));
                 
                 // Comenzar el juego
