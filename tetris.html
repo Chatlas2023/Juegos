@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tetris Móvil</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            touch-action: manipulation;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100vh;
+            width: 100vw;
+            padding: 5px 0;
+        }
+        #canvas-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        #canvas {
+            background-color: black;
+            border: 2px solid #333;
+        }
+        #status {
+            color: white;
+            text-align: center;
+            margin: 5px 0;
+            font-size: 18px;
+        }
+        #game-over {
+            color: red;
+            text-align: center;
+            font-size: 24px;
+            margin: 5px 0;
+            display: none;
+        }
+        #controls {
+            display: flex;
+            flex-direction: column;
+            margin-top: 5px;
+            width: 95%;
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .btn {
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 0 3px;
+            font-size: 14px;
+            flex: 1;
+            text-align: center;
+        }
+        .btn:active {
+            background-color: #555;
+        }
+        .btn-rotate {
+            background-color: #4CAF50;
+        }
+        .btn-down {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+        <div id="status">Score: 0<br>Level: 0</div>
+        <div id="game-over">GAME OVER. Tap to reset</div>
+        <div id="controls">
+            <div class="row">
+                <button class="btn" id="left">←</button>
+                <button class="btn btn-rotate" id="rotate">↻</button>
+                <button class="btn" id="right">→</button>
+            </div>
+            <div class="row">
+                <button class="btn btn-down" id="down">↓</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // [El resto del código JavaScript permanece igual]
+        // Solo necesitas asegurarte que el cálculo del pieceSize sea:
+        const pieceSize = Math.min(
+            window.innerWidth * 0.95 / this.tetris.FIELD_WIDTH,
+            window.innerHeight * 0.70 / this.tetris.FIELD_HEIGHT
+        ) * 1.2; // 20% más grande
+        
+        // Y que el canvas-container tenga flex-grow: 1 como en el CSS anterior
+    </script>
+</body>
+</html>
