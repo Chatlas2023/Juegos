@@ -22,12 +22,12 @@
             justify-content: flex-start; 
             height: 100vh;
             width: 100vw;
-            padding-top: 10px;
+            padding-top: 5px;
         }
         #canvas {
             background-color: black;
             border: 2px solid #333;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         #status {
             color: white;
@@ -43,13 +43,13 @@
             display: none;
         }
             #status, #game-over {
-        margin: 5px 0;  /* Menos margen vertical */
+        margin: 3px 0;  /* Menos margen vertical */
     }
         #controls {
             display: flex;
             flex-direction: column;
-            margin-top: 10px;
-            width: 90%;
+            margin-top: 5px;
+            width: 95%;
         }
         .row {
             display: flex;
@@ -212,8 +212,8 @@
                 
                 // Ajustar tamaño del canvas para dispositivos móviles
                 const pieceSize = Math.min(
-                    window.innerWidth * 0.9 / this.tetris.FIELD_WIDTH,
-                    window.innerHeight * 0.6 / this.tetris.FIELD_HEIGHT
+                    window.innerWidth * 0.95 / this.tetris.FIELD_WIDTH,
+                    window.innerHeight * 0.7 / this.tetris.FIELD_HEIGHT
                 );
                 
                 this.canvas.width = pieceSize * this.tetris.FIELD_WIDTH;
