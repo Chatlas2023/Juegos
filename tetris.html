@@ -19,13 +19,14 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start; 
             height: 100vh;
             width: 100vw;
-            padding: 5px 0;
+            padding: 2px 0;
         }
         #canvas-container {
-            flex-grow: 1;
+            flex: 0 0 auto;
+            margin-top: 2px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -38,7 +39,7 @@
         #status {
             color: white;
             text-align: center;
-            margin: 5px 0;
+            margin: 2px 0;
             font-size: 18px;
         }
         #game-over {
@@ -51,7 +52,8 @@
         #controls {
             display: flex;
             flex-direction: column;
-            margin-top: 5px;
+            margin-top: auto;
+            margin-bottom: 5px;
             width: 95%;
         }
         .row {
