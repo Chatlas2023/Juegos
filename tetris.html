@@ -16,16 +16,16 @@
             -webkit-user-select: none;
         }
         #game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start; 
-            height: 100vh;
-            width: 100vw;
-            padding: 2px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+        padding: 0;
+        justify-content: space-between; /* Cambiado a space-between */
         }
         #canvas-container {
-            flex: 0 0 auto;
+            flex-shrink: 0;
             margin-top: 2px;
             display: flex;
             align-items: center;
@@ -41,6 +41,7 @@
             text-align: center;
             margin: 2px 0;
             font-size: 18px;
+            flex-shrink: 0;
         }
         #game-over {
             color: red;
@@ -55,7 +56,17 @@
             margin-top: auto;
             margin-bottom: 5px;
             width: 95%;
+            flex-shrink: 0;
         }
+            .top-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        flex-grow: 1;
+        overflow: hidden;
+        justify-content: flex-start;
+    }
         .row {
             display: flex;
             justify-content: center;
@@ -84,20 +95,22 @@
     </style>
 </head>
 <body>
-    <div id="game-container">
+<div id="game-container">
+    <div class="top-section">
         <div id="canvas-container">
             <canvas id="canvas"></canvas>
         </div>
         <div id="status">Score: 0<br>Level: 0</div>
         <div id="game-over">GAME OVER. Tap to reset</div>
-        <div id="controls">
-            <div class="row">
-                <button class="btn" id="left">←</button>
-                <button class="btn btn-rotate" id="rotate">↻</button>
-                <button class="btn" id="right">→</button>
-            </div>
-            <div class="row">
-                <button class="btn btn-down" id="down">↓</button>
+    </div>
+    <div id="controls">
+        <div class="row">
+            <button class="btn" id="left">←</button>
+            <button class="btn btn-rotate" id="rotate">↻</button>
+            <button class="btn" id="right">→</button>
+        </div>
+        <div class="row">
+            <button class="btn btn-down" id="down">↓</button>
             </div>
         </div>
     </div>
