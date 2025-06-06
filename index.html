@@ -47,6 +47,9 @@
             overflow: hidden;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
+            text-decoration: none;
+            display: block;
+            color: inherit;
         }
         
         .game-card:hover {
@@ -78,21 +81,6 @@
             margin-bottom: 15px;
         }
         
-        .play-btn {
-            display: inline-block;
-            background-color: #2ecc71;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        
-        .play-btn:hover {
-            background-color: #27ae60;
-        }
-        
         footer {
             text-align: center;
             margin-top: 40px;
@@ -120,52 +108,48 @@
         
         <div class="games-grid">
             <!-- Juego 1 -->
-            <div class="game-card">
+            <a href="Descubre_Calles.html" class="game-card">
                 <div class="game-image" style="background-color: #3498db;">
                     CALLES CF
                 </div>
                 <div class="game-info">
                     <h2>Calles de Capital Federal</h2>
                     <p>Adivina los nombres de las calles más famosas de Buenos Aires.</p>
-                    <a href="Descubre_Calles.html" class="play-btn">Jugar</a>
                 </div>
-            </div>
+            </a>
             
             <!-- Juego 2 -->
-            <div class="game-card">
+            <a href="Snake.html" class="game-card">
                 <div class="game-image" style="background-color: #e74c3c;">
                     SNAKE
                 </div>
                 <div class="game-info">
                     <h2>Juego de Snake</h2>
                     <p>Demuestra tu habilidad con este desafío.</p>
-                    <a href="Snake.html" class="play-btn">Jugar</a>
                 </div>
-            </div>
+            </a>
             
             <!-- Juego 3 -->
-            <div class="game-card">
+            <a href="Encuentra_el_5.html" class="game-card">
                 <div class="game-image" style="background-color: #9b59b6;">
                     ENCUENTRA EL 5
                 </div>
                 <div class="game-info">
                     <h2>Velocidad Visual</h2>
                     <p>Marca la casilla con el "5".</p>
-                    <a href="Encuentra_el_5.html" class="play-btn">Jugar</a>
                 </div>
-            </div>
+            </a>
             
             <!-- Juego 4 - Tetris -->
-            <div class="game-card">
+            <a href="tetris.html" class="game-card">
                 <div class="game-image" style="background-color: #f39c12;">
                     TETRIS
                 </div>
                 <div class="game-info">
                     <h2>Tetris Clásico</h2>
                     <p>El famoso juego de puzzle con piezas que caen.</p>
-                    <a href="tetris.html" class="play-btn">Jugar</a>
                 </div>
-            </div>
+            </a>
         </div>
         
         <footer>
