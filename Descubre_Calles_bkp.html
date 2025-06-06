@@ -1,52 +1,79 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Ahorcado - Calles de Capital Federal</title>
+    <title>Ahorcado - Calles CABA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9; 
+            --accent: #4895ef;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --warning: #f8961e;
+            --info: #38b000;
+        }
+        
         body {
-            font-family: 'Helvetica', Arial, sans-serif;
+            font-family: 'Poppins', sans-serif;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             margin: 0;
-            padding: 20px;
+            padding: 10px;
+            color: var(--light);
         }
 
         .game-container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 600px;
+            max-width: 700px;
             text-align: center;
+            margin: 10px 0;
         }
 
         h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-            color: #333;
+            font-size: 18px;
+            margin: 0 0 15px 0;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        .word-display-container {
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
         }
 
         .word-display {
-            font-size: 32px;
+            font-size: 36px;
             letter-spacing: 5px;
-            margin: 20px 0;
-            min-height: 50px;
-            padding: 10px;
-            border-radius: 5px;
-            transition: all 0.3s;
+            margin: 5px 0;
+            min-height: 40px;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: var(--dark);
+            text-transform: uppercase;
+            line-height: 1.3;
         }
 
         .word-display.correct {
-            background-color: #4CAF50;
+            background: linear-gradient(to right, var(--info), var(--success));
             color: white;
             animation: blink 1s ease-in-out 3;
-            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
         }
 
         @keyframes blink {
@@ -54,92 +81,204 @@
             50% { opacity: 0.7; }
         }
 
-.game-info p {
-    margin: 5px 0; /* Reducir margen para compactar */
-    white-space: nowrap; /* Evitar saltos de línea */
-}
+        .game-info-container {
+            background-color: rgba(67, 97, 238, 0.1);
+            border-radius: 8px;
+            padding: 8px;
+            margin: 10px 0;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .info-box {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            min-width: 45%;
+            color: var(--dark);
+        }
+
+        .info-box h3 {
+            margin: 0 0 5px 0;
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .info-box p {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
         #guessed-letters {
-    display: inline; /* Mostrar en línea con el texto */
-    margin-left: 5px; /* Espacio después del texto */
-}
+            color: var(--danger);
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .keyboard-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
 
         .keyboard {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 5px;
-            margin: 20px 0;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
         }
-        .key {
-        width: 40px;
-        height: 40px;
-        font-size: 18px;
-        background-color: #e0e0e0;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        display: flex; /* Agregar Flexbox */
-        justify-content: center; /* Centrar horizontalmente */
-        align-items: center; /* Centrar verticalmente */
-            }
 
-        .key:hover {
-            background-color: #d0d0d0;
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .key {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            color: var(--dark);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .key:hover:not(.used) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .key.used {
-            background-color: #a0a0a0;
+            background: linear-gradient(to bottom, #adb5bd, #6c757d);
             color: white;
             cursor: not-allowed;
+        }
+
+        .key.correct {
+            background: linear-gradient(to bottom, var(--info), #38b000);
+            color: white;
+        }
+
+        .key.wrong {
+            background: linear-gradient(to bottom, var(--danger), #d90429);
+            color: white;
         }
 
         .buttons {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
+            margin-top: 10px;
         }
 
         button {
-            padding: 10px 20px;
-            font-size: 16px;
+            padding: 8px 16px;
+            font-size: 14px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            font-weight: 600;
         }
 
         #next-word-btn {
-            background-color: #4CAF50;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
         }
 
         #next-word-btn:disabled {
-            background-color: #cccccc;
+            background: linear-gradient(to right, #adb5bd, #6c757d);
             cursor: not-allowed;
         }
 
-        button:hover:not(:disabled) {
-            opacity: 0.9;
+        .attempts-warning {
+            color: var(--danger);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Teclado en 4 filas para móviles */
+        @media (max-width: 600px) {
+            .keyboard {
+                gap: 6px;
+            }
+            
+            .keyboard-row {
+                gap: 4px;
+            }
+            
+            .key {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+                border-radius: 6px;
+            }
+            
+            h1 {
+                font-size: 16px;
+            }
+            
+            .word-display {
+                font-size: 24px;
+                letter-spacing: 3px;
+            }
+            
+            .info-box {
+                min-width: 40%;
+                padding: 6px 8px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <h1>Juego de Ahorcado con CALLES DE CAPITAL FEDERAL</h1>
+        <h1>Ahorcado - Calles de CABA</h1>
         
-        <div id="word-display" class="word-display"></div>
+        <div class="word-display-container">
+            <div id="word-display" class="word-display"></div>
+        </div>
         
-<div class="game-info">
-    <p id="attempts">Intentos restantes: 6</p>
-    <p>Letras intentadas: <span id="guessed-letters"></span></p>
-</div>
+        <div class="game-info-container">
+            <div class="game-info">
+                <div class="info-box">
+                    <h3>Letras restantes</h3>
+                    <p id="attempts">6</p>
+                </div>
+                <div class="info-box">
+                    <h3>Letras usadas</h3>
+                    <p><span id="guessed-letters"></span></p>
+                </div>
+            </div>
+        </div>
         
-        <div class="keyboard"></div>
+        <div class="keyboard-container">
+            <div class="keyboard"></div>
+        </div>
         
         <div class="buttons">
-            <button id="next-word-btn" disabled>Siguiente palabra</button>
+            <button id="next-word-btn" disabled>Siguiente</button>
         </div>
     </div>
 
@@ -147,7 +286,7 @@
         class HangmanGame {
             constructor() {
                 this.words = [
-"ACASSUSO",
+                   "ACASSUSO",
 "ACEVEDO",
 "ACHALA",
 "ACHAL",
@@ -1110,7 +1249,7 @@
 "ZINNY",
 "ZURICH",
 "ZUVIRIA",
-];
+                ];
                 this.wordToGuess = "";
                 this.guessedLetters = new Set();
                 this.attempts = 6;
@@ -1132,15 +1271,26 @@
             }
             
             createKeyboard() {
-                const letters = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ';
+                const letters = [
+                    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+                    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ'],
+                    ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
+                ];
                 this.keyboard.innerHTML = '';
                 
-                letters.split('').forEach(letter => {
-                    const key = document.createElement('button');
-                    key.textContent = letter;
-                    key.classList.add('key');
-                    key.addEventListener('click', () => this.makeGuess(letter));
-                    this.keyboard.appendChild(key);
+                letters.forEach(row => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.classList.add('keyboard-row');
+                    
+                    row.forEach(letter => {
+                        const key = document.createElement('button');
+                        key.textContent = letter;
+                        key.classList.add('key');
+                        key.addEventListener('click', () => this.makeGuess(letter));
+                        rowDiv.appendChild(key);
+                    });
+                    
+                    this.keyboard.appendChild(rowDiv);
                 });
             }
             
@@ -1150,20 +1300,28 @@
                     if (this.guessedLetters.has(letter)) {
                         display += letter;
                     } else {
-                        display += "-";
+                        display += "_";
                     }
                 }
                 this.wordDisplay.textContent = display;
+                
+                if (this.attempts <= 2) {
+                    this.attemptsDisplay.classList.add('attempts-warning');
+                } else {
+                    this.attemptsDisplay.classList.remove('attempts-warning');
+                }
+                
                 return display;
             }
             
             updateAttemptsDisplay() {
-                this.attemptsDisplay.textContent = `Intentos restantes: ${this.attempts}`;
+                this.attemptsDisplay.textContent = this.attempts;
             }
             
             updateGuessedLettersDisplay() {
-    this.guessedLettersDisplay.textContent = [...this.guessedLetters].sort().join(', ');
-}
+                const letters = [...this.guessedLetters].sort();
+                this.guessedLettersDisplay.textContent = letters.length > 0 ? letters.join(', ') : '-';
+            }
             
             handleKeyPress(event) {
                 const key = event.key.toUpperCase();
@@ -1180,10 +1338,14 @@
                 this.guessedLetters.add(guess);
                 this.updateGuessedLettersDisplay();
                 
-                // Actualizar tecla en el teclado
                 const keys = document.querySelectorAll('.key');
                 keys.forEach(key => {
                     if (key.textContent === guess) {
+                        if (this.wordToGuess.includes(guess)) {
+                            key.classList.add('correct');
+                        } else {
+                            key.classList.add('wrong');
+                        }
                         key.classList.add('used');
                         key.disabled = true;
                     }
@@ -1191,12 +1353,9 @@
                 
                 if (this.wordToGuess.includes(guess)) {
                     const currentDisplay = this.displayWord();
-                    if (!currentDisplay.includes('-')) {
-                        // Aplicar efecto de destaque cuando se adivina la palabra
+                    if (!currentDisplay.includes('_')) {
                         this.wordDisplay.classList.add('correct');
                         this.nextWordBtn.disabled = false;
-                        
-                        // Quitar la clase después de la animación (3 segundos)
                         setTimeout(() => {
                             this.wordDisplay.classList.remove('correct');
                         }, 3000);
@@ -1205,7 +1364,7 @@
                     this.attempts--;
                     this.updateAttemptsDisplay();
                     if (this.attempts <= 0) {
-                        this.showMessage('¡Perdiste!', `¡Te has quedado sin intentos! La palabra era: ${this.wordToGuess}`);
+                        this.showMessage('¡Perdiste!', `La palabra era: ${this.wordToGuess}`);
                         this.nextWordBtn.disabled = false;
                     }
                 }
@@ -1217,7 +1376,7 @@
             
             nextWord() {
                 if (this.words.length === 0) {
-                    alert('No hay palabras disponibles');
+                    alert('No hay más palabras');
                     return;
                 }
                 
@@ -1225,23 +1384,20 @@
                 this.guessedLetters = new Set();
                 this.attempts = 6;
                 
-                // Asegurarse de quitar la clase de destaque al cambiar de palabra
                 this.wordDisplay.classList.remove('correct');
                 this.displayWord();
                 this.updateAttemptsDisplay();
                 this.guessedLettersDisplay.textContent = '';
                 this.nextWordBtn.disabled = true;
                 
-                // Resetear teclado
                 const keys = document.querySelectorAll('.key');
                 keys.forEach(key => {
-                    key.classList.remove('used');
+                    key.classList.remove('used', 'correct', 'wrong');
                     key.disabled = false;
                 });
             }
         }
 
-        // Iniciar el juego cuando se cargue la página
         document.addEventListener('DOMContentLoaded', () => {
             new HangmanGame();
         });
