@@ -69,7 +69,7 @@
 </head>
 <body>
     <div id="gameContainer">
-        <div id="score">Player: 0 - Machine: 0</div>
+        <div id="score">Machine: 0 - Player: 0</div>
         <canvas id="gameCanvas"></canvas>
         <div id="controls">
             <div class="control-btn" id="upBtn">↑</div>
@@ -99,24 +99,24 @@
         const BALL_SIZE = 10;
         const PADDLE_OFFSET = 30;
         
-        let playerScore = 0;
         let machineScore = 0;
+        let playerScore = 0;
         
         // Paletas
-        const playerPaddle = {
+        const machinePaddle = {
             x: PADDLE_OFFSET,
             y: canvas.height / 2 - PADDLE_HEIGHT / 2,
             width: PADDLE_WIDTH,
             height: PADDLE_HEIGHT,
-            speed: 8
+            speed: 5
         };
         
-        const machinePaddle = {
+        const playerPaddle = {
             x: canvas.width - PADDLE_OFFSET - PADDLE_WIDTH,
             y: canvas.height / 2 - PADDLE_HEIGHT / 2,
             width: PADDLE_WIDTH,
             height: PADDLE_HEIGHT,
-            speed: 5
+            speed: 8
         };
         
         // Pelota
@@ -171,8 +171,8 @@
             
             // Dibujar paletas
             ctx.fillStyle = 'white';
-            ctx.fillRect(playerPaddle.x, playerPaddle.y, playerPaddle.width, playerPaddle.height);
             ctx.fillRect(machinePaddle.x, machinePaddle.y, machinePaddle.width, machinePaddle.height);
+            ctx.fillRect(playerPaddle.x, playerPaddle.y, playerPaddle.width, playerPaddle.height);
             
             // Dibujar pelota
             ctx.fillStyle = 'red';
@@ -192,7 +192,7 @@
         
         // Función para actualizar la posición de los elementos
         function update() {
-            // Mover paleta del jugador
+            // Mover paleta del jugador (ahora en la derecha)
             if (upPressed && playerPaddle.y > 0) {
                 playerPaddle.y -= playerPaddle.speed;
             }
@@ -200,7 +200,7 @@
                 playerPaddle.y += playerPaddle.speed;
             }
             
-            // IA simple para la paleta de la máquina
+            // IA simple para la paleta de la máquina (ahora en la izquierda)
             const machinePaddleCenter = machinePaddle.y + machinePaddle.height / 2;
             if (machinePaddleCenter < ball.y - 20) {
                 machinePaddle.y += machinePaddle.speed;
@@ -224,43 +224,43 @@
             }
             
             // Detección de colisión con las paletas
-            // Paleta del jugador
+            // Paleta de la máquina (izquierda)
             if (
-                ball.x - ball.size < playerPaddle.x + playerPaddle.width &&
-                ball.y > playerPaddle.y &&
-                ball.y < playerPaddle.y + playerPaddle.height
-            ) {
-                ball.speedX = Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la derecha
-                // Añadir efecto de ángulo según donde golpee la paleta
-                const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
-                ball.speedY = hitPosition * 5;
-            }
-            
-            // Paleta de la máquina
-            if (
-                ball.x + ball.size > machinePaddle.x &&
+                ball.x - ball.size < machinePaddle.x + machinePaddle.width &&
                 ball.y > machinePaddle.y &&
                 ball.y < machinePaddle.y + machinePaddle.height
             ) {
-                ball.speedX = -Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la izquierda
+                ball.speedX = Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la derecha
                 // Añadir efecto de ángulo según donde golpee la paleta
                 const hitPosition = (ball.y - (machinePaddle.y + machinePaddle.height / 2)) / (machinePaddle.height / 2);
                 ball.speedY = hitPosition * 5;
             }
             
+            // Paleta del jugador (derecha)
+            if (
+                ball.x + ball.size > playerPaddle.x &&
+                ball.y > playerPaddle.y &&
+                ball.y < playerPaddle.y + playerPaddle.height
+            ) {
+                ball.speedX = -Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la izquierda
+                // Añadir efecto de ángulo según donde golpee la paleta
+                const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
+                ball.speedY = hitPosition * 5;
+            }
+            
             // Puntuación
             if (ball.x - ball.size < 0) {
-                // Punto para la máquina
-                machineScore++;
+                // Punto para el jugador (la máquina falló)
+                playerScore++;
                 resetBall();
             } else if (ball.x + ball.size > canvas.width) {
-                // Punto para el jugador
-                playerScore++;
+                // Punto para la máquina (el jugador falló)
+                machineScore++;
                 resetBall();
             }
             
             // Actualizar marcador
-            scoreElement.textContent = `Player: ${playerScore} - Machine: ${machineScore}`;
+            scoreElement.textContent = `Machine: ${machineScore} - Player: ${playerScore}`;
         }
         
         // Función para reiniciar la pelota
