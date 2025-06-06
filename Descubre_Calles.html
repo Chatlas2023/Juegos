@@ -187,6 +187,9 @@
             justify-content: center;
             margin-top: 10px;
         }
+        .buttons.hidden {
+    display: none;
+}
 
         button {
             padding: 8px 16px;
@@ -303,6 +306,9 @@
     </style>
 </head>
 <body>
+    <div class="buttons hidden">
+    <button id="next-word-btn">Siguiente</button>
+</div>
     <div class="game-container">
         <h1>Ahorcado - Calles de CABA</h1>
         
@@ -1412,20 +1418,20 @@
                 
                 if (this.wordToGuess.includes(guess)) {
                     const currentDisplay = this.displayWord();
-                    if (!currentDisplay.includes('_')) {
-                        this.wordDisplay.classList.add('correct');
-                        this.nextWordBtn.disabled = false;
-                        setTimeout(() => {
-                            this.wordDisplay.classList.remove('correct');
-                        }, 3000);
-                    }
+        if (!currentDisplay.includes('_')) {
+    this.wordDisplay.classList.add('correct');
+    document.querySelector('.buttons').classList.remove('hidden');
+    setTimeout(() => {
+        this.wordDisplay.classList.remove('correct');
+    }, 3000);
+}
                 } else {
                     this.attempts--;
                     this.updateAttemptsDisplay();
-                    if (this.attempts <= 0) {
-                        this.showMessage('¡Perdiste!', `La palabra era: ${this.wordToGuess}`);
-                        this.nextWordBtn.disabled = false;
-                    }
+if (this.attempts <= 0) {
+    this.showMessage('¡Perdiste!', `La palabra era: ${this.wordToGuess}`);
+    document.querySelector('.buttons').classList.remove('hidden');
+}
                 }
             }
             
@@ -1464,7 +1470,7 @@
             
             startNewGame() {
                 // Ocultar mensaje si está visible
-                document.getElementById('message-container').classList.remove('show');
+                document.querySelector('.buttons').classList.add('hidden');
                 
                 if (this.words.length === 0) {
                     this.showMessage('Fin del juego', 'No hay más palabras');
