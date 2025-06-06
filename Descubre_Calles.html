@@ -6,55 +6,6 @@
     <title>Ahorcado - Calles CABA</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        .message-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-}
-
-.message-container.show {
-    opacity: 1;
-    pointer-events: all;
-}
-
-.message-box {
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 80%;
-    text-align: center;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-.message-box h2 {
-    color: var(--danger);
-    margin-top: 0;
-}
-
-.message-box p {
-    color: var(--dark);
-    margin-bottom: 20px;
-}
-
-.message-box button {
-    background: linear-gradient(to right, var(--primary), var(--secondary));
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: 600;
-}
         :root {
             --primary: #4361ee;
             --secondary: #3f37c9; 
@@ -267,6 +218,57 @@
             100% { opacity: 1; }
         }
 
+        /* Estilos para el mensaje emergente */
+        .message-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .message-container.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .message-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 80%;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .message-box h2 {
+            color: var(--danger);
+            margin-top: 0;
+        }
+
+        .message-box p {
+            color: var(--dark);
+            margin-bottom: 20px;
+        }
+
+        .message-box button {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
         /* Teclado en 4 filas para móviles */
         @media (max-width: 600px) {
             .keyboard {
@@ -330,974 +332,19 @@
         </div>
     </div>
 
+    <!-- Contenedor de mensajes emergentes -->
+    <div class="message-container" id="message-container">
+        <div class="message-box">
+            <h2 id="message-title"></h2>
+            <p id="message-text"></p>
+            <button id="message-close-btn">Aceptar</button>
+        </div>
+    </div>
+
     <script>
         class HangmanGame {
             constructor() {
-                this.words = [
-                   "ACASSUSO",
-"ACEVEDO",
-"ACHALA",
-"ACHAL",
-"ACHEGA",
-"ACHIRA",
-"ACHUPALLAS",
-"ACONCAGUA",
-"AGACES",
-"AGRELO",
-"AGUARIBAY",
-"AGÜERO",
-"AGUILAR",
-"AGUIRRE",
-"AIZPURUA",
-"ALAGON",
-"ALBANIA",
-"ALBARIÑO",
-"ALBARRACIN",
-"ALBERTI",
-"ALCARAZ",
-"ALEMANIA",
-"ALFARERO",
-"ALGARROBO",
-"ALICANTE",
-"ALLENDE",
-"ALMAGRO",
-"ALPATACAL",
-"ALTOLAGUIRRE",
-"ALVARADO",
-"ALZAGA",
-"AMALIA",
-"AMAMBAY",
-"AMANCAY",
-"AMBERES",
-"AMENABAR",
-"AMPERE",
-"AMSTERDAM",
-"ANASAGASTI",
-"AÑASCO",
-"ANCASTE",
-"ANCHORIS",
-"ANCON",
-"ANDALGALA",
-"ANDALUCIA",
-"ANDONAEGUI",
-"ANDORRA",
-"ANGACO",
-"ANKARA",
-"ANTEQUERA",
-"ANTEZANA",
-"ANTOFAGASTA",
-"APULE",
-"AQUINO",
-"ARAOZ",
-"ARAUJO",
-"ARCAMENDIA",
-"ARCE",
-"ARCOS",
-"ARENALES",
-"ARENGREEN",
-"AREVALO",
-"ARGAÑARAS",
-"ARGELIA",
-"ARGERICH",
-"ARIAS",
-"ARIEL",
-"ARISMENDI",
-"ARIZONA",
-"ARJONILLA",
-"ARMENIA",
-"AROMA",
-"AROMO",
-"ARQUIMEDES",
-"ARREGUI",
-"ARRIBEÑOS",
-"ARRIOLA",
-"ARROTEA",
-"ARROYO",
-"ARTILLEROS",
-"ASCASUBI",
-"ASIA",
-"ASTURIAS",
-"ASUNCION",
-"ATACALCO",
-"ATAHUALPA",
-"ATENAS",
-"ATUEL",
-"AU1",
-"AUSTRALIA",
-"AUSTRIA",
-"AVALLE",
-"AVALOS",
-"AVELLANEDA",
-"AYACUCHO",
-"AYOLAS",
-"AYUI",
-"AZARA",
-"AZCUENAGA",
-"AZOPARDO",
-"AZUL",
-"BACACAY",
-"BACON",
-"BAEZ",
-"BAHIA",
-"BAIGORRI",
-"BAIGORRIA",
-"BALBASTRO",
-"BALBOA",
-"BALCARCE",
-"BALLIVIAN",
-"BARADERO",
-"BARAGAÑA",
-"BARCALA",
-"BARCELONA",
-"BARILOCHE",
-"BARRAGAN",
-"BARRIENTOS",
-"BARZANA",
-"BASAVILBASO",
-"BASUALDO",
-"BATHURST",
-"BAUNESS",
-"BAZURCO",
-"BEADE",
-"BEAUCHEF",
-"BEAZLEY",
-"BEETHOVEN",
-"BEHRING",
-"BELEN",
-"BELFAST",
-"BELGICA",
-"BELGRADO",
-"BERLIN",
-"BERMEJO",
-"BERMUDEZ",
-"BERNA",
-"BERNAL",
-"BERNALDES",
-"BERTHELOT",
-"BERTRES",
-"BERUTI",
-"BESARES",
-"BETHLEN",
-"BEYROUTH",
-"BIARRITZ",
-"BILLINGHURST",
-"BLANDENGUES",
-"BOGADO",
-"BOGOTA",
-"BOLAÑOS",
-"BOLIVAR",
-"BOLIVIA",
-"BOLLINI",
-"BOLONIA",
-"BOMBAY",
-"BONPLAND",
-"BOQUERON",
-"BORDABEHERE",
-"BOSTON",
-"BOUCHARD",
-"BRAGADO",
-"BRANDSEN",
-"BRAVARD",
-"BRUSELAS",
-"BUCARELLI",
-"BUCAREST",
-"BUDAPEST",
-"BUERAS",
-"BULGARIA",
-"BULNES",
-"BURELA",
-"BURGOS",
-"BUTTELER",
-"BYNNON",
-"BYRON",
-"CAAGUAZU",
-"CABALLITO",
-"CABELLO",
-"CABOT",
-"CABOTO",
-"CACHEUTA",
-"CACHI",
-"CACHIMAYO",
-"CACIQUE",
-"CADIZ",
-"CAFAYATE",
-"CAGLIARI",
-"CAJARAVILLA",
-"CALABRIA",
-"CALCENA",
-"CALDAS",
-"CALDEN",
-"CALFUCURA",
-"CALIFORNIA",
-"CALINGASTA",
-"CAMACUA",
-"CAMARGO",
-"CAMARONES",
-"CAMINITO",
-"CAMOATI",
-"CAMPANA",
-"CAMPICHUELO",
-"CAMPILLO",
-"CANADA",
-"CANDELARIA",
-"CANGALLO",
-"CANGAYE",
-"CAÑUELAS",
-"CAPDEVILA",
-"CAPERUCITA",
-"CARABELAS",
-"CARACAS",
-"CARANDAY",
-"CARAPACHAY",
-"CARBAJAL",
-"CARDOSO",
-"CARHUE",
-"CARICANCHA",
-"CAROYA",
-"CARRASCO",
-"CASACUBERTA",
-"CASAFOUST",
-"CASCO",
-"CASTAÑEDA",
-"CASTAÑON",
-"CASTELLI",
-"CASTEX",
-"CASTILLO",
-"CASTRO",
-"CATAMARCA",
-"CATANIA",
-"CATRIEL",
-"CAVIA",
-"CAYASTA",
-"CAZADORES",
-"CENTENARIO",
-"CERETTI",
-"CERRILLOS",
-"CERRITO",
-"CERVANTES",
-"CERVIÑO",
-"CESPEDES",
-"CHACABUCO",
-"CHACO",
-"CHAJARI",
-"CHAMICAL",
-"CHARCAS",
-"CHARLONE",
-"CHARRUA",
-"CHASCOMUS",
-"CHECOSLOVAQUIA",
-"CHICOANA",
-"CHILE",
-"CHILECITO",
-"CHIMBORAZO",
-"CHINA",
-"CHIRIGUANOS",
-"CHIRIMAY",
-"CHIVILCOY",
-"CHONINO",
-"CHUBUT",
-"CHUMBICHA",
-"CIPOLLETTI",
-"CISNE",
-"CIUDADELA",
-"CLAY",
-"COCHABAMBA",
-"COCHICO",
-"COCHRANE",
-"COLIGÜE",
-"COLIQUEO",
-"COLOMBRES",
-"COLONIA",
-"COLPAYO",
-"COLUMBIA",
-"CONCORDIA",
-"CONDARCO",
-"CONDE",
-"CONDOR",
-"CONESA",
-"CONSTANTINOPLA",
-"CONSTITUCION",
-"CONVENCION",
-"COOPERACION",
-"COPAHUE",
-"COPENHAGUE",
-"COPERNICO",
-"COREA",
-"CORONDA",
-"CORRALES",
-"CORREA",
-"CORREGIDORES",
-"CORTINA",
-"CORVALAN",
-"COSQUIN",
-"COTAGAITA",
-"COTOCOLLAO",
-"CRAIG",
-"CRAINQUEVILLE",
-"CRAMER",
-"CRANWELL",
-"CRESPO",
-"CUBA",
-"CUENCA",
-"CULLEN",
-"CULPINA",
-"CURAPALIGÜE",
-"CURITYBA",
-"CURUPAYTI",
-"CUYO",
-"CUZCO",
-"DAGUERRE",
-"DANEL",
-"DANTE",
-"DARREGUEYRA",
-"DARWIN",
-"DAVILA",
-"DEFENSA",
-"DEHEZA",
-"DEKAY",
-"DELAMBRE",
-"DELGADO",
-"DEMARIA",
-"DESAGUADERO",
-"DESEADO",
-"DIAMANTE",
-"DINAMARCA",
-"DOBLAS",
-"DOLORES",
-"DONADO",
-"DONIZETTI",
-"DRAGONES",
-"DRUMOND",
-"DUBLIN",
-"DUPUY",
-"ECHAURI",
-"ECHEANDIA",
-"ECHENAGUCIA",
-"ECHEVERRIA",
-"ECUADOR",
-"ELIA",
-"EMPEDRADO",
-"ENSENADA",
-"EPECUEN",
-"EPUYEN",
-"ERASMO",
-"ERCILLA",
-"EREZCANO",
-"ESCALADA",
-"ESCOBAR",
-"ESCRIBANO",
-"ESMERALDA",
-"ESNAOLA",
-"ESPARTACO",
-"ESPARZA",
-"ESPINILLO",
-"ESPINOSA",
-"ESPRONCEDA",
-"ESQUEL",
-"ESQUINA",
-"ESQUIU",
-"ESTIVAO",
-"ESTOCOLMO",
-"ESTOMBA",
-"ESTONIA",
-"ESTRADA",
-"EUCLIDES",
-"EZEIZA",
-"FABRE",
-"FACUNDO",
-"FALUCHO",
-"FAMAILLA",
-"FAMATINA",
-"FARADAY",
-"FCDFS",
-"FCGBM",
-"FCGMB",
-"FCGR",
-"FCGSM",
-"FCGU",
-"FECUNDIDAD",
-"FERNANDEZ",
-"FERRARI",
-"FERRE",
-"FERROCARRIL",
-"FILIBERTO",
-"FINLANDIA",
-"FLORESTA",
-"FLORIDA",
-"FONROUGE",
-"FORMOSA",
-"FOURNIER",
-"FRAGA",
-"FRAGUEIRO",
-"FRANCO",
-"FRANKLIN",
-"FRATERNIDAD",
-"FRENCH",
-"GALENO",
-"GALICIA",
-"GALILEO",
-"GALLARDO",
-"GALLEGOS",
-"GALLO",
-"GALVAN",
-"GAMARRA",
-"GANA",
-"GANDARA",
-"GARIBALDI",
-"GARRO",
-"GASCON",
-"GAVILAN",
-"GELLY",
-"GENA",
-"GENOVA",
-"GIBRALTAR",
-"GIBSON",
-"GINEBRA",
-"GIRARDOT",
-"GIRIBONE",
-"GOROSTIAGA",
-"GORRITI",
-"GOYA",
-"GRANADEROS",
-"GRECIA",
-"GRIVEO",
-"GUAL",
-"GUALEGUAY",
-"GUALEGUAYCHU",
-"GUAMINI",
-"GUANAHANI",
-"GUARANI",
-"GUATEMALA",
-"GUAYAQUIL",
-"GUAYMALLEN",
-"GUAYQUIRARO",
-"GUAYRA",
-"GÜEMES",
-"GUEVARA",
-"GUIDO",
-"GUIPUZCOA",
-"GUISE",
-"GURRUCHAGA",
-"GUTENBERG",
-"HABANA",
-"HAITI",
-"HAMBURGO",
-"HAWAII",
-"HELGUERA",
-"HEREDIA",
-"HERNANDARIAS",
-"HERRERA",
-"HIDALGO",
-"HINOJO",
-"HIROSHIMA",
-"HOLMBERG",
-"HOMERO",
-"HONDURAS",
-"HORTIGUERA",
-"HUALFIN",
-"HUAURA",
-"HUBAC",
-"HUDSON",
-"HUEMUL",
-"HUERGO",
-"HUMAHUACA",
-"HUMAITA",
-"HUMBOLDT",
-"HUNGRIA",
-"HUSARES",
-"IBAÑEZ",
-"IBARROLA",
-"IBERA",
-"ICALMA",
-"IGUALDAD",
-"IGUAZU",
-"INCA",
-"INCLAN",
-"INDIO",
-"IRALA",
-"IRIARTE",
-"IRIGOYEN",
-"IRIZAR",
-"IRLANDA",
-"ISLANDIA",
-"ITALIA",
-"ITAQUI",
-"ITURRI",
-"ITUZAINGO",
-"JACARANDA",
-"JACHAL",
-"JARAMILLO",
-"JORGE",
-"JUFRE",
-"JUNCAL",
-"JUNIN",
-"JURAMENTO",
-"KING",
-"LACARRA",
-"LADINES",
-"LAFAYETTE",
-"LAFINUR",
-"LAFUENTE",
-"LAGOS",
-"LAGRANGE",
-"LAGUNA",
-"LAMBARE",
-"LANIN",
-"LANUS",
-"LANZA",
-"LAPACHO",
-"LAPLACE",
-"LAPRIDA",
-"LARRAYA",
-"LARRAZABAL",
-"LARREA",
-"LARSEN",
-"LASCANO",
-"LAUSANA",
-"LAUTARO",
-"LAVADERO",
-"LAVALLE",
-"LAVALLEJA",
-"LAVARDEN",
-"LAVOISIER",
-"LEIPZIG",
-"LEIVA",
-"LEONES",
-"LEOPARDI",
-"LERMA",
-"LEZICA",
-"LIBERTAD",
-"LIBRES",
-"LIMA",
-"LINNEO",
-"LISBOA",
-"LITUANIA",
-"LIVERPOOL",
-"LLAVALLOL",
-"LLERENA",
-"LLORENTE",
-"LOBERIA",
-"LOBOS",
-"LOGROÑO",
-"LONDRES",
-"LOYOLA",
-"LUCERO",
-"LÜCHTER",
-"LUGO",
-"LUGONES",
-"LUNA",
-"LUXEMBURGO",
-"LUZURIAGA",
-"LYNCH",
-"MACHAIN",
-"MADARIAGA",
-"MADERO",
-"MADRID",
-"MAGALLANES",
-"MAGDALENA",
-"MAIPU",
-"MAITEN",
-"MALABIA",
-"MALAGA",
-"MALASIA",
-"MALDONADO",
-"MANAGUA",
-"MANDISOBI",
-"MANGIANTE",
-"MANZANARES",
-"MANZONI",
-"MARACAIBO",
-"MARSELLA",
-"MASON",
-"MATACO",
-"MATANZA",
-"MATHEU",
-"MATORRAS",
-"MATURIN",
-"MAURE",
-"MAZA",
-"MBURUCUYA",
-"MEDANOS",
-"MEDEYROS",
-"MEDINA",
-"MEDRANO",
-"MELGAR",
-"MELIAN",
-"MELINCUE",
-"MEMBRILLAR",
-"MENDEZ",
-"MENDOZA",
-"MERCEDES",
-"METAN",
-"MEXICO",
-"MIGUELETES",
-"MILAN",
-"MILLER",
-"MILTON",
-"MIÑONES",
-"MIRAFLORES",
-"MIRALLA",
-"MIRAMAR",
-"MIRANDA",
-"MIRAVE",
-"MIRIÑAY",
-"MIRO",
-"MISIONES",
-"MOCORETA",
-"MOCTEZUMA",
-"MOLDES",
-"MOLIERE",
-"MOLINA",
-"MOM",
-"MOMPOX",
-"MONACO",
-"MONASTERIO",
-"MONROE",
-"MONTAÑESES",
-"MONTE",
-"MONTEAGUDO",
-"MONTENEGRO",
-"MONTESQUIEU",
-"MONTEVIDEO",
-"MONTIEL",
-"MONTREAL",
-"MORELOS",
-"MORENO",
-"MORETO",
-"MORLOTE",
-"MORON",
-"MORSE",
-"MOSCU",
-"MOZART",
-"MUÑECAS",
-"MUNICH",
-"MUÑIZ",
-"MURATURE",
-"MURCIA",
-"MURGUIONDO",
-"MURILLO",
-"MUTUALISMO",
-"NAMUNCURA",
-"ÑANDUTI",
-"NAPOLES",
-"NATAL",
-"NAVARRO",
-"NAZARRE",
-"NECOCHEA",
-"NEPPER",
-"NEUQUEN",
-"NEVADA",
-"NEWTON",
-"NICARAGUA",
-"NIZA",
-"NOGOYA",
-"NORUEGA",
-"NUMANCIA",
-"NUÑEZ",
-"O'BRIEN",
-"O'GORMAN",
-"O'HIGGINS",
-"OCEANIA",
-"OHM",
-"OLAVARRIA",
-"OLAYA",
-"OLAZABAL",
-"OLIDEN",
-"OLIVIERI",
-"OLIVOS",
-"OLLEROS",
-"OMBU",
-"ONCATIVO",
-"OPORTO",
-"ORMA",
-"ORTEGA",
-"ORURO",
-"OSAKA",
-"OSLO",
-"OSORIO",
-"OSTENDE",
-"OTAMENDI",
-"OTERO",
-"OTTAWA",
-"OWEN",
-"PACHECO",
-"PADILLA",
-"PAEZ",
-"PALESTINA",
-"PALMAR",
-"PALOS",
-"PALPA",
-"PANAMA",
-"PARACAS",
-"PARAGUAY",
-"PARANA",
-"PAREJA",
-"PARERA",
-"PARIS",
-"PARKER",
-"PAROISSIEN",
-"PARRAL",
-"PASCO",
-"PASO",
-"PASTEUR",
-"PATAGONES",
-"PATRON",
-"PAUNERO",
-"PAVON",
-"PAYSANDU",
-"PEDERNERA",
-"PEHUAJO",
-"PEIPING",
-"PEÑA",
-"PEPIRI",
-"PERDRIEL",
-"PEREYRA",
-"PERGAMINO",
-"PERIBEBUY",
-"PERNAMBUCO",
-"PERRAULT",
-"PERU",
-"PESCADORES",
-"PESTALOZZI",
-"PICHEUTA",
-"PICHINCHA",
-"PICO",
-"PIEDRAS",
-"PIERES",
-"PILA",
-"PILAR",
-"PILCOMAYO",
-"PILLADO",
-"PINTO",
-"PINZON",
-"PIRAN",
-"PIROVANO",
-"PITAGORAS",
-"PIZARRO",
-"PIZZURNO",
-"PLANES",
-"PLAZA",
-"PLUMERILLO",
-"PLUTARCO",
-"POLA",
-"POLONIA",
-"PORTELA",
-"PORTILLO",
-"PORTUGAL",
-"POSADAS",
-"POSTA",
-"POTOSI",
-"PRAGA",
-"PRINGLES",
-"PROMETEO",
-"PUAN",
-"PUJOL",
-"PUMACAHUA",
-"PUNA",
-"QUEBRACHO",
-"QUERANDIES",
-"QUEROL",
-"QUESADA",
-"QUEVEDO",
-"QUILMES",
-"QUINTANA",
-"QUIRNO",
-"QUIROS",
-"QUITO",
-"RAFAELA",
-"RAMALLO",
-"RAMSAY",
-"RANQUELES",
-"RAUCH",
-"RAULET",
-"RAULIES",
-"RAWSON",
-"RECONQUISTA",
-"REMEDIOS",
-"RENACIMIENTO",
-"RENAN",
-"REPUBLICA",
-"RESURRECCION",
-"RIACHUELO",
-"RIGLOS",
-"RINCON",
-"RIOBAMBA",
-"ROBERTSON",
-"ROCAMORA",
-"ROCHA",
-"ROCHDALE",
-"RODNEY",
-"ROJAS",
-"ROMA",
-"ROMERO",
-"RONDEAU",
-"ROSARIO",
-"ROSETI",
-"RUBENS",
-"RUFINO",
-"RUMANIA",
-"RUSIA",
-"RUSSEL",
-"SAAVEDRA",
-"SALADILLO",
-"SALALA",
-"SALAS",
-"SALCEDO",
-"SALOM",
-"SALTA",
-"SALTO",
-"SALVIGNY",
-"SANABRIA",
-"SANCHEZ",
-"SANTANDER",
-"SARACHAGA",
-"SARANDI",
-"SARAVIA",
-"SARAZA",
-"SARMIENTO",
-"SAYOS",
-"SENILLOSA",
-"SERRANO",
-"SERVET",
-"SEVILLA",
-"SHAKESPEARE",
-"SHANGHAI",
-"SIMBRON",
-"SINCLAIR",
-"SOCRATES",
-"SOFIA",
-"SOLER",
-"SOLIS",
-"SOMELLERA",
-"SORIA",
-"STEPHENSON",
-"SUAREZ",
-"SUDAMERICA",
-"SUECIA",
-"SUIPACHA",
-"SUIZA",
-"SUNCHALES",
-"SUPERI",
-"TABARE",
-"TACUARA",
-"TACUARI",
-"TAFI",
-"TAGLE",
-"TALAVERA",
-"TALCAHUANO",
-"TANDIL",
-"TAPALQUE",
-"TARIJA",
-"TARTAGAL",
-"TASSO",
-"TEGUCIGALPA",
-"TEJEDOR",
-"TEMPERLEY",
-"TERRADA",
-"TERRERO",
-"THAMES",
-"THOMPSON",
-"THORNE",
-"TILCARA",
-"TIMBO",
-"TIMBUES",
-"TINOGASTA",
-"TOAY",
-"TOBAS",
-"TOKIO",
-"TOLEDO",
-"TOLL",
-"TONELERO",
-"TORRENT",
-"TOTORAL",
-"TRAFUL",
-"TREVERIS",
-"TRIESTE",
-"TRIPOLI",
-"TROLE",
-"TRONADOR",
-"TUCUMAN",
-"TUNEZ",
-"TUPIZA",
-"TURIN",
-"TURQUIA",
-"TUYU",
-"TUYUTI",
-"UCACHA",
-"UGARTECHE",
-"UKRANIA",
-"UNANUE",
-"URDANETA",
-"URDININEA",
-"URIARTE",
-"URIBURU",
-"URIEN",
-"URUGUAY",
-"URUNDAY",
-"USPALLATA",
-"VALDENEGRO",
-"VALDERRAMA",
-"VALENCIA",
-"VALLE",
-"VALLEJOS",
-"VALPARAISO",
-"VARELA",
-"VARSOVIA",
-"VEDIA",
-"VELAZQUEZ",
-"VENECIA",
-"VENEZUELA",
-"VENIALVO",
-"VENTANA",
-"VERA",
-"VERACRUZ",
-"VIAMONTE",
-"VIDT",
-"VIEJOBUENO",
-"VIEL",
-"VIENA",
-"VIEYRA",
-"VIEYTES",
-"VIGO",
-"VILELA",
-"VILLANUEVA",
-"VILLARINO",
-"VILLARROEL",
-"VINCHINA",
-"VIRASORO",
-"VIRGILIO",
-"VIRREYES",
-"VOLTA",
-"VOLTAIRE",
-"WAGNER",
-"WASHINGTON",
-"WHITE",
-"YAPEYU",
-"YATAY",
-"YERBAL",
-"YERUA",
-"YRUPE",
-"YUGOSLAVIA",
-"ZABALA",
-"ZADO",
-"ZAMUDIO",
-"ZAÑARTU",
-"ZAPALA",
-"ZAPATA",
-"ZAPIOLA",
-"ZARATE",
-"ZARRAGA",
-"ZAVALETA",
-"ZAVALIA",
-"ZELADA",
-"ZELARRAYAN",
-"ZELAYA",
-"ZENTENO",
-"ZEPITA",
-"ZINNY",
-"ZURICH",
-"ZUVIRIA",
-                ];
+                this.words = [];  // Aquí deberás agregar tu listado de calles
                 this.wordToGuess = "";
                 this.guessedLetters = new Set();
                 this.attempts = 6;
@@ -1310,12 +357,12 @@
                 this.keyboard = document.querySelector('.keyboard');
                 
                 // Event listeners
-                this.nextWordBtn.addEventListener('click', () => this.nextWord());             
+                this.nextWordBtn.addEventListener('click', () => this.startNewGame());
                 document.addEventListener('keydown', (e) => this.handleKeyPress(e));
                 
                 // Comenzar el juego
                 this.createKeyboard();
-                this.nextWord();
+                this.startNewGame();
             }
             
             createKeyboard() {
@@ -1418,38 +465,69 @@
                 }
             }
             
-showMessage(title, message) {
-    const messageContainer = document.getElementById('message-container');
-    const messageTitle = document.getElementById('message-title');
-    const messageText = document.getElementById('message-text');
-    const closeBtn = document.getElementById('message-close-btn');
-    
-    messageTitle.textContent = title;
-    messageText.textContent = message;
-    messageContainer.classList.add('show');
-    
-    closeBtn.onclick = () => {
-        messageContainer.classList.remove('show');
-    };
-    
-    // También cerrar haciendo click fuera del mensaje
-    messageContainer.onclick = (e) => {
-        if (e.target === messageContainer) {
-            messageContainer.classList.remove('show');
+            showMessage(title, message) {
+                const messageContainer = document.getElementById('message-container');
+                const messageTitle = document.getElementById('message-title');
+                const messageText = document.getElementById('message-text');
+                const closeBtn = document.getElementById('message-close-btn');
+                
+                messageTitle.textContent = title;
+                messageText.textContent = message;
+                messageContainer.classList.add('show');
+                
+                // Configurar el botón de cierre
+                const closeMessage = () => {
+                    messageContainer.classList.remove('show');
+                };
+                
+                closeBtn.onclick = closeMessage;
+                
+                // También cerrar haciendo click fuera del mensaje
+                messageContainer.onclick = (e) => {
+                    if (e.target === messageContainer) {
+                        closeMessage();
+                    }
+                };
+                
+                // Cerrar con la tecla Escape
+                document.addEventListener('keydown', function handleKey(e) {
+                    if (e.key === 'Escape') {
+                        closeMessage();
+                        document.removeEventListener('keydown', handleKey);
+                    }
+                }, {once: true});
+            }
+            
+            startNewGame() {
+                // Ocultar mensaje si está visible
+                document.getElementById('message-container').classList.remove('show');
+                
+                if (this.words.length === 0) {
+                    this.showMessage('Fin del juego', 'No hay más palabras');
+                    return;
+                }
+                
+                this.wordToGuess = this.words[Math.floor(Math.random() * this.words.length)].toUpperCase();
+                this.guessedLetters = new Set();
+                this.attempts = 6;
+                
+                this.wordDisplay.classList.remove('correct');
+                this.displayWord();
+                this.updateAttemptsDisplay();
+                this.guessedLettersDisplay.textContent = '';
+                this.nextWordBtn.disabled = true;
+                
+                const keys = document.querySelectorAll('.key');
+                keys.forEach(key => {
+                    key.classList.remove('used', 'correct', 'wrong');
+                    key.disabled = false;
+                });
+            }
         }
-    };
-}
 
         document.addEventListener('DOMContentLoaded', () => {
             new HangmanGame();
         });
     </script>
-    <div class="message-container" id="message-container">
-    <div class="message-box">
-        <h2 id="message-title"></h2>
-        <p id="message-text"></p>
-        <button id="message-close-btn">Aceptar</button>
-    </div>
-</div>
 </body>
 </html>
