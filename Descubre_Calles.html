@@ -37,6 +37,21 @@
             letter-spacing: 5px;
             margin: 20px 0;
             min-height: 50px;
+            padding: 10px;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .word-display.correct {
+            background-color: #4CAF50;
+            color: white;
+            animation: blink 1s ease-in-out 3;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
 
         .game-info {
@@ -51,19 +66,19 @@
             gap: 5px;
             margin: 20px 0;
         }
-    .key {
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
-    background-color: #e0e0e0;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    display: flex; /* Agregar Flexbox */
-    justify-content: center; /* Centrar horizontalmente */
-    align-items: center; /* Centrar verticalmente */
-        }
+        .key {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        background-color: #e0e0e0;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        display: flex; /* Agregar Flexbox */
+        justify-content: center; /* Centrar horizontalmente */
+        align-items: center; /* Centrar verticalmente */
+            }
 
         .key:hover {
             background-color: #d0d0d0;
@@ -122,7 +137,6 @@
         
         <div class="buttons">
             <button id="next-word-btn" disabled>Siguiente palabra</button>
-
         </div>
     </div>
 
@@ -133,7 +147,7 @@
 "ACASSUSO",
 "ACEVEDO",
 "ACHALA",
-"ACHAVAL",
+"ACHAL",
 "ACHEGA",
 "ACHIRA",
 "ACHUPALLAS",
@@ -1048,7 +1062,6 @@
 "VERA",
 "VERACRUZ",
 "VIAMONTE",
-"VIDAL",
 "VIDT",
 "VIEJOBUENO",
 "VIEL",
@@ -1156,38 +1169,44 @@
                 }
             }
             
-makeGuess(guess) {
-    if (this.guessedLetters.has(guess) || this.attempts <= 0) {
-        return;
-    }
-    
-    this.guessedLetters.add(guess);
-    this.updateGuessedLettersDisplay();
-    
-    // Actualizar tecla en el teclado
-    const keys = document.querySelectorAll('.key');
-    keys.forEach(key => {
-        if (key.textContent === guess) {
-            key.classList.add('used');
-            key.disabled = true;
-        }
-    });
-    
-    if (this.wordToGuess.includes(guess)) {
-        const currentDisplay = this.displayWord();
-        if (!currentDisplay.includes('-')) {
-            // Eliminado el popup de felicitaciones
-            this.nextWordBtn.disabled = false;
-        }
-    } else {
-        this.attempts--;
-        this.updateAttemptsDisplay();
-        if (this.attempts <= 0) {
-            this.showMessage('¡Perdiste!', `¡Te has quedado sin intentos! La palabra era: ${this.wordToGuess}`);
-            this.nextWordBtn.disabled = false;
-        }
-    }
-}
+            makeGuess(guess) {
+                if (this.guessedLetters.has(guess) || this.attempts <= 0) {
+                    return;
+                }
+                
+                this.guessedLetters.add(guess);
+                this.updateGuessedLettersDisplay();
+                
+                // Actualizar tecla en el teclado
+                const keys = document.querySelectorAll('.key');
+                keys.forEach(key => {
+                    if (key.textContent === guess) {
+                        key.classList.add('used');
+                        key.disabled = true;
+                    }
+                });
+                
+                if (this.wordToGuess.includes(guess)) {
+                    const currentDisplay = this.displayWord();
+                    if (!currentDisplay.includes('-')) {
+                        // Aplicar efecto de destaque cuando se adivina la palabra
+                        this.wordDisplay.classList.add('correct');
+                        this.nextWordBtn.disabled = false;
+                        
+                        // Quitar la clase después de la animación (3 segundos)
+                        setTimeout(() => {
+                            this.wordDisplay.classList.remove('correct');
+                        }, 3000);
+                    }
+                } else {
+                    this.attempts--;
+                    this.updateAttemptsDisplay();
+                    if (this.attempts <= 0) {
+                        this.showMessage('¡Perdiste!', `¡Te has quedado sin intentos! La palabra era: ${this.wordToGuess}`);
+                        this.nextWordBtn.disabled = false;
+                    }
+                }
+            }
             
             showMessage(title, message) {
                 alert(`${title}\n${message}`);
@@ -1203,6 +1222,8 @@ makeGuess(guess) {
                 this.guessedLetters = new Set();
                 this.attempts = 6;
                 
+                // Asegurarse de quitar la clase de destaque al cambiar de palabra
+                this.wordDisplay.classList.remove('correct');
                 this.displayWord();
                 this.updateAttemptsDisplay();
                 this.guessedLettersDisplay.textContent = '';
