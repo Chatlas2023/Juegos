@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pong Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+            overflow: hidden;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            background-color: green;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+        }
+        #score {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            pointer-events: none;
+        }
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        .control-btn {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            touch-action: manipulation;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="score">Player: 0 - Machine: 0</div>
+        <canvas id="gameCanvas"></canvas>
+        <div id="controls">
+            <div class="control-btn" id="upBtn">↑</div>
+            <div class="control-btn" id="downBtn">↓</div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración del juego
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        
+        // Ajustar tamaño del canvas
+        function resizeCanvas() {
+            const container = document.getElementById('gameContainer');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Variables del juego
+        const PADDLE_WIDTH = 10;
+        const PADDLE_HEIGHT = 100;
+        const BALL_SIZE = 10;
+        const PADDLE_OFFSET = 30;
+        
+        let playerScore = 0;
+        let machineScore = 0;
+        
+        // Paletas
+        const playerPaddle = {
+            x: PADDLE_OFFSET,
+            y: canvas.height / 2 - PADDLE_HEIGHT / 2,
+            width: PADDLE_WIDTH,
+            height: PADDLE_HEIGHT,
+            speed: 8
+        };
+        
+        const machinePaddle = {
+            x: canvas.width - PADDLE_OFFSET - PADDLE_WIDTH,
+            y: canvas.height / 2 - PADDLE_HEIGHT / 2,
+            width: PADDLE_WIDTH,
+            height: PADDLE_HEIGHT,
+            speed: 5
+        };
+        
+        // Pelota
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            size: BALL_SIZE,
+            speedX: 4,
+            speedY: 4
+        };
+        
+        // Controles táctiles
+        let upPressed = false;
+        let downPressed = false;
+        
+        document.getElementById('upBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            upPressed = true;
+        });
+        
+        document.getElementById('upBtn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            upPressed = false;
+        });
+        
+        document.getElementById('downBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            downPressed = true;
+        });
+        
+        document.getElementById('downBtn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            downPressed = false;
+        });
+        
+        // Controles de teclado (para probar en desktop)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp') upPressed = true;
+            if (e.key === 'ArrowDown') downPressed = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowUp') upPressed = false;
+            if (e.key === 'ArrowDown') downPressed = false;
+        });
+        
+        // Función para dibujar elementos
+        function draw() {
+            // Limpiar canvas
+            ctx.fillStyle = 'green';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Dibujar paletas
+            ctx.fillStyle = 'white';
+            ctx.fillRect(playerPaddle.x, playerPaddle.y, playerPaddle.width, playerPaddle.height);
+            ctx.fillRect(machinePaddle.x, machinePaddle.y, machinePaddle.width, machinePaddle.height);
+            
+            // Dibujar pelota
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Dibujar línea central
+            ctx.strokeStyle = 'white';
+            ctx.setLineDash([10, 10]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        // Función para actualizar la posición de los elementos
+        function update() {
+            // Mover paleta del jugador
+            if (upPressed && playerPaddle.y > 0) {
+                playerPaddle.y -= playerPaddle.speed;
+            }
+            if (downPressed && playerPaddle.y < canvas.height - playerPaddle.height) {
+                playerPaddle.y += playerPaddle.speed;
+            }
+            
+            // IA simple para la paleta de la máquina
+            const machinePaddleCenter = machinePaddle.y + machinePaddle.height / 2;
+            if (machinePaddleCenter < ball.y - 20) {
+                machinePaddle.y += machinePaddle.speed;
+            } else if (machinePaddleCenter > ball.y + 20) {
+                machinePaddle.y -= machinePaddle.speed;
+            }
+            
+            // Asegurar que la paleta de la máquina no salga del canvas
+            if (machinePaddle.y < 0) machinePaddle.y = 0;
+            if (machinePaddle.y > canvas.height - machinePaddle.height) {
+                machinePaddle.y = canvas.height - machinePaddle.height;
+            }
+            
+            // Mover pelota
+            ball.x += ball.speedX;
+            ball.y += ball.speedY;
+            
+            // Detección de colisión con los bordes superior e inferior
+            if (ball.y - ball.size < 0 || ball.y + ball.size > canvas.height) {
+                ball.speedY = -ball.speedY;
+            }
+            
+            // Detección de colisión con las paletas
+            // Paleta del jugador
+            if (
+                ball.x - ball.size < playerPaddle.x + playerPaddle.width &&
+                ball.y > playerPaddle.y &&
+                ball.y < playerPaddle.y + playerPaddle.height
+            ) {
+                ball.speedX = Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la derecha
+                // Añadir efecto de ángulo según donde golpee la paleta
+                const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
+                ball.speedY = hitPosition * 5;
+            }
+            
+            // Paleta de la máquina
+            if (
+                ball.x + ball.size > machinePaddle.x &&
+                ball.y > machinePaddle.y &&
+                ball.y < machinePaddle.y + machinePaddle.height
+            ) {
+                ball.speedX = -Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la izquierda
+                // Añadir efecto de ángulo según donde golpee la paleta
+                const hitPosition = (ball.y - (machinePaddle.y + machinePaddle.height / 2)) / (machinePaddle.height / 2);
+                ball.speedY = hitPosition * 5;
+            }
+            
+            // Puntuación
+            if (ball.x - ball.size < 0) {
+                // Punto para la máquina
+                machineScore++;
+                resetBall();
+            } else if (ball.x + ball.size > canvas.width) {
+                // Punto para el jugador
+                playerScore++;
+                resetBall();
+            }
+            
+            // Actualizar marcador
+            scoreElement.textContent = `Player: ${playerScore} - Machine: ${machineScore}`;
+        }
+        
+        // Función para reiniciar la pelota
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.speedX = (Math.random() > 0.5 ? 1 : -1) * 4;
+            ball.speedY = (Math.random() * 2 - 1) * 4;
+        }
+        
+        // Bucle del juego
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Iniciar el juego
+        resetBall();
+        gameLoop();
+    </script>
+</body>
+</html>
