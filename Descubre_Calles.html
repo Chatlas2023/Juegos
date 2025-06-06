@@ -6,6 +6,55 @@
     <title>Ahorcado - Calles CABA</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        .message-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.message-container.show {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.message-box {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 80%;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.message-box h2 {
+    color: var(--danger);
+    margin-top: 0;
+}
+
+.message-box p {
+    color: var(--dark);
+    margin-bottom: 20px;
+}
+
+.message-box button {
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+}
         :root {
             --primary: #4361ee;
             --secondary: #3f37c9; 
@@ -1369,37 +1418,38 @@
                 }
             }
             
-            showMessage(title, message) {
-                alert(`${title}\n${message}`);
-            }
-            
-            nextWord() {
-                if (this.words.length === 0) {
-                    alert('No hay más palabras');
-                    return;
-                }
-                
-                this.wordToGuess = this.words[Math.floor(Math.random() * this.words.length)].toUpperCase();
-                this.guessedLetters = new Set();
-                this.attempts = 6;
-                
-                this.wordDisplay.classList.remove('correct');
-                this.displayWord();
-                this.updateAttemptsDisplay();
-                this.guessedLettersDisplay.textContent = '';
-                this.nextWordBtn.disabled = true;
-                
-                const keys = document.querySelectorAll('.key');
-                keys.forEach(key => {
-                    key.classList.remove('used', 'correct', 'wrong');
-                    key.disabled = false;
-                });
-            }
+showMessage(title, message) {
+    const messageContainer = document.getElementById('message-container');
+    const messageTitle = document.getElementById('message-title');
+    const messageText = document.getElementById('message-text');
+    const closeBtn = document.getElementById('message-close-btn');
+    
+    messageTitle.textContent = title;
+    messageText.textContent = message;
+    messageContainer.classList.add('show');
+    
+    closeBtn.onclick = () => {
+        messageContainer.classList.remove('show');
+    };
+    
+    // También cerrar haciendo click fuera del mensaje
+    messageContainer.onclick = (e) => {
+        if (e.target === messageContainer) {
+            messageContainer.classList.remove('show');
         }
+    };
+}
 
         document.addEventListener('DOMContentLoaded', () => {
             new HangmanGame();
         });
     </script>
+    <div class="message-container" id="message-container">
+    <div class="message-box">
+        <h2 id="message-title"></h2>
+        <p id="message-text"></p>
+        <button id="message-close-btn">Aceptar</button>
+    </div>
+</div>
 </body>
 </html>
