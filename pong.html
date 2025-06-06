@@ -102,6 +102,19 @@
         let machineScore = 0;
         let playerScore = 0;
         
+        // Cargar sonidos
+        const sounds = {
+            paddleHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'), // Sonido corto base64
+            wallHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'), // Otro sonido base64
+            score: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...') // Sonido más largo base64
+        };
+        
+        // En un juego real, deberías usar archivos de sonido reales en lugar de datos base64
+        // Ejemplo de cómo cargar sonidos desde archivos:
+        // sounds.paddleHit = new Audio('sounds/paddle.wav');
+        // sounds.wallHit = new Audio('sounds/wall.wav');
+        // sounds.score = new Audio('sounds/score.wav');
+        
         // Paletas
         const machinePaddle = {
             x: PADDLE_OFFSET,
@@ -221,6 +234,8 @@
             // Detección de colisión con los bordes superior e inferior
             if (ball.y - ball.size < 0 || ball.y + ball.size > canvas.height) {
                 ball.speedY = -ball.speedY;
+                sounds.wallHit.currentTime = 0; // Rebobinar el sonido por si ya está sonando
+                sounds.wallHit.play();
             }
             
             // Detección de colisión con las paletas
@@ -234,6 +249,9 @@
                 // Añadir efecto de ángulo según donde golpee la paleta
                 const hitPosition = (ball.y - (machinePaddle.y + machinePaddle.height / 2)) / (machinePaddle.height / 2);
                 ball.speedY = hitPosition * 5;
+                
+                sounds.paddleHit.currentTime = 0;
+                sounds.paddleHit.play();
             }
             
             // Paleta del jugador (derecha)
@@ -246,16 +264,23 @@
                 // Añadir efecto de ángulo según donde golpee la paleta
                 const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
                 ball.speedY = hitPosition * 5;
+                
+                sounds.paddleHit.currentTime = 0;
+                sounds.paddleHit.play();
             }
             
             // Puntuación
             if (ball.x - ball.size < 0) {
                 // Punto para el jugador (la máquina falló)
                 playerScore++;
+                sounds.score.currentTime = 0;
+                sounds.score.play();
                 resetBall();
             } else if (ball.x + ball.size > canvas.width) {
                 // Punto para la máquina (el jugador falló)
                 machineScore++;
+                sounds.score.currentTime = 0;
+                sounds.score.play();
                 resetBall();
             }
             
