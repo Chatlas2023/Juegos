@@ -82,6 +82,8 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
+        const NORMAL_SPEED = 4;
+        const INITIAL_SPEED = NORMAL_SPEED / 2; // Mitad de velocidad al inicio
         
         // Ajustar tamaño del canvas
         function resizeCanvas() {
@@ -292,13 +294,34 @@
         function resetBall() {
             ball.x = canvas.width / 2;
             ball.y = canvas.height / 2;
-            ball.speedX = (Math.random() > 0.5 ? 1 : -1) * 4;
-            ball.speedY = (Math.random() * 2 - 1) * 4;
+            
+            // Comenzar con la mitad de velocidad
+            ball.speedX = (Math.random() > 0.5 ? 1 : -1) * INITIAL_SPEED;
+            ball.speedY = (Math.random() * 2 - 1) * INITIAL_SPEED;
             
             // Asegurar que la pelota no empiece con un ángulo completamente horizontal
             if (Math.abs(ball.speedY) < 0.5) {
                 ball.speedY = (Math.random() > 0.5 ? 1 : -1) * 2;
             }
+            
+            // Función para aumentar la velocidad gradualmente hasta la normal
+            function increaseSpeed() {
+                if (Math.abs(ball.speedX) < NORMAL_SPEED) {
+                    // Aumentar velocidad gradualmente
+                    ball.speedX *= 1.05;
+                    ball.speedY *= 1.05;
+                    requestAnimationFrame(increaseSpeed);
+                } else {
+                    // Asegurar que no supere la velocidad normal
+                    ball.speedX = Math.sign(ball.speedX) * NORMAL_SPEED;
+                    ball.speedY = Math.min(Math.abs(ball.speedY), NORMAL_SPEED) * Math.sign(ball.speedY);
+                }
+            }
+            
+            // Iniciar el aumento de velocidad después de un breve retraso
+            setTimeout(() => {
+                increaseSpeed();
+            }, 500);
         }
         
         // Bucle del juego
