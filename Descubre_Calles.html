@@ -1,347 +1,360 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ahorcado - Calles CABA</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #4361ee;
-            --secondary: #3f37c9; 
-            --accent: #4895ef;
-            --success: #4cc9f0;
-            --danger: #f72585;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --warning: #f8961e;
-            --info: #38b000;
-        }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0;
-            padding: 10px;
-            color: var(--light);
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ahorcado - Calles CABA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9; 
+            --accent: #4895ef;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --warning: #f8961e;
+            --info: #38b000;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 10px;
+            color: var(--light);
+        }
 
-        .game-container {
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 700px;
-            text-align: center;
-            margin: 10px 0;
-        }
+        .game-container {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+            margin: 10px 0;
+        }
 
-        h1 {
-            font-size: 18px;
-            margin: 0 0 15px 0;
-            color: var(--secondary);
-            font-weight: 600;
-        }
+        /* Modificación para el tamaño del título */
+        h1 {
+            font-size: 24px; /* Aumentado de 18px a 24px */
+            margin: 0 0 15px 0;
+            color: var(--secondary);
+            font-weight: 600;
+        }
 
-        .word-display-container {
-            background: linear-gradient(145deg, #ffffff, #e6e6e6);
-            border-radius: 8px;
-            padding: 10px;
-            margin: 10px 0;
-            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
-        }
+        .word-display-container {
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+        }
 
-        .word-display {
-            font-size: 36px;
-            letter-spacing: 5px;
-            margin: 5px 0;
-            min-height: 40px;
-            padding: 8px;
-            border-radius: 6px;
-            font-weight: 600;
-            color: var(--dark);
-            text-transform: uppercase;
-            line-height: 1.3;
-        }
+        .word-display {
+            font-size: 36px;
+            letter-spacing: 5px;
+            margin: 5px 0;
+            min-height: 40px;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: var(--dark);
+            text-transform: uppercase;
+            line-height: 1.3;
+        }
 
-        .word-display.correct {
-            background: linear-gradient(to right, var(--info), var(--success));
-            color: white;
-            animation: blink 1s ease-in-out 3;
-        }
+        .word-display.correct {
+            background: linear-gradient(to right, var(--info), var(--success));
+            color: white;
+            animation: blink 1s ease-in-out 3;
+        }
 
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
-        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
 
-        .game-info-container {
-            background-color: rgba(67, 97, 238, 0.1);
-            border-radius: 8px;
-            padding: 8px;
-            margin: 10px 0;
-        }
+        .game-info-container {
+            background-color: rgba(67, 97, 238, 0.1);
+            border-radius: 8px;
+            padding: 8px;
+            margin: 10px 0;
+        }
 
-        .game-info {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+        /* Modificación para que los info-box se apilen verticalmente */
+        .game-info {
+            display: flex;
+            flex-direction: column; /* Cambiado a columna */
+            align-items: center; /* Centrado */
+            gap: 8px;
+        }
 
-        .info-box {
-            background: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            min-width: 45%;
-            color: var(--dark);
-        }
+        .info-box {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            width: 90%; /* Ajustado el ancho para que ocupe más espacio */
+            max-width: 300px; /* Límite de ancho para que no sea muy grande en pantallas amplias */
+            color: var(--dark);
+        }
 
-        .info-box h3 {
-            margin: 0 0 5px 0;
-            font-size: 12px;
-            color: var(--primary);
-            font-weight: 600;
-        }
+        .info-box h3 {
+            margin: 0 0 5px 0;
+            font-size: 14px; /* Aumentado de 12px a 14px */
+            color: var(--primary);
+            font-weight: 600;
+        }
 
-        .info-box p {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 700;
-        }
+        /* Modificación para el tamaño de la fuente de los números y letras usadas */
+        .info-box p {
+            margin: 0;
+            font-size: 20px; /* Aumentado de 14px a 20px */
+            font-weight: 700;
+        }
 
-        #guessed-letters {
-            color: var(--danger);
-            font-weight: 600;
-            font-size: 12px;
-        }
+        #guessed-letters {
+            color: var(--danger);
+            font-weight: 600;
+            font-size: 16px; /* Aumentado de 12px a 16px */
+        }
 
-        .keyboard-container {
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
-        }
+        .keyboard-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
 
-        .keyboard {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            margin: 10px 0;
-        }
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+        }
 
-        .keyboard-row {
-            display: flex;
-            justify-content: center;
-            gap: 6px;
-            width: 100%;
-        }
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+        }
 
-        .key {
-            width: 40px;
-            height: 40px;
-            font-size: 18px;
-            background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 600;
-            color: var(--dark);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease;
-        }
+        .key {
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            background: linear-gradient(to bottom, #f8f9fa, #e9ecef);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            color: var(--dark);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
 
-        .key:hover:not(.used) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+        .key:hover:not(.used) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
 
-        .key.used {
-            background: linear-gradient(to bottom, #adb5bd, #6c757d);
-            color: white;
-            cursor: not-allowed;
-        }
+        .key.used {
+            background: linear-gradient(to bottom, #adb5bd, #6c757d);
+            color: white;
+            cursor: not-allowed;
+        }
 
-        .key.correct {
-            background: linear-gradient(to bottom, var(--info), #38b000);
-            color: white;
-        }
+        .key.correct {
+            background: linear-gradient(to bottom, var(--info), #38b000);
+            color: white;
+        }
 
-        .key.wrong {
-            background: linear-gradient(to bottom, var(--danger), #d90429);
-            color: white;
-        }
+        .key.wrong {
+            background: linear-gradient(to bottom, var(--danger), #d90429);
+            color: white;
+        }
 
-        .buttons {
-            display: flex;
-            justify-content: center;
-            margin-top: 10px;
-        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
 
-        button {
-            padding: 8px 16px;
-            font-size: 14px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-        }
+        button {
+            padding: 8px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
 
-        #next-word-btn {
-            display: none;
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            color: white;
-        }
+        #next-word-btn {
+            display: none;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+        }
 
-        #next-word-btn.show {
-            display: inline-block;
-        }
+        #next-word-btn.show {
+            display: inline-block;
+        }
 
-        .attempts-warning {
-            color: var(--danger);
-            animation: pulse 1.5s infinite;
-        }
+        .attempts-warning {
+            color: var(--danger);
+            animation: pulse 1.5s infinite;
+        }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
 
-        .message-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
+        .message-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
 
-        .message-container.show {
-            opacity: 1;
-            pointer-events: all;
-        }
+        .message-container.show {
+            opacity: 1;
+            pointer-events: all;
+        }
 
-        .message-box {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 80%;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
+        .message-box {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 80%;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
 
-        .message-box h2 {
-            color: var(--danger);
-            margin-top: 0;
-        }
+        .message-box h2 {
+            color: var(--danger);
+            margin-top: 0;
+        }
 
-        .message-box p {
-            color: var(--dark);
-            margin-bottom: 20px;
-        }
+        .message-box p {
+            color: var(--dark);
+            margin-bottom: 20px;
+        }
 
-        .message-box button {
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 600;
-        }
+        .message-box button {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
 
-        @media (max-width: 600px) {
-            .keyboard {
-                gap: 6px;
-            }
-            
-            .keyboard-row {
-                gap: 4px;
-            }
-            
-            .key {
-                width: 32px;
-                height: 32px;
-                font-size: 16px;
-                border-radius: 6px;
-            }
-            
-            h1 {
-                font-size: 16px;
-            }
-            
-            .word-display {
-                font-size: 24px;
-                letter-spacing: 3px;
-            }
-            
-            .info-box {
-                min-width: 40%;
-                padding: 6px 8px;
-            }
-        }
-    </style>
+        @media (max-width: 600px) {
+            .keyboard {
+                gap: 6px;
+            }
+            
+            .keyboard-row {
+                gap: 4px;
+            }
+            
+            .key {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+                border-radius: 6px;
+            }
+            
+            h1 {
+                font-size: 20px; /* Ajuste para pantallas pequeñas */
+            }
+            
+            .word-display {
+                font-size: 24px;
+                letter-spacing: 3px;
+            }
+            
+            .info-box {
+                min-width: 80%; /* Ajuste para que ocupe más espacio en pantallas pequeñas */
+                padding: 6px 8px;
+            }
+
+            .info-box p {
+                font-size: 18px; /* Ajuste para pantallas pequeñas */
+            }
+
+            #guessed-letters {
+                font-size: 14px; /* Ajuste para pantallas pequeñas */
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="game-container">
-        <h1>Ahorcado - Calles de CABA</h1>
-        
-        <div class="word-display-container">
-            <div id="word-display" class="word-display"></div>
-        </div>
-        
-        <div class="game-info-container">
-            <div class="game-info">
-                <div class="info-box">
-                    <h3>Letras restantes</h3>
-                    <p id="attempts">6</p>
-                </div>
-                <div class="info-box">
-                    <h3>Letras usadas</h3>
-                    <p><span id="guessed-letters"></span></p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="keyboard-container">
-            <div class="keyboard"></div>
-        </div>
-        
-        <div class="buttons">
-            <button id="next-word-btn">Siguiente</button>
-        </div>
-    </div>
+    <div class="game-container">
+        <h1>Ahorcado - Calles de CABA</h1>
+        
+        <div class="word-display-container">
+            <div id="word-display" class="word-display"></div>
+        </div>
+        
+        <div class="game-info-container">
+            <div class="game-info">
+                <div class="info-box">
+                    <h3>Letras restantes</h3>
+                    <p id="attempts">6</p>
+                </div>
+                <div class="info-box">
+                    <h3>Letras usadas</h3>
+                    <p><span id="guessed-letters"></span></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="keyboard-container">
+            <div class="keyboard"></div>
+        </div>
+        
+        <div class="buttons">
+            <button id="next-word-btn">Siguiente</button>
+        </div>
+    </div>
 
-    <div class="message-container" id="message-container">
-        <div class="message-box">
-            <h2 id="message-title"></h2>
-            <p id="message-text"></p>
-            <button id="message-close-btn">Aceptar</button>
-        </div>
-    </div>
+    <div class="message-container" id="message-container">
+        <div class="message-box">
+            <h2 id="message-title"></h2>
+            <p id="message-text"></p>
+            <button id="message-close-btn">Aceptar</button>
+        </div>
+    </div>
 
-    <script>
-        class HangmanGame {
-            constructor() {
-                this.words = [
+    <script>
+        class HangmanGame {
+            constructor() {
+                this.words = [
 "ACASSUSO",
 "ACEVEDO",
 "ACHALA",
@@ -1305,187 +1318,187 @@
 "ZINNY",
 "ZURICH",
 "ZUVIRIA",
-                ];  
-                this.wordToGuess = "";
-                this.guessedLetters = new Set();
-                this.attempts = 6;
-                
-                this.wordDisplay = document.getElementById('word-display');
-                this.attemptsDisplay = document.getElementById('attempts');
-                this.guessedLettersDisplay = document.getElementById('guessed-letters');
-                this.nextWordBtn = document.getElementById('next-word-btn');
-                this.keyboard = document.querySelector('.keyboard');
-                
-                this.nextWordBtn.addEventListener('click', () => this.startNewGame());
-                document.addEventListener('keydown', (e) => this.handleKeyPress(e));
-                
-                this.createKeyboard();
-                this.startNewGame();
-            }
-            
-            createKeyboard() {
-                const letters = [
-                    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-                    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ'],
-                    ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
-                ];
-                
-                this.keyboard.innerHTML = '';
-                
-                letters.forEach(row => {
-                    const rowDiv = document.createElement('div');
-                    rowDiv.classList.add('keyboard-row');
-                    
-                    row.forEach(letter => {
-                        const key = document.createElement('button');
-                        key.textContent = letter;
-                        key.classList.add('key');
-                        key.addEventListener('click', () => this.makeGuess(letter));
-                        rowDiv.appendChild(key);
-                    });
-                    
-                    this.keyboard.appendChild(rowDiv);
-                });
-            }
-            
-            displayWord() {
-                let display = "";
-                for (const letter of this.wordToGuess) {
-                    if (this.guessedLetters.has(letter)) {
-                        display += letter;
-                    } else {
-                        display += "_";
-                    }
-                }
-                this.wordDisplay.textContent = display;
-                
-                if (this.attempts <= 2) {
-                    this.attemptsDisplay.classList.add('attempts-warning');
-                } else {
-                    this.attemptsDisplay.classList.remove('attempts-warning');
-                }
-                
-                return display;
-            }
-            
-            updateAttemptsDisplay() {
-                this.attemptsDisplay.textContent = this.attempts;
-            }
-            
-            updateGuessedLettersDisplay() {
-                const letters = [...this.guessedLetters].sort();
-                this.guessedLettersDisplay.textContent = letters.length > 0 ? letters.join(', ') : '-';
-            }
-            
-            handleKeyPress(event) {
-                const key = event.key.toUpperCase();
-                if (/^[A-ZÑ]$/.test(key)) {
-                    this.makeGuess(key);
-                }
-            }
-            
-            makeGuess(guess) {
-                if (this.guessedLetters.has(guess) || this.attempts <= 0) {
-                    return;
-                }
-                
-                this.guessedLetters.add(guess);
-                this.updateGuessedLettersDisplay();
-                
-                const keys = document.querySelectorAll('.key');
-                keys.forEach(key => {
-                    if (key.textContent === guess) {
-                        if (this.wordToGuess.includes(guess)) {
-                            key.classList.add('correct');
-                        } else {
-                            key.classList.add('wrong');
-                        }
-                        key.classList.add('used');
-                        key.disabled = true;
-                    }
-                });
-                
-                if (this.wordToGuess.includes(guess)) {
-                    const currentDisplay = this.displayWord();
-                    if (!currentDisplay.includes('_')) {
-                        this.wordDisplay.classList.add('correct');
-                        this.nextWordBtn.disabled = false;
-                        this.nextWordBtn.classList.add('show');
-                        setTimeout(() => {
-                            this.wordDisplay.classList.remove('correct');
-                        }, 3000);
-                    }
-                } else {
-                    this.attempts--;
-                    this.updateAttemptsDisplay();
-                    if (this.attempts <= 0) {
-                        this.showMessage('¡Perdiste!', `La palabra era: ${this.wordToGuess}`);
-                        this.nextWordBtn.disabled = false;
-                        this.nextWordBtn.classList.add('show');
-                    }
-                }
-            }
-            
-            showMessage(title, message) {
-                const messageContainer = document.getElementById('message-container');
-                const messageTitle = document.getElementById('message-title');
-                const messageText = document.getElementById('message-text');
-                const closeBtn = document.getElementById('message-close-btn');
-                
-                messageTitle.textContent = title;
-                messageText.textContent = message;
-                messageContainer.classList.add('show');
-                
-                const closeMessage = () => {
-                    messageContainer.classList.remove('show');
-                };
-                
-                closeBtn.onclick = closeMessage;
-                
-                messageContainer.onclick = (e) => {
-                    if (e.target === messageContainer) {
-                        closeMessage();
-                    }
-                };
-                
-                document.addEventListener('keydown', function handleKey(e) {
-                    if (e.key === 'Escape') {
-                        closeMessage();
-                        document.removeEventListener('keydown', handleKey);
-                    }
-                }, {once: true});
-            }
-            
-            startNewGame() {
-                document.getElementById('message-container').classList.remove('show');
-                
-                if (this.words.length === 0) {
-                    this.showMessage('Fin del juego', 'No hay más palabras');
-                    return;
-                }
-                
-                this.wordToGuess = this.words[Math.floor(Math.random() * this.words.length)].toUpperCase();
-                this.guessedLetters = new Set();
-                this.attempts = 6;
-                
-                this.wordDisplay.classList.remove('correct');
-                this.displayWord();
-                this.updateAttemptsDisplay();
-                this.guessedLettersDisplay.textContent = '';
-                this.nextWordBtn.disabled = true;
-                this.nextWordBtn.classList.remove('show');
-                
-                const keys = document.querySelectorAll('.key');
-                keys.forEach(key => {
-                    key.classList.remove('used', 'correct', 'wrong');
-                    key.disabled = false;
-                });
-            }
-        }
+                ];  
+                this.wordToGuess = "";
+                this.guessedLetters = new Set();
+                this.attempts = 6;
+                
+                this.wordDisplay = document.getElementById('word-display');
+                this.attemptsDisplay = document.getElementById('attempts');
+                this.guessedLettersDisplay = document.getElementById('guessed-letters');
+                this.nextWordBtn = document.getElementById('next-word-btn');
+                this.keyboard = document.querySelector('.keyboard');
+                
+                this.nextWordBtn.addEventListener('click', () => this.startNewGame());
+                document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+                
+                this.createKeyboard();
+                this.startNewGame();
+            }
+            
+            createKeyboard() {
+                const letters = [
+                    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+                    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ'],
+                    ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
+                ];
+                
+                this.keyboard.innerHTML = '';
+                
+                letters.forEach(row => {
+                    const rowDiv = document.createElement('div');
+                    rowDiv.classList.add('keyboard-row');
+                    
+                    row.forEach(letter => {
+                        const key = document.createElement('button');
+                        key.textContent = letter;
+                        key.classList.add('key');
+                        key.addEventListener('click', () => this.makeGuess(letter));
+                        rowDiv.appendChild(key);
+                    });
+                    
+                    this.keyboard.appendChild(rowDiv);
+                });
+            }
+            
+            displayWord() {
+                let display = "";
+                for (const letter of this.wordToGuess) {
+                    if (this.guessedLetters.has(letter)) {
+                        display += letter;
+                    } else {
+                        display += "_";
+                    }
+                }
+                this.wordDisplay.textContent = display;
+                
+                if (this.attempts <= 2) {
+                    this.attemptsDisplay.classList.add('attempts-warning');
+                } else {
+                    this.attemptsDisplay.classList.remove('attempts-warning');
+                }
+                
+                return display;
+            }
+            
+            updateAttemptsDisplay() {
+                this.attemptsDisplay.textContent = this.attempts;
+            }
+            
+            updateGuessedLettersDisplay() {
+                const letters = [...this.guessedLetters].sort();
+                this.guessedLettersDisplay.textContent = letters.length > 0 ? letters.join(', ') : '-';
+            }
+            
+            handleKeyPress(event) {
+                const key = event.key.toUpperCase();
+                if (/^[A-ZÑ]$/.test(key)) {
+                    this.makeGuess(key);
+                }
+            }
+            
+            makeGuess(guess) {
+                if (this.guessedLetters.has(guess) || this.attempts <= 0) {
+                    return;
+                }
+                
+                this.guessedLetters.add(guess);
+                this.updateGuessedLettersDisplay();
+                
+                const keys = document.querySelectorAll('.key');
+                keys.forEach(key => {
+                    if (key.textContent === guess) {
+                        if (this.wordToGuess.includes(guess)) {
+                            key.classList.add('correct');
+                        } else {
+                            key.classList.add('wrong');
+                        }
+                        key.classList.add('used');
+                        key.disabled = true;
+                    }
+                });
+                
+                if (this.wordToGuess.includes(guess)) {
+                    const currentDisplay = this.displayWord();
+                    if (!currentDisplay.includes('_')) {
+                        this.wordDisplay.classList.add('correct');
+                        this.nextWordBtn.disabled = false;
+                        this.nextWordBtn.classList.add('show');
+                        setTimeout(() => {
+                            this.wordDisplay.classList.remove('correct');
+                        }, 3000);
+                    }
+                } else {
+                    this.attempts--;
+                    this.updateAttemptsDisplay();
+                    if (this.attempts <= 0) {
+                        this.showMessage('¡Perdiste!', `La palabra era: ${this.wordToGuess}`);
+                        this.nextWordBtn.disabled = false;
+                        this.nextWordBtn.classList.add('show');
+                    }
+                }
+            }
+            
+            showMessage(title, message) {
+                const messageContainer = document.getElementById('message-container');
+                const messageTitle = document.getElementById('message-title');
+                const messageText = document.getElementById('message-text');
+                const closeBtn = document.getElementById('message-close-btn');
+                
+                messageTitle.textContent = title;
+                messageText.textContent = message;
+                messageContainer.classList.add('show');
+                
+                const closeMessage = () => {
+                    messageContainer.classList.remove('show');
+                };
+                
+                closeBtn.onclick = closeMessage;
+                
+                messageContainer.onclick = (e) => {
+                    if (e.target === messageContainer) {
+                        closeMessage();
+                    }
+                };
+                
+                document.addEventListener('keydown', function handleKey(e) {
+                    if (e.key === 'Escape') {
+                        closeMessage();
+                        document.removeEventListener('keydown', handleKey);
+                    }
+                }, {once: true});
+            }
+            
+            startNewGame() {
+                document.getElementById('message-container').classList.remove('show');
+                
+                if (this.words.length === 0) {
+                    this.showMessage('Fin del juego', 'No hay más palabras');
+                    return;
+                }
+                
+                this.wordToGuess = this.words[Math.floor(Math.random() * this.words.length)].toUpperCase();
+                this.guessedLetters = new Set();
+                this.attempts = 6;
+                
+                this.wordDisplay.classList.remove('correct');
+                this.displayWord();
+                this.updateAttemptsDisplay();
+                this.guessedLettersDisplay.textContent = '';
+                this.nextWordBtn.disabled = true;
+                this.nextWordBtn.classList.remove('show');
+                
+                const keys = document.querySelectorAll('.key');
+                keys.forEach(key => {
+                    key.classList.remove('used', 'correct', 'wrong');
+                    key.disabled = false;
+                });
+            }
+        }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            new HangmanGame();
-        });
-    </script>
+        document.addEventListener('DOMContentLoaded', () => {
+            new HangmanGame();
+        });
+    </script>
 </body>
 </html>
