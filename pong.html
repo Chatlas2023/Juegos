@@ -242,34 +242,46 @@
             
             // Detección de colisión con las paletas
             // Paleta de la máquina (izquierda)
-            if (
-                ball.x - ball.size < machinePaddle.x + machinePaddle.width &&
-                ball.y > machinePaddle.y &&
-                ball.y < machinePaddle.y + machinePaddle.height
-            ) {
-                ball.speedX = Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la derecha
-                // Añadir efecto de ángulo según donde golpee la paleta
-                const hitPosition = (ball.y - (machinePaddle.y + machinePaddle.height / 2)) / (machinePaddle.height / 2);
-                ball.speedY = hitPosition * 5;
-                
-                sounds.paddleHit.currentTime = 0;
-                sounds.paddleHit.play();
-            }
+if (
+    ball.x - ball.size < machinePaddle.x + machinePaddle.width &&
+    ball.y > machinePaddle.y &&
+    ball.y < machinePaddle.y + machinePaddle.height
+) {
+    ball.speedX = Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la derecha
+    // Añadir efecto de ángulo según donde golpee la paleta
+    const hitPosition = (ball.y - (machinePaddle.y + machinePaddle.height / 2)) / (machinePaddle.height / 2);
+    // Calcular velocidad base
+    let speedY = hitPosition * 5;
+    // Asegurar un ángulo mínimo aleatorio si el rebote es casi horizontal
+    if (Math.abs(speedY) < 1) {
+        speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1); // Entre 1 y 2
+    }
+    ball.speedY = speedY;
+    
+    sounds.paddleHit.currentTime = 0;
+    sounds.paddleHit.play();
+}
             
             // Paleta del jugador (derecha)
-            if (
-                ball.x + ball.size > playerPaddle.x &&
-                ball.y > playerPaddle.y &&
-                ball.y < playerPaddle.y + playerPaddle.height
-            ) {
-                ball.speedX = -Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la izquierda
-                // Añadir efecto de ángulo según donde golpee la paleta
-                const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
-                ball.speedY = hitPosition * 5;
-                
-                sounds.paddleHit.currentTime = 0;
-                sounds.paddleHit.play();
-            }
+if (
+    ball.x + ball.size > playerPaddle.x &&
+    ball.y > playerPaddle.y &&
+    ball.y < playerPaddle.y + playerPaddle.height
+) {
+    ball.speedX = -Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la izquierda
+    // Añadir efecto de ángulo según donde golpee la paleta
+    const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
+    // Calcular velocidad base
+    let speedY = hitPosition * 5;
+    // Asegurar un ángulo mínimo aleatorio si el rebote es casi horizontal
+    if (Math.abs(speedY) < 1) {
+        speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1); // Entre 1 y 2
+    }
+    ball.speedY = speedY;
+    
+    sounds.paddleHit.currentTime = 0;
+    sounds.paddleHit.play();
+}
             
             // Puntuación
             if (ball.x - ball.size < 0) {
