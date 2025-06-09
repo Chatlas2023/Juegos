@@ -35,17 +35,17 @@
         position: relative;
         width: 100%;
         max-width: 800px;
-        height: 70vh; /* Cambiado de calc(100vh - 60px) a 70vh */
+        height: 70vh;
         background-color: green;
         overflow: hidden;
-        margin-bottom: 20px; /* Espacio adicional abajo */
+        margin-bottom: 20px;
     }
         canvas {
             display: block;
         }
         #controls {
             position: absolute;
-            bottom: 10px; /* Reducido de 20px a 10px */
+            bottom: 10px;
             width: 100%;
             display: flex;
             justify-content: space-between;
@@ -53,8 +53,8 @@
             box-sizing: border-box;
         }
         .control-btn {
-            width: 70px; /* Reducido de 80px */
-            height: 70px; /* Reducido de 80px */
+            width: 70px;
+            height: 70px;
             background-color: rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             display: flex;
@@ -83,9 +83,7 @@
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
         const NORMAL_SPEED = 4;
-        const INITIAL_SPEED = NORMAL_SPEED / 2; // Mitad de velocidad al inicio
-        const machinePaddleCenter = machinePaddle.y + machinePaddle.height / 2;
-        const isSharpAngle = Math.abs(ball.speedY / ball.speedX) > 1;
+        const INITIAL_SPEED = NORMAL_SPEED / 2;
         
         // Ajustar tamaño del canvas
         function resizeCanvas() {
@@ -108,9 +106,9 @@
         
         // Cargar sonidos
         const sounds = {
-            paddleHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'), // Sonido corto base64
-            wallHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'), // Otro sonido base64
-            score: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...') // Sonido más largo base64
+            paddleHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
+            wallHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'),
+            score: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...')
         };
         
         // Paletas
@@ -203,7 +201,7 @@
         
         // Función para actualizar la posición de los elementos
         function update() {
-            // Mover paleta del jugador (ahora en la derecha)
+            // Mover paleta del jugador
             if (upPressed && playerPaddle.y > 0) {
                 playerPaddle.y -= playerPaddle.speed;
             }
@@ -211,12 +209,16 @@
                 playerPaddle.y += playerPaddle.speed;
             }
             
-            // IA simple para la paleta de la máquina (ahora en la izquierda)
+            // IA para la paleta de la máquina con posibilidad de fallo
             const machinePaddleCenter = machinePaddle.y + machinePaddle.height / 2;
-            if (machinePaddleCenter < ball.y - 20) {
-                machinePaddle.y += machinePaddle.speed;
-            } else if (machinePaddleCenter > ball.y + 20) {
-                machinePaddle.y -= machinePaddle.speed;
+            const isSharpAngle = Math.abs(ball.speedY / ball.speedX) > 1;
+            
+            if (!isSharpAngle || Math.random() > 0.5) { // 50% de fallo solo en ángulos pronunciados
+                if (machinePaddleCenter < ball.y - 20) {
+                    machinePaddle.y += machinePaddle.speed;
+                } else if (machinePaddleCenter > ball.y + 20) {
+                    machinePaddle.y -= machinePaddle.speed;
+                }
             }
             
             // Asegurar que la paleta de la máquina no salga del canvas
@@ -224,13 +226,6 @@
             if (machinePaddle.y > canvas.height - machinePaddle.height) {
                 machinePaddle.y = canvas.height - machinePaddle.height;
             }
-            if (!isSharpAngle || Math.random() > 0.5) { // 50% de fallo solo en ángulos pronunciados
-    if (machinePaddleCenter < ball.y - 20) {
-        machinePaddle.y += machinePaddle.speed;
-    } else if (machinePaddleCenter > ball.y + 20) {
-        machinePaddle.y -= machinePaddle.speed;
-    }
-}
             
             // Mover pelota
             ball.x += ball.speedX;
@@ -238,69 +233,57 @@
             
             // Detección de colisión con los bordes superior e inferior
             if (ball.y - ball.size < 0 || ball.y + ball.size > canvas.height) {
-                // Si la pelota está rebotando casi horizontalmente, añadir un ángulo mínimo
                 if (Math.abs(ball.speedY) < 1) {
                     ball.speedY = (ball.speedY < 0 ? -2 : 2);
                 } else {
                     ball.speedY = -ball.speedY;
                 }
-                
                 sounds.wallHit.currentTime = 0;
                 sounds.wallHit.play();
             }
             
             // Detección de colisión con las paletas
             // Paleta de la máquina (izquierda)
-if (
-    ball.x - ball.size < machinePaddle.x + machinePaddle.width &&
-    ball.y > machinePaddle.y &&
-    ball.y < machinePaddle.y + machinePaddle.height
-) {
-    ball.speedX = Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la derecha
-    // Añadir efecto de ángulo según donde golpee la paleta
-    const hitPosition = (ball.y - (machinePaddle.y + machinePaddle.height / 2)) / (machinePaddle.height / 2);
-    // Calcular velocidad base
-    let speedY = hitPosition * 5;
-    // Asegurar un ángulo mínimo aleatorio si el rebote es casi horizontal
-    if (Math.abs(speedY) < 1) {
-        speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1); // Entre 1 y 2
-    }
-    ball.speedY = speedY;
-    
-    sounds.paddleHit.currentTime = 0;
-    sounds.paddleHit.play();
-}
+            if (
+                ball.x - ball.size < machinePaddle.x + machinePaddle.width &&
+                ball.y > machinePaddle.y &&
+                ball.y < machinePaddle.y + machinePaddle.height
+            ) {
+                ball.speedX = Math.abs(ball.speedX);
+                const hitPosition = (ball.y - (machinePaddle.y + machinePaddle.height / 2)) / (machinePaddle.height / 2);
+                let speedY = hitPosition * 5;
+                if (Math.abs(speedY) < 1) {
+                    speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1);
+                }
+                ball.speedY = speedY;
+                sounds.paddleHit.currentTime = 0;
+                sounds.paddleHit.play();
+            }
             
             // Paleta del jugador (derecha)
-if (
-    ball.x + ball.size > playerPaddle.x &&
-    ball.y > playerPaddle.y &&
-    ball.y < playerPaddle.y + playerPaddle.height
-) {
-    ball.speedX = -Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la izquierda
-    // Añadir efecto de ángulo según donde golpee la paleta
-    const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
-    // Calcular velocidad base
-    let speedY = hitPosition * 5;
-    // Asegurar un ángulo mínimo aleatorio si el rebote es casi horizontal
-    if (Math.abs(speedY) < 1) {
-        speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1); // Entre 1 y 2
-    }
-    ball.speedY = speedY;
-    
-    sounds.paddleHit.currentTime = 0;
-    sounds.paddleHit.play();
-}
+            if (
+                ball.x + ball.size > playerPaddle.x &&
+                ball.y > playerPaddle.y &&
+                ball.y < playerPaddle.y + playerPaddle.height
+            ) {
+                ball.speedX = -Math.abs(ball.speedX);
+                const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
+                let speedY = hitPosition * 5;
+                if (Math.abs(speedY) < 1) {
+                    speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1);
+                }
+                ball.speedY = speedY;
+                sounds.paddleHit.currentTime = 0;
+                sounds.paddleHit.play();
+            }
             
             // Puntuación
             if (ball.x - ball.size < 0) {
-                // Punto para el jugador (la máquina falló)
                 playerScore++;
                 sounds.score.currentTime = 0;
                 sounds.score.play();
                 resetBall();
             } else if (ball.x + ball.size > canvas.width) {
-                // Punto para la máquina (el jugador falló)
                 machineScore++;
                 sounds.score.currentTime = 0;
                 sounds.score.play();
@@ -315,31 +298,24 @@ if (
         function resetBall() {
             ball.x = canvas.width / 2;
             ball.y = canvas.height / 2;
-            
-            // Comenzar con la mitad de velocidad
             ball.speedX = (Math.random() > 0.5 ? 1 : -1) * INITIAL_SPEED;
             ball.speedY = (Math.random() * 2 - 1) * INITIAL_SPEED;
             
-            // Asegurar que la pelota no empiece con un ángulo completamente horizontal
             if (Math.abs(ball.speedY) < 0.5) {
                 ball.speedY = (Math.random() > 0.5 ? 1 : -1) * 2;
             }
             
-            // Función para aumentar la velocidad gradualmente hasta la normal
             function increaseSpeed() {
                 if (Math.abs(ball.speedX) < NORMAL_SPEED) {
-                    // Aumentar velocidad gradualmente
                     ball.speedX *= 1.05;
                     ball.speedY *= 1.05;
                     requestAnimationFrame(increaseSpeed);
                 } else {
-                    // Asegurar que no supere la velocidad normal
                     ball.speedX = Math.sign(ball.speedX) * NORMAL_SPEED;
                     ball.speedY = Math.min(Math.abs(ball.speedY), NORMAL_SPEED) * Math.sign(ball.speedY);
                 }
             }
             
-            // Iniciar el aumento de velocidad después de un breve retraso
             setTimeout(() => {
                 increaseSpeed();
             }, 500);
