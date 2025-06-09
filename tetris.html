@@ -132,7 +132,7 @@
         <div id="canvas-container">
             <canvas id="canvas"></canvas>
         </div>
-        <div id="status">V1.4 Score: 0<br>Level: 0</div>
+        <div id="status">Score: 0<br>High Score: 0<br>Level: 0</div>
         <div id="game-over">GAME OVER. Tap to reset</div>
     </div>
     <div id="controls">
@@ -166,10 +166,17 @@
             ];
             
             this.nextTetrominos = [];
+            this.highScore = localStorage.getItem('tetrisHighScore') || 0;
             this.resetGame();
         }
         
         resetGame() {
+            // Guardar el high score antes de resetear
+            if (this.score > this.highScore) {
+                this.highScore = this.score;
+                localStorage.setItem('tetrisHighScore', this.highScore);
+            }
+            
             this.field = Array(this.FIELD_HEIGHT).fill().map(() => Array(this.FIELD_WIDTH).fill(0));
             this.score = 0;
             this.level = 0;
@@ -465,7 +472,7 @@
             this.drawNextBlock(this.nextBlock1Ctx, this.tetris.nextTetrominos[0].shape, this.tetris.nextTetrominos[0].color, 15);
             this.drawNextBlock(this.nextBlock2Ctx, this.tetris.nextTetrominos[1].shape, this.tetris.nextTetrominos[1].color, 15);
             
-            this.status.textContent = `Score: ${this.tetris.score}\nLevel: ${this.tetris.level}`;
+            this.status.textContent = `Score: ${this.tetris.score}\nHigh Score: ${this.tetris.highScore}\nLevel: ${this.tetris.level}`;
             
             if (this.tetris.game_over) {
                 this.gameOverMsg.style.display = 'block';
