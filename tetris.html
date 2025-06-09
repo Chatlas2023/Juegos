@@ -16,13 +16,13 @@
             -webkit-user-select: none;
         }
         #game-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        height: 100vh;
-        width: 100vw;
-        padding: 0;
-        justify-content: space-between;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            padding: 0;
+            justify-content: space-between;
         }
         #canvas-container {
             flex-shrink: 0;
@@ -36,38 +36,59 @@
             background-color: black;
             border: 2px solid #333;
         }
+        #next-blocks {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        .next-block-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 5px;
+        }
+        .next-block-label {
+            color: white;
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+        .next-block-canvas {
+            background-color: black;
+            border: 1px solid #333;
+        }
         #status {
-        color: white;
-        text-align: center;
-        margin: 1px 0; /* Reducido de 2px a 1px */
-        font-size: 18px;
-        flex-shrink: 0;
+            color: white;
+            text-align: center;
+            margin: 1px 0;
+            font-size: 18px;
+            flex-shrink: 0;
         }
         #game-over {
-        color: red;
-        text-align: center;
-        font-size: 24px;
-        margin: 2px 0; /* Reducido de 5px a 2px */
-        display: none;
+            color: red;
+            text-align: center;
+            font-size: 24px;
+            margin: 2px 0;
+            display: none;
         }
         #controls {
-        display: flex;
-        flex-direction: column;
-        width: 95%;
-        margin-bottom: 60px; /* Reducido de 5px a 2px */
-        flex-shrink: 0;
-        padding-top: 2px; /* Pequeño espacio arriba de los controles */
+            display: flex;
+            flex-direction: column;
+            width: 95%;
+            margin-bottom: 60px;
+            flex-shrink: 0;
+            padding-top: 2px;
         }
-            .top-section {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-        flex-grow: 1;
-        overflow: hidden;
-        justify-content: flex-start;
-        padding-bottom: 5px; /* Reducimos el espacio inferior */
-    }
+        .top-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            flex-grow: 1;
+            overflow: hidden;
+            justify-content: flex-start;
+            padding-bottom: 5px;
+        }
         .row {
             display: flex;
             justify-content: center;
@@ -98,6 +119,16 @@
 <body>
 <div id="game-container">
     <div class="top-section">
+        <div id="next-blocks">
+            <div class="next-block-container">
+                <div class="next-block-label">Siguiente:</div>
+                <canvas id="next-block-1" class="next-block-canvas" width="60" height="60"></canvas>
+            </div>
+            <div class="next-block-container">
+                <div class="next-block-label">Después:</div>
+                <canvas id="next-block-2" class="next-block-canvas" width="60" height="60"></canvas>
+            </div>
+        </div>
         <div id="canvas-container">
             <canvas id="canvas"></canvas>
         </div>
@@ -112,282 +143,339 @@
         </div>
         <div class="row">
             <button class="btn btn-down" id="down">↓</button>
-            </div>
         </div>
     </div>
+</div>
 
-    <script>
-        const COLORS = ['#000000', '#4CAF50', '#E91E63', '#2196F3', '#FF9800', '#9C27B0'];
+<script>
+    const COLORS = ['#000000', '#4CAF50', '#E91E63', '#2196F3', '#FF9800', '#9C27B0'];
+    
+    class Tetris {
+        constructor() {
+            this.FIELD_HEIGHT = 20;
+            this.FIELD_WIDTH = 10;
+            this.SCORE_PER_ELIMINATED_LINES = [0, 40, 100, 300, 1200];
+            this.TETROMINOS = [
+                [[0, 0], [0, 1], [1, 0], [1,1]], // O
+                [[0, 0], [0, 1], [1, 1], [2,1]], // L
+                [[0, 1], [1, 1], [2, 1], [2,0]], // J 
+                [[0, 1], [1, 0], [1, 1], [2,0]], // Z
+                [[0, 1], [1, 0], [1, 1], [2,1]], // T
+                [[0, 0], [1, 0], [1, 1], [2,1]], // S
+                [[0, 1], [1, 1], [2, 1], [3,1]], // I
+            ];
+            
+            this.nextTetrominos = [];
+            this.resetGame();
+        }
         
-        class Tetris {
-            constructor() {
-                this.FIELD_HEIGHT = 20;
-                this.FIELD_WIDTH = 10;
-                this.SCORE_PER_ELIMINATED_LINES = [0, 40, 100, 300, 1200];
-                this.TETROMINOS = [
-                    [[0, 0], [0, 1], [1, 0], [1,1]], // O
-                    [[0, 0], [0, 1], [1, 1], [2,1]], // L
-                    [[0, 1], [1, 1], [2, 1], [2,0]], // J 
-                    [[0, 1], [1, 0], [1, 1], [2,0]], // Z
-                    [[0, 1], [1, 0], [1, 1], [2,1]], // T
-                    [[0, 0], [1, 0], [1, 1], [2,1]], // S
-                    [[0, 1], [1, 1], [2, 1], [3,1]], // I
-                ];
-                
-                this.resetGame();
-            }
+        resetGame() {
+            this.field = Array(this.FIELD_HEIGHT).fill().map(() => Array(this.FIELD_WIDTH).fill(0));
+            this.score = 0;
+            this.level = 0;
+            this.total_lines_eliminated = 0;
+            this.game_over = false;
             
-            resetGame() {
-                this.field = Array(this.FIELD_HEIGHT).fill().map(() => Array(this.FIELD_WIDTH).fill(0));
-                this.score = 0;
-                this.level = 0;
-                this.total_lines_eliminated = 0;
-                this.game_over = false;
-                this.reset_tetromino();
-            }
-            
-            reset_tetromino() {
-                this.tetromino = JSON.parse(JSON.stringify(this.TETROMINOS[Math.floor(Math.random() * this.TETROMINOS.length)]));
-                this.tetromino_color = 1 + Math.floor(Math.random() * (COLORS.length - 1));
-                this.tetromino_offset = [-2, Math.floor(this.FIELD_WIDTH / 2)];
-                this.game_over = !this.get_tetromino_coords().every(([r, c]) => this.is_cell_free(r, c));
-            }
-            
-            get_tetromino_coords() {
-                return this.tetromino.map(([r, c]) => [r + this.tetromino_offset[0], c + this.tetromino_offset[1]]);
-            }
-            
-            apply_tetromino() {
-                this.get_tetromino_coords().forEach(([r, c]) => {
-                    this.field[r][c] = this.tetromino_color;
+            // Inicializar los próximos tetrominós
+            this.nextTetrominos = [];
+            for (let i = 0; i < 2; i++) {
+                this.nextTetrominos.push({
+                    shape: JSON.parse(JSON.stringify(this.TETROMINOS[Math.floor(Math.random() * this.TETROMINOS.length)])),
+                    color: 1 + Math.floor(Math.random() * (COLORS.length - 1))
                 });
-                
-                const new_field = this.field.filter(row => row.some(tile => tile === 0));
-                const lines_eliminated = this.field.length - new_field.length;
-                this.total_lines_eliminated += lines_eliminated;
-                this.field = [...Array(lines_eliminated).fill().map(() => Array(this.FIELD_WIDTH).fill(0)), ...new_field];
-                this.score += this.SCORE_PER_ELIMINATED_LINES[lines_eliminated] * (this.level + 1);
-                this.level = Math.floor(this.total_lines_eliminated / 10);
-                this.reset_tetromino();
             }
             
-            get_color(r, c) {
-                return this.get_tetromino_coords().some(([tr, tc]) => tr === r && tc === c) ? 
-                    this.tetromino_color : this.field[r][c];
-            }
+            this.reset_tetromino();
+        }
+        
+        reset_tetromino() {
+            // Tomar el primer tetrominó de la cola
+            const next = this.nextTetrominos.shift();
+            this.tetromino = next.shape;
+            this.tetromino_color = next.color;
             
-            is_cell_free(r, c) {
-                return r < this.FIELD_HEIGHT && c >= 0 && c < this.FIELD_WIDTH && (r < 0 || this.field[r][c] === 0);
-            }
+            // Añadir un nuevo tetrominó a la cola
+            this.nextTetrominos.push({
+                shape: JSON.parse(JSON.stringify(this.TETROMINOS[Math.floor(Math.random() * this.TETROMINOS.length)])),
+                color: 1 + Math.floor(Math.random() * (COLORS.length - 1))
+            });
             
-            move(dr, dc) {
-                if (this.game_over) return;
-                
-                if (this.get_tetromino_coords().every(([r, c]) => this.is_cell_free(r + dr, c + dc))) {
-                    this.tetromino_offset[0] += dr;
-                    this.tetromino_offset[1] += dc;
-                } else if (dr === 1 && dc === 0) {
-                    this.game_over = this.get_tetromino_coords().some(([r, c]) => r < 0);
-                    if (!this.game_over) {
-                        this.apply_tetromino();
-                    }
-                }
-            }
+            this.tetromino_offset = [-2, Math.floor(this.FIELD_WIDTH / 2)];
+            this.game_over = !this.get_tetromino_coords().every(([r, c]) => this.is_cell_free(r, c));
+        }
+        
+        get_tetromino_coords() {
+            return this.tetromino.map(([r, c]) => [r + this.tetromino_offset[0], c + this.tetromino_offset[1]]);
+        }
+        
+        apply_tetromino() {
+            this.get_tetromino_coords().forEach(([r, c]) => {
+                this.field[r][c] = this.tetromino_color;
+            });
             
-            rotate() {
-                if (this.game_over) {
-                    this.resetGame();
-                    return;
-                }
-                
-                const ys = this.tetromino.map(([r, c]) => r);
-                const xs = this.tetromino.map(([r, c]) => c);
-                const size = Math.max(Math.max(...ys) - Math.min(...ys), Math.max(...xs) - Math.min(...xs));
-                const rotated_tetromino = this.tetromino.map(([r, c]) => [c, size - r]);
-                const wallkick_offset = [...this.tetromino_offset];
-                const tetromino_coord = rotated_tetromino.map(([r, c]) => [r + wallkick_offset[0], c + wallkick_offset[1]]);
-                
-                const min_x = Math.min(...tetromino_coord.map(([r, c]) => c));
-                const max_x = Math.max(...tetromino_coord.map(([r, c]) => c));
-                const max_y = Math.max(...tetromino_coord.map(([r, c]) => r));
-                
-                wallkick_offset[1] -= Math.min(0, min_x);
-                wallkick_offset[1] += Math.min(0, this.FIELD_WIDTH - (1 + max_x));
-                wallkick_offset[0] += Math.min(0, this.FIELD_HEIGHT - (1 + max_y));
-                
-                const new_coords = rotated_tetromino.map(([r, c]) => [r + wallkick_offset[0], c + wallkick_offset[1]]);
-                if (new_coords.every(([r, c]) => this.is_cell_free(r, c))) {
-                    this.tetromino = rotated_tetromino;
-                    this.tetromino_offset = wallkick_offset;
+            const new_field = this.field.filter(row => row.some(tile => tile === 0));
+            const lines_eliminated = this.field.length - new_field.length;
+            this.total_lines_eliminated += lines_eliminated;
+            this.field = [...Array(lines_eliminated).fill().map(() => Array(this.FIELD_WIDTH).fill(0)), ...new_field];
+            this.score += this.SCORE_PER_ELIMINATED_LINES[lines_eliminated] * (this.level + 1);
+            this.level = Math.floor(this.total_lines_eliminated / 10);
+            this.reset_tetromino();
+        }
+        
+        get_color(r, c) {
+            return this.get_tetromino_coords().some(([tr, tc]) => tr === r && tc === c) ? 
+                this.tetromino_color : this.field[r][c];
+        }
+        
+        is_cell_free(r, c) {
+            return r < this.FIELD_HEIGHT && c >= 0 && c < this.FIELD_WIDTH && (r < 0 || this.field[r][c] === 0);
+        }
+        
+        move(dr, dc) {
+            if (this.game_over) return;
+            
+            if (this.get_tetromino_coords().every(([r, c]) => this.is_cell_free(r + dr, c + dc))) {
+                this.tetromino_offset[0] += dr;
+                this.tetromino_offset[1] += dc;
+            } else if (dr === 1 && dc === 0) {
+                this.game_over = this.get_tetromino_coords().some(([r, c]) => r < 0);
+                if (!this.game_over) {
+                    this.apply_tetromino();
                 }
             }
         }
         
-        class Game {
-            constructor() {
-                this.tetris = new Tetris();
-                this.canvas = document.getElementById('canvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.status = document.getElementById('status');
-                this.gameOverMsg = document.getElementById('game-over');
-                
-                // Ajustar tamaño del canvas con un 20% más grande
-                const scaleFactor = 1.2; // 20% más grande
-                const pieceSize = Math.min(
-                    window.innerWidth * 0.95 / this.tetris.FIELD_WIDTH,
-                    window.innerHeight * 0.65 / this.tetris.FIELD_HEIGHT
-                ) * scaleFactor;
-                
-                this.canvas.width = pieceSize * this.tetris.FIELD_WIDTH;
-                this.canvas.height = pieceSize * this.tetris.FIELD_HEIGHT;
-                this.pieceSize = pieceSize;
-
-                // Configurar controles
-                this.setupControls();
-                
-                this.lastTime = 0;
-                this.updateInterval = 1000; // ms
-                this.gameLoop(0);
+        rotate() {
+            if (this.game_over) {
+                this.resetGame();
+                return;
             }
             
-            setupControls() {
-                const setupContinuousMove = (buttonId, direction) => {
-                    const button = document.getElementById(buttonId);
-                    let moveInterval = null;
-                    let initialDelay = null;
-                    const moveDelay = 100;
-                    
-                    const startMove = (e) => {
-                        if (e) e.preventDefault();
-                        this.tetris.move(direction[0], direction[1]);
-                        this.update();
-                        
-                        initialDelay = setTimeout(() => {
-                            moveInterval = setInterval(() => {
-                                this.tetris.move(direction[0], direction[1]);
-                                this.update();
-                            }, moveDelay);
-                        }, 300);
-                    };
-                    
-                    const stopMove = (e) => {
-                        if (e) e.preventDefault();
-                        if (initialDelay) clearTimeout(initialDelay);
-                        if (moveInterval) clearInterval(moveInterval);
-                    };
-                    
-                    button.addEventListener('touchstart', startMove);
-                    button.addEventListener('touchend', stopMove);
-                    button.addEventListener('touchcancel', stopMove);
-                    button.addEventListener('mousedown', startMove);
-                    button.addEventListener('mouseup', stopMove);
-                    button.addEventListener('mouseleave', stopMove);
-                };
+            const ys = this.tetromino.map(([r, c]) => r);
+            const xs = this.tetromino.map(([r, c]) => c);
+            const size = Math.max(Math.max(...ys) - Math.min(...ys), Math.max(...xs) - Math.min(...xs));
+            const rotated_tetromino = this.tetromino.map(([r, c]) => [c, size - r]);
+            const wallkick_offset = [...this.tetromino_offset];
+            const tetromino_coord = rotated_tetromino.map(([r, c]) => [r + wallkick_offset[0], c + wallkick_offset[1]]);
+            
+            const min_x = Math.min(...tetromino_coord.map(([r, c]) => c));
+            const max_x = Math.max(...tetromino_coord.map(([r, c]) => c));
+            const max_y = Math.max(...tetromino_coord.map(([r, c]) => r));
+            
+            wallkick_offset[1] -= Math.min(0, min_x);
+            wallkick_offset[1] += Math.min(0, this.FIELD_WIDTH - (1 + max_x));
+            wallkick_offset[0] += Math.min(0, this.FIELD_HEIGHT - (1 + max_y));
+            
+            const new_coords = rotated_tetromino.map(([r, c]) => [r + wallkick_offset[0], c + wallkick_offset[1]]);
+            if (new_coords.every(([r, c]) => this.is_cell_free(r, c))) {
+                this.tetromino = rotated_tetromino;
+                this.tetromino_offset = wallkick_offset;
+            }
+        }
+    }
+    
+    class Game {
+        constructor() {
+            this.tetris = new Tetris();
+            this.canvas = document.getElementById('canvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.nextBlock1 = document.getElementById('next-block-1');
+            this.nextBlock1Ctx = this.nextBlock1.getContext('2d');
+            this.nextBlock2 = document.getElementById('next-block-2');
+            this.nextBlock2Ctx = this.nextBlock2.getContext('2d');
+            this.status = document.getElementById('status');
+            this.gameOverMsg = document.getElementById('game-over');
+            
+            // Ajustar tamaño del canvas principal (un poco más pequeño para dejar espacio a los próximos bloques)
+            const scaleFactor = 1.1;
+            const pieceSize = Math.min(
+                window.innerWidth * 0.95 / this.tetris.FIELD_WIDTH,
+                window.innerHeight * 0.55 / this.tetris.FIELD_HEIGHT
+            ) * scaleFactor;
+            
+            this.canvas.width = pieceSize * this.tetris.FIELD_WIDTH;
+            this.canvas.height = pieceSize * this.tetris.FIELD_HEIGHT;
+            this.pieceSize = pieceSize;
 
-                setupContinuousMove('left', [0, -1]);
-                setupContinuousMove('right', [0, 1]);
-
-                document.getElementById('rotate').addEventListener('click', () => {
-                    this.tetris.rotate();
+            // Configurar controles
+            this.setupControls();
+            
+            this.lastTime = 0;
+            this.updateInterval = 1000;
+            this.gameLoop(0);
+        }
+        
+        setupControls() {
+            const setupContinuousMove = (buttonId, direction) => {
+                const button = document.getElementById(buttonId);
+                let moveInterval = null;
+                let initialDelay = null;
+                const moveDelay = 100;
+                
+                const startMove = (e) => {
+                    if (e) e.preventDefault();
+                    this.tetris.move(direction[0], direction[1]);
                     this.update();
-                });
-
-                const downBtn = document.getElementById('down');
-                let longPressTimer = null;
-                let isLongPress = false;
-
-                const handleDownStart = (e) => {
-                    if (e) e.preventDefault();
-                    isLongPress = false;
-                    longPressTimer = setTimeout(() => {
-                        isLongPress = true;
-                        while (!this.tetris.game_over && 
-                               this.tetris.get_tetromino_coords().every(([r, c]) => 
-                                  this.tetris.is_cell_free(r + 1, c))) {
-                            this.tetris.move(1, 0);
-                        }
-                        this.update();
-                    }, 500);
+                    
+                    initialDelay = setTimeout(() => {
+                        moveInterval = setInterval(() => {
+                            this.tetris.move(direction[0], direction[1]);
+                            this.update();
+                        }, moveDelay);
+                    }, 300);
                 };
-
-                const handleDownEnd = (e) => {
+                
+                const stopMove = (e) => {
                     if (e) e.preventDefault();
-                    if (longPressTimer) clearTimeout(longPressTimer);
-                    if (!isLongPress) {
+                    if (initialDelay) clearTimeout(initialDelay);
+                    if (moveInterval) clearInterval(moveInterval);
+                };
+                
+                button.addEventListener('touchstart', startMove);
+                button.addEventListener('touchend', stopMove);
+                button.addEventListener('touchcancel', stopMove);
+                button.addEventListener('mousedown', startMove);
+                button.addEventListener('mouseup', stopMove);
+                button.addEventListener('mouseleave', stopMove);
+            };
+
+            setupContinuousMove('left', [0, -1]);
+            setupContinuousMove('right', [0, 1]);
+
+            document.getElementById('rotate').addEventListener('click', () => {
+                this.tetris.rotate();
+                this.update();
+            });
+
+            const downBtn = document.getElementById('down');
+            let longPressTimer = null;
+            let isLongPress = false;
+
+            const handleDownStart = (e) => {
+                if (e) e.preventDefault();
+                isLongPress = false;
+                longPressTimer = setTimeout(() => {
+                    isLongPress = true;
+                    while (!this.tetris.game_over && 
+                           this.tetris.get_tetromino_coords().every(([r, c]) => 
+                              this.tetris.is_cell_free(r + 1, c))) {
                         this.tetris.move(1, 0);
-                        this.update();
                     }
-                    isLongPress = false;
-                };
+                    this.update();
+                }, 500);
+            };
 
-                downBtn.addEventListener('touchstart', handleDownStart);
-                downBtn.addEventListener('touchend', handleDownEnd);
-                downBtn.addEventListener('touchcancel', handleDownEnd);
-                downBtn.addEventListener('mousedown', handleDownStart);
-                downBtn.addEventListener('mouseup', handleDownEnd);
-                downBtn.addEventListener('mouseleave', handleDownEnd);
-                
-                this.gameOverMsg.addEventListener('click', () => {
-                    this.tetris.resetGame();
-                    this.gameOverMsg.style.display = 'none';
-                    this.update();
-                });
-                
-                document.addEventListener('keydown', (e) => {
-                    switch(e.key) {
-                        case 'ArrowLeft': this.tetris.move(0, -1); break;
-                        case 'ArrowRight': this.tetris.move(0, 1); break;
-                        case 'ArrowDown': this.tetris.move(1, 0); break;
-                        case 'ArrowUp': this.tetris.rotate(); break;
-                    }
-                    this.update();
-                });
-            }
-            
-            gameLoop(timestamp) {
-                if (timestamp - this.lastTime > this.updateInterval * Math.pow(0.66, this.tetris.level)) {
+            const handleDownEnd = (e) => {
+                if (e) e.preventDefault();
+                if (longPressTimer) clearTimeout(longPressTimer);
+                if (!isLongPress) {
                     this.tetris.move(1, 0);
                     this.update();
-                    this.lastTime = timestamp;
                 }
-                requestAnimationFrame((ts) => this.gameLoop(ts));
-            }
+                isLongPress = false;
+            };
+
+            downBtn.addEventListener('touchstart', handleDownStart);
+            downBtn.addEventListener('touchend', handleDownEnd);
+            downBtn.addEventListener('touchcancel', handleDownEnd);
+            downBtn.addEventListener('mousedown', handleDownStart);
+            downBtn.addEventListener('mouseup', handleDownEnd);
+            downBtn.addEventListener('mouseleave', handleDownEnd);
             
-            update() {
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                
-                for (let r = 0; r < this.tetris.FIELD_HEIGHT; r++) {
-                    for (let c = 0; c < this.tetris.FIELD_WIDTH; c++) {
-                        const color = COLORS[this.tetris.get_color(r, c)];
-                        this.ctx.fillStyle = color;
-                        this.ctx.fillRect(
-                            c * this.pieceSize, 
-                            r * this.pieceSize, 
-                            this.pieceSize, 
-                            this.pieceSize
-                        );
-                        
-                        this.ctx.strokeStyle = '#333';
-                        this.ctx.strokeRect(
-                            c * this.pieceSize, 
-                            r * this.pieceSize, 
-                            this.pieceSize, 
-                            this.pieceSize
-                        );
-                    }
+            this.gameOverMsg.addEventListener('click', () => {
+                this.tetris.resetGame();
+                this.gameOverMsg.style.display = 'none';
+                this.update();
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                switch(e.key) {
+                    case 'ArrowLeft': this.tetris.move(0, -1); break;
+                    case 'ArrowRight': this.tetris.move(0, 1); break;
+                    case 'ArrowDown': this.tetris.move(1, 0); break;
+                    case 'ArrowUp': this.tetris.rotate(); break;
                 }
-                
-                this.status.textContent = `Score: ${this.tetris.score}\nLevel: ${this.tetris.level}`;
-                
-                if (this.tetris.game_over) {
-                    this.gameOverMsg.style.display = 'block';
-                }
-            }
+                this.update();
+            });
         }
         
-        window.onload = () => {
-            new Game();
-        };
-    </script>
+        drawNextBlock(ctx, tetromino, color, size) {
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            
+            // Calcular el centro del canvas
+            const blockWidth = Math.max(...tetromino.map(([r, c]) => c)) + 1;
+            const blockHeight = Math.max(...tetromino.map(([r, c]) => r)) + 1;
+            const offsetX = (ctx.canvas.width - blockWidth * size) / 2;
+            const offsetY = (ctx.canvas.height - blockHeight * size) / 2;
+            
+            tetromino.forEach(([r, c]) => {
+                ctx.fillStyle = COLORS[color];
+                ctx.fillRect(
+                    offsetX + c * size,
+                    offsetY + r * size,
+                    size,
+                    size
+                );
+                
+                ctx.strokeStyle = '#333';
+                ctx.strokeRect(
+                    offsetX + c * size,
+                    offsetY + r * size,
+                    size,
+                    size
+                );
+            });
+        }
+        
+        gameLoop(timestamp) {
+            if (timestamp - this.lastTime > this.updateInterval * Math.pow(0.66, this.tetris.level)) {
+                this.tetris.move(1, 0);
+                this.update();
+                this.lastTime = timestamp;
+            }
+            requestAnimationFrame((ts) => this.gameLoop(ts));
+        }
+        
+        update() {
+            // Dibujar el tablero principal
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            for (let r = 0; r < this.tetris.FIELD_HEIGHT; r++) {
+                for (let c = 0; c < this.tetris.FIELD_WIDTH; c++) {
+                    const color = COLORS[this.tetris.get_color(r, c)];
+                    this.ctx.fillStyle = color;
+                    this.ctx.fillRect(
+                        c * this.pieceSize, 
+                        r * this.pieceSize, 
+                        this.pieceSize, 
+                        this.pieceSize
+                    );
+                    
+                    this.ctx.strokeStyle = '#333';
+                    this.ctx.strokeRect(
+                        c * this.pieceSize, 
+                        r * this.pieceSize, 
+                        this.pieceSize, 
+                        this.pieceSize
+                    );
+                }
+            }
+            
+            // Dibujar los próximos bloques
+            this.drawNextBlock(this.nextBlock1Ctx, this.tetris.nextTetrominos[0].shape, this.tetris.nextTetrominos[0].color, 15);
+            this.drawNextBlock(this.nextBlock2Ctx, this.tetris.nextTetrominos[1].shape, this.tetris.nextTetrominos[1].color, 15);
+            
+            this.status.textContent = `Score: ${this.tetris.score}\nLevel: ${this.tetris.level}`;
+            
+            if (this.tetris.game_over) {
+                this.gameOverMsg.style.display = 'block';
+            }
+        }
+    }
+    
+    window.onload = () => {
+        new Game();
+    };
+</script>
 </body>
 </html>
