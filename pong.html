@@ -84,6 +84,8 @@
         const scoreElement = document.getElementById('score');
         const NORMAL_SPEED = 4;
         const INITIAL_SPEED = NORMAL_SPEED / 2; // Mitad de velocidad al inicio
+        const machinePaddleCenter = machinePaddle.y + machinePaddle.height / 2;
+        const isSharpAngle = Math.abs(ball.speedY / ball.speedX) > 1;
         
         // Ajustar tamaño del canvas
         function resizeCanvas() {
@@ -222,6 +224,13 @@
             if (machinePaddle.y > canvas.height - machinePaddle.height) {
                 machinePaddle.y = canvas.height - machinePaddle.height;
             }
+            if (!isSharpAngle || Math.random() > 0.5) { // 50% de fallo solo en ángulos pronunciados
+    if (machinePaddleCenter < ball.y - 20) {
+        machinePaddle.y += machinePaddle.speed;
+    } else if (machinePaddleCenter > ball.y + 20) {
+        machinePaddle.y -= machinePaddle.speed;
+    }
+}
             
             // Mover pelota
             ball.x += ball.speedX;
