@@ -106,6 +106,10 @@
             min-width: 45%;
             color: var(--light);
             border: 1px solid rgba(255, 255, 255, 0.05);
+                min-height: 60px; /* Altura fija para mantener el espacio */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
         }
 
         .info-box h3 {
@@ -125,6 +129,12 @@
             color: var(--danger);
             font-weight: 600;
             font-size: 14px;
+                white-space: nowrap; /* Evita saltos de línea */
+    overflow: hidden; /* Oculta el texto que desborda */
+    text-overflow: ellipsis; /* Añade ... si el texto es muy largo */
+    min-height: 20px; /* Altura mínima para mantener el espacio */
+    line-height: 1.2; /* Ajuste de interlineado */
+    margin-top: 5px; /* Espacio constante */
         }
 
         .keyboard-container {
@@ -289,7 +299,7 @@
                 </div>
                 <div class="info-box">
                     <h3>Letras usadas</h3>
-                    <p><span id="guessed-letters"></span></p>
+                    <p><span id="guessed-letters">-</span></p>
                 </div>
             </div>
         </div>
@@ -1343,8 +1353,8 @@
             }
             
             updateGuessedLettersDisplay() {
-                const letters = [...this.guessedLetters].sort();
-                this.guessedLettersDisplay.textContent = letters.length > 0 ? letters.join(', ') : '-';
+    const letters = [...this.guessedLetters].sort();
+    this.guessedLettersDisplay.textContent = letters.length > 0 ? letters.join(', ') : '-';
             }
             
             handleKeyPress(event) {
