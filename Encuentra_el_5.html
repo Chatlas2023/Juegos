@@ -48,29 +48,29 @@
         overflow: hidden;
     }
     
-    .grid {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: repeat(4, 1fr);
-        gap: 1px;
-        background-color: #3c3c3c; /* Dark grid lines */
-    }
-    
-    .cell {
-        background-color: #333333; /* Dark cell background */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 36px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        user-select: none;
-        color: #e0e0e0; /* Light text for numbers */
-    }
+.grid {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 3px; /* Increased from 1px to 3px for thicker lines */
+    background-color: #ffffff; /* White for high contrast (grid lines) */
+}
+
+.cell {
+    background-color: #333333; /* Dark cell background (unchanged) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    user-select: none;
+    color: #e0e0e0; /* Light text for numbers (unchanged) */
+}
     
     .cell:hover {
         background-color: #4a4a4a; /* Slightly lighter on hover */
