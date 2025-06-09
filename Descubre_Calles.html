@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -42,7 +43,7 @@
         }
 
         h1 {
-            font-size: 24px; /* Aumentado de 18px a 24px */
+            font-size: 18px;
             margin: 0 0 15px 0;
             color: var(--secondary);
             font-weight: 600;
@@ -89,38 +90,37 @@
 
         .game-info {
             display: flex;
-            flex-direction: column; /* Cambiado de space-around a columna */
-            align-items: center;
-            gap: 12px; /* Aumentado el espacio entre bloques */
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .info-box {
             background: white;
-            padding: 10px 14px; /* Aumentado el padding */
+            padding: 8px 12px;
             border-radius: 6px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            width: 80%; /* Ajustado para mejor apariencia */
-            max-width: 300px; /* Límite de ancho máximo */
+            min-width: 45%;
             color: var(--dark);
         }
 
         .info-box h3 {
             margin: 0 0 5px 0;
-            font-size: 18px; /* Aumentado de 12px a 14px */
+            font-size: 12px;
             color: var(--primary);
             font-weight: 600;
         }
 
         .info-box p {
             margin: 0;
-            font-size: 18px; /* Aumentado de 14px a 18px */
+            font-size: 14px;
             font-weight: 700;
         }
 
         #guessed-letters {
             color: var(--danger);
             font-weight: 600;
-            font-size: 18px; /* Aumentado de 12px a 16px */
+            font-size: 12px;
         }
 
         .keyboard-container {
@@ -199,13 +199,13 @@
         }
 
         #next-word-btn {
-            display: none;
             background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
         }
 
-        #next-word-btn.show {
-            display: inline-block;
+        #next-word-btn:disabled {
+            background: linear-gradient(to right, #adb5bd, #6c757d);
+            cursor: not-allowed;
         }
 
         .attempts-warning {
@@ -219,56 +219,7 @@
             100% { opacity: 1; }
         }
 
-        .message-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .message-container.show {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .message-box {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 80%;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .message-box h2 {
-            color: var(--danger);
-            margin-top: 0;
-        }
-
-        .message-box p {
-            color: var(--dark);
-            margin-bottom: 20px;
-        }
-
-        .message-box button {
-            background: linear-gradient(to right, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
+        /* Teclado en 4 filas para móviles */
         @media (max-width: 600px) {
             .keyboard {
                 gap: 6px;
@@ -286,7 +237,7 @@
             }
             
             h1 {
-                font-size: 20px; /* Ajustado para móviles */
+                font-size: 16px;
             }
             
             .word-display {
@@ -295,20 +246,8 @@
             }
             
             .info-box {
-                width: 90%; /* Ajustado para móviles */
-                padding: 8px 10px;
-            }
-
-            .info-box h3 {
-                font-size: 12px; /* Ajustado para móviles */
-            }
-
-            .info-box p {
-                font-size: 16px; /* Ajustado para móviles */
-            }
-
-            #guessed-letters {
-                font-size: 14px; /* Ajustado para móviles */
+                min-width: 40%;
+                padding: 6px 8px;
             }
         }
     </style>
@@ -339,15 +278,7 @@
         </div>
         
         <div class="buttons">
-            <button id="next-word-btn">Siguiente</button>
-        </div>
-    </div>
-
-    <div class="message-container" id="message-container">
-        <div class="message-box">
-            <h2 id="message-title"></h2>
-            <p id="message-text"></p>
-            <button id="message-close-btn">Aceptar</button>
+            <button id="next-word-btn" disabled>Siguiente</button>
         </div>
     </div>
 
