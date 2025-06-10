@@ -53,8 +53,8 @@ window.addEventListener("resize", resizeCanvas);
 let ballX = canvas.width / 2;
 let ballY = canvas.height - 30;
 let ballRadius = 10;
-let ballSpeedX = 5;
-let ballSpeedY = -5;
+let ballSpeedX = 4;
+let ballSpeedY = -4;
 
 let paddleWidth = 80;
 let paddleHeight = 10;
@@ -165,32 +165,44 @@ function gameLoop() {
     drawBricks();
     drawBall();
     drawPaddle();
-    drawLives(); // Muestra el contador
+    drawLives();
     collisionDetection();
 
-    // Rebote en paredes
-if (ballY + ballSpeedY > canvas.height - ballRadius) {
-    if (ballX > paddleX && ballX < paddleX + paddleWidth) {
+    // Rebote en paredes laterales
+    if (ballX + ballSpeedX > canvas.width - ballRadius || ballX + ballSpeedX < ballRadius) {
+        ballSpeedX = -ballSpeedX;
+    }
+    
+    // Rebote en techo
+    if (ballY + ballSpeedY < ballRadius) {
         ballSpeedY = -ballSpeedY;
+    }
+    
+    // Rebote en paleta o pérdida de vida
+    if (ballY + ballSpeedY > canvas.height - ballRadius) {
+        if (ballX > paddleX - ballRadius && ballX < paddleX + paddleWidth + ballRadius) {
+            ballSpeedY = -ballSpeedY;
+} else {
+    lives--;
+    if (lives <= 0) {
+        alert("¡Game Over!");
+        document.location.reload();
     } else {
-        lives--; // Resta una vida
-        if (lives <= 0) {
-            alert("¡Game Over!");
-            document.location.reload();
-        } else {
-            // Reinicia posición de pelota y paleta
+        ctx.fillStyle = "#FFF";
+        ctx.font = "24px Arial";
+        ctx.fillText("¡Listo!", canvas.width / 2 - 40, canvas.height / 2);
+        setTimeout(() => {
             ballX = canvas.width / 2;
             ballY = canvas.height - 30;
-            ballSpeedX = 5;
-            ballSpeedY = -5;
+            ballSpeedX = 4;
+            ballSpeedY = -4;
             paddleX = (canvas.width - paddleWidth) / 2;
-        }
+        }, 1000); // Espera 1 segundo
     }
 }
 
     ballX += ballSpeedX;
     ballY += ballSpeedY;
-
     requestAnimationFrame(gameLoop);
 }
 
