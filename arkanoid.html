@@ -36,6 +36,7 @@
         <canvas id="gameCanvas"></canvas>
     </div>
     <script>
+        let lives = 10; // Inicia con 10 vidas
         const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -152,30 +153,40 @@ function collisionDetection() {
         }
     }
 }
-
+function drawLives() {
+    ctx.font = "bold 20px 'Arial'";
+    ctx.fillStyle = "#FFD700"; // Dorado
+    ctx.textAlign = "left";
+    ctx.fillText("❤️ " + lives, 20, 25);
+}
 // Bucle principal del juego
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBricks();
     drawBall();
     drawPaddle();
+    drawLives(); // Muestra el contador
     collisionDetection();
 
     // Rebote en paredes
-    if (ballX + ballSpeedX > canvas.width - ballRadius || ballX + ballSpeedX < ballRadius) {
-        ballSpeedX = -ballSpeedX;
-    }
-    if (ballY + ballSpeedY < ballRadius) {
+if (ballY + ballSpeedY > canvas.height - ballRadius) {
+    if (ballX > paddleX && ballX < paddleX + paddleWidth) {
         ballSpeedY = -ballSpeedY;
-    } else if (ballY + ballSpeedY > canvas.height - ballRadius) {
-        // Rebote en la paleta
-        if (ballX > paddleX && ballX < paddleX + paddleWidth) {
-            ballSpeedY = -ballSpeedY;
-        } else {
-            // Game Over
+    } else {
+        lives--; // Resta una vida
+        if (lives <= 0) {
+            alert("¡Game Over!");
             document.location.reload();
+        } else {
+            // Reinicia posición de pelota y paleta
+            ballX = canvas.width / 2;
+            ballY = canvas.height - 30;
+            ballSpeedX = 5;
+            ballSpeedY = -5;
+            paddleX = (canvas.width - paddleWidth) / 2;
         }
     }
+}
 
     ballX += ballSpeedX;
     ballY += ballSpeedY;
