@@ -304,11 +304,12 @@ function showNumbers() {
         cell.classList.remove('correct', 'incorrect', 'target');
         // Quitar cualquier listener existente primero para evitar duplicados
         cell.replaceWith(cell.cloneNode(true));
-        // Agregar el event listener para permitir clics tempranos
+        // Agregar el event listener para permitir clics
         cell = document.querySelector(`.cell[data-index="${index}"]`);
         cell.addEventListener('click', handleCellClick);
-            });
-        }
+        cell.style.pointerEvents = 'auto'; // Habilitar clics nuevamente
+    });
+}
         
         // Ocultar números y preparar para la selección
         function hideNumbers() {
@@ -321,6 +322,12 @@ function showNumbers() {
         // Manejar clic en una celda
 function handleCellClick(event) {
     if (!isGameRunning) return;
+    
+    // Deshabilitar clics adicionales
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => {
+        cell.style.pointerEvents = 'none';
+    });
     
     clearTimeout(gameTimeout);
     
