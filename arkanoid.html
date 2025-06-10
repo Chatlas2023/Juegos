@@ -28,6 +28,7 @@
     display: block;
     width: 100%;
     touch-action: none;
+    border-radius: 8px; /* Bordes redondeados */
 }
     </style>
 </head>
@@ -154,10 +155,18 @@ function collisionDetection() {
     }
 }
 function drawLives() {
-    ctx.font = "bold 20px 'Arial'";
-    ctx.fillStyle = "#FFD700"; // Dorado
-    ctx.textAlign = "left";
-    ctx.fillText("❤️ " + lives, 20, 25);
+    const heartIcon = "❤️";
+    const heartSpacing = 30; // Espacio entre corazones
+    const startX = canvas.width - 40; // Posición inicial (esquina derecha)
+    
+    ctx.font = "24px Arial";
+    ctx.fillStyle = "#FF5252"; // Rojo
+    ctx.textAlign = "right";
+    
+    // Dibuja un corazón por cada vida restante
+    for (let i = 0; i < lives; i++) {
+        ctx.fillText(heartIcon, startX - (i * heartSpacing), 30);
+    }
 }
 // Bucle principal del juego
 function gameLoop() {
@@ -179,28 +188,30 @@ function gameLoop() {
     }
     
     // Rebote en paleta o pérdida de vida
-    if (ballY + ballSpeedY > canvas.height - ballRadius) {
-        if (ballX > paddleX - ballRadius && ballX < paddleX + paddleWidth + ballRadius) {
-            ballSpeedY = -ballSpeedY;
+// Rebote en paleta o pérdida de vida
+if (ballY + ballSpeedY > canvas.height - ballRadius) {
+    if (ballX > paddleX - ballRadius && ballX < paddleX + paddleWidth + ballRadius) {
+        ballSpeedY = -ballSpeedY; // Rebote en la paleta
+    } else {
+        lives--; // Restar una vida
+        if (lives === 0) {  // Cambiado de <= a ===
+            alert("¡Game Over!");
+            document.location.reload();
         } else {
-            lives--;
-            if (lives <= 0) {
-                alert("¡Game Over!");
-                document.location.reload();
-            } else {
-                ctx.fillStyle = "#FFF";
-                ctx.font = "24px Arial";
-                ctx.fillText("¡Listo!", canvas.width / 2 - 40, canvas.height / 2);
-                setTimeout(() => {
-                    ballX = canvas.width / 2;
-                    ballY = canvas.height - 30;
-                    ballSpeedX = 4;
-                    ballSpeedY = -4;
-                    paddleX = (canvas.width - paddleWidth) / 2;
-                }, 1000); // Espera 1 segundo
-            }
+            ctx.fillStyle = "#FFF";
+            ctx.font = "24px Arial";
+            ctx.fillText("¡Listo!", canvas.width / 2 - 40, canvas.height / 2);
+            // Pausa de 1 segundo antes de reiniciar
+            setTimeout(() => {
+                ballX = canvas.width / 2;
+                ballY = canvas.height - 30;
+                ballSpeedX = 4;
+                ballSpeedY = -4;
+                paddleX = (canvas.width - paddleWidth) / 2;
+            }, 1000);
         }
     }
+}
 
     ballX += ballSpeedX;
     ballY += ballSpeedY;
