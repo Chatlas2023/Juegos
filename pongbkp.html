@@ -5,47 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pong Game</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #222;
-            overflow: hidden;
-            touch-action: none;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-        #gameContainer {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            height: 600px;
-            background-color: green;
-            overflow: hidden;
-        }
+    body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        min-height: 100vh;
+        background-color: #222;
+        overflow: hidden;
+        touch-action: none;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        font-family: Arial, sans-serif;
+    }
+    #score {
+        color: white;
+        font-size: 28px;
+        margin: 10px 0;
+        text-align: center;
+        padding: 5px 0;
+    }
+    #gameContainer {
+        position: relative;
+        width: 100%;
+        max-width: 800px;
+        height: 70vh;
+        background-color: green;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
         canvas {
             display: block;
         }
-        #score {
-            position: absolute;
-            top: 20px;
-            width: 100%;
-            text-align: center;
-            color: white;
-            font-family: Arial, sans-serif;
-            font-size: 24px;
-            pointer-events: none;
-        }
         #controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 10px;
             width: 100%;
             display: flex;
             justify-content: space-between;
@@ -53,8 +53,8 @@
             box-sizing: border-box;
         }
         .control-btn {
-            width: 80px;
-            height: 80px;
+            width: 70px;
+            height: 70px;
             background-color: rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             display: flex;
@@ -68,8 +68,8 @@
     </style>
 </head>
 <body>
+    <div id="score">Machine: 0 - Player: 0</div>
     <div id="gameContainer">
-        <div id="score">Machine: 0 - Player: 0</div>
         <canvas id="gameCanvas"></canvas>
         <div id="controls">
             <div class="control-btn" id="upBtn">↑</div>
@@ -82,6 +82,8 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
+        const NORMAL_SPEED = 4;
+        const INITIAL_SPEED = NORMAL_SPEED / 2;
         
         // Ajustar tamaño del canvas
         function resizeCanvas() {
@@ -104,16 +106,10 @@
         
         // Cargar sonidos
         const sounds = {
-            paddleHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'), // Sonido corto base64
-            wallHit: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...'), // Otro sonido base64
-            score: new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU...') // Sonido más largo base64
+            paddleHit: new Audio('ping-pong1.mp3'),
+            wallHit: new Audio('ping-pong2.mp3'),
+            score: new Audio('notification.mp3')
         };
-        
-        // En un juego real, deberías usar archivos de sonido reales en lugar de datos base64
-        // Ejemplo de cómo cargar sonidos desde archivos:
-        // sounds.paddleHit = new Audio('sounds/paddle.wav');
-        // sounds.wallHit = new Audio('sounds/wall.wav');
-        // sounds.score = new Audio('sounds/score.wav');
         
         // Paletas
         const machinePaddle = {
@@ -205,7 +201,7 @@
         
         // Función para actualizar la posición de los elementos
         function update() {
-            // Mover paleta del jugador (ahora en la derecha)
+            // Mover paleta del jugador
             if (upPressed && playerPaddle.y > 0) {
                 playerPaddle.y -= playerPaddle.speed;
             }
@@ -213,12 +209,16 @@
                 playerPaddle.y += playerPaddle.speed;
             }
             
-            // IA simple para la paleta de la máquina (ahora en la izquierda)
+            // IA para la paleta de la máquina con posibilidad de fallo
             const machinePaddleCenter = machinePaddle.y + machinePaddle.height / 2;
-            if (machinePaddleCenter < ball.y - 20) {
-                machinePaddle.y += machinePaddle.speed;
-            } else if (machinePaddleCenter > ball.y + 20) {
-                machinePaddle.y -= machinePaddle.speed;
+            const isSharpAngle = Math.abs(ball.speedY / ball.speedX) > 1;
+            
+            if (!isSharpAngle || Math.random() > 0.5) { // 50% de fallo solo en ángulos pronunciados
+                if (machinePaddleCenter < ball.y - 20) {
+                    machinePaddle.y += machinePaddle.speed;
+                } else if (machinePaddleCenter > ball.y + 20) {
+                    machinePaddle.y -= machinePaddle.speed;
+                }
             }
             
             // Asegurar que la paleta de la máquina no salga del canvas
@@ -233,8 +233,12 @@
             
             // Detección de colisión con los bordes superior e inferior
             if (ball.y - ball.size < 0 || ball.y + ball.size > canvas.height) {
-                ball.speedY = -ball.speedY;
-                sounds.wallHit.currentTime = 0; // Rebobinar el sonido por si ya está sonando
+                if (Math.abs(ball.speedY) < 1) {
+                    ball.speedY = (ball.speedY < 0 ? -2 : 2);
+                } else {
+                    ball.speedY = -ball.speedY;
+                }
+                sounds.wallHit.currentTime = 0;
                 sounds.wallHit.play();
             }
             
@@ -245,11 +249,13 @@
                 ball.y > machinePaddle.y &&
                 ball.y < machinePaddle.y + machinePaddle.height
             ) {
-                ball.speedX = Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la derecha
-                // Añadir efecto de ángulo según donde golpee la paleta
+                ball.speedX = Math.abs(ball.speedX);
                 const hitPosition = (ball.y - (machinePaddle.y + machinePaddle.height / 2)) / (machinePaddle.height / 2);
-                ball.speedY = hitPosition * 5;
-                
+                let speedY = hitPosition * 5;
+                if (Math.abs(speedY) < 1) {
+                    speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1);
+                }
+                ball.speedY = speedY;
                 sounds.paddleHit.currentTime = 0;
                 sounds.paddleHit.play();
             }
@@ -260,24 +266,24 @@
                 ball.y > playerPaddle.y &&
                 ball.y < playerPaddle.y + playerPaddle.height
             ) {
-                ball.speedX = -Math.abs(ball.speedX); // Asegurar que la pelota vaya hacia la izquierda
-                // Añadir efecto de ángulo según donde golpee la paleta
+                ball.speedX = -Math.abs(ball.speedX);
                 const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
-                ball.speedY = hitPosition * 5;
-                
+                let speedY = hitPosition * 5;
+                if (Math.abs(speedY) < 1) {
+                    speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1);
+                }
+                ball.speedY = speedY;
                 sounds.paddleHit.currentTime = 0;
                 sounds.paddleHit.play();
             }
             
             // Puntuación
             if (ball.x - ball.size < 0) {
-                // Punto para el jugador (la máquina falló)
                 playerScore++;
                 sounds.score.currentTime = 0;
                 sounds.score.play();
                 resetBall();
             } else if (ball.x + ball.size > canvas.width) {
-                // Punto para la máquina (el jugador falló)
                 machineScore++;
                 sounds.score.currentTime = 0;
                 sounds.score.play();
@@ -292,8 +298,27 @@
         function resetBall() {
             ball.x = canvas.width / 2;
             ball.y = canvas.height / 2;
-            ball.speedX = (Math.random() > 0.5 ? 1 : -1) * 4;
-            ball.speedY = (Math.random() * 2 - 1) * 4;
+            ball.speedX = (Math.random() > 0.5 ? 1 : -1) * INITIAL_SPEED;
+            ball.speedY = (Math.random() * 2 - 1) * INITIAL_SPEED;
+            
+            if (Math.abs(ball.speedY) < 0.5) {
+                ball.speedY = (Math.random() > 0.5 ? 1 : -1) * 2;
+            }
+            
+            function increaseSpeed() {
+                if (Math.abs(ball.speedX) < NORMAL_SPEED) {
+                    ball.speedX *= 1.05;
+                    ball.speedY *= 1.05;
+                    requestAnimationFrame(increaseSpeed);
+                } else {
+                    ball.speedX = Math.sign(ball.speedX) * NORMAL_SPEED;
+                    ball.speedY = Math.min(Math.abs(ball.speedY), NORMAL_SPEED) * Math.sign(ball.speedY);
+                }
+            }
+            
+            setTimeout(() => {
+                increaseSpeed();
+            }, 500);
         }
         
         // Bucle del juego
