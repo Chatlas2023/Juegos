@@ -43,38 +43,12 @@
         canvas {
             display: block;
         }
-        #controls {
-            position: absolute;
-            bottom: 10px;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 20px;
-            box-sizing: border-box;
-        }
-        .control-btn {
-            width: 70px;
-            height: 70px;
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            touch-action: manipulation;
-        }
     </style>
 </head>
 <body>
     <div id="score">Machine: 0 - Player: 0</div>
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
-        <div id="controls">
-            <div class="control-btn" id="upBtn">↑</div>
-            <div class="control-btn" id="downBtn">↓</div>
-        </div>
     </div>
 
     <script>
@@ -137,39 +111,92 @@
             speedY: 4
         };
         
-        // Controles táctiles
-        let upPressed = false;
-        let downPressed = false;
+        // Variables para el control táctil
+        let isDragging = false;
+        let touchStartY = 0;
+        let paddleStartY = 0;
         
-        document.getElementById('upBtn').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            upPressed = true;
+        // Eventos táctiles
+        canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const touchX = touch.clientX - rect.left;
+            const touchY = touch.clientY - rect.top;
+            
+            // Verificar si el toque está dentro de la paleta del jugador
+            if (touchX > playerPaddle.x && 
+                touchX < playerPaddle.x + playerPaddle.width &&
+                touchY > playerPaddle.y && 
+                touchY < playerPaddle.y + playerPaddle.height) {
+                
+                isDragging = true;
+                touchStartY = touchY;
+                paddleStartY = playerPaddle.y;
+                e.preventDefault();
+            }
         });
         
-        document.getElementById('upBtn').addEventListener('touchend', (e) => {
-            e.preventDefault();
-            upPressed = false;
+        canvas.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                const touchY = touch.clientY - rect.top;
+                
+                // Calcular nueva posición de la paleta
+                const deltaY = touchY - touchStartY;
+                let newY = paddleStartY + deltaY;
+                
+                // Limitar la paleta dentro del canvas
+                newY = Math.max(0, Math.min(newY, canvas.height - playerPaddle.height));
+                playerPaddle.y = newY;
+                
+                e.preventDefault();
+            }
         });
         
-        document.getElementById('downBtn').addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            downPressed = true;
+        canvas.addEventListener('touchend', (e) => {
+            isDragging = false;
         });
         
-        document.getElementById('downBtn').addEventListener('touchend', (e) => {
-            e.preventDefault();
-            downPressed = false;
+        // Eventos de ratón para probar en desktop
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            if (mouseX > playerPaddle.x && 
+                mouseX < playerPaddle.x + playerPaddle.width &&
+                mouseY > playerPaddle.y && 
+                mouseY < playerPaddle.y + playerPaddle.height) {
+                
+                isDragging = true;
+                touchStartY = mouseY;
+                paddleStartY = playerPaddle.y;
+                e.preventDefault();
+            }
         });
         
-        // Controles de teclado (para probar en desktop)
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowUp') upPressed = true;
-            if (e.key === 'ArrowDown') downPressed = true;
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const rect = canvas.getBoundingClientRect();
+                const mouseY = e.clientY - rect.top;
+                
+                const deltaY = mouseY - touchStartY;
+                let newY = paddleStartY + deltaY;
+                
+                newY = Math.max(0, Math.min(newY, canvas.height - playerPaddle.height));
+                playerPaddle.y = newY;
+                
+                e.preventDefault();
+            }
         });
         
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowUp') upPressed = false;
-            if (e.key === 'ArrowDown') downPressed = false;
+        canvas.addEventListener('mouseup', (e) => {
+            isDragging = false;
+        });
+        
+        canvas.addEventListener('mouseleave', (e) => {
+            isDragging = false;
         });
         
         // Función para dibujar elementos
@@ -201,14 +228,6 @@
         
         // Función para actualizar la posición de los elementos
         function update() {
-            // Mover paleta del jugador
-            if (upPressed && playerPaddle.y > 0) {
-                playerPaddle.y -= playerPaddle.speed;
-            }
-            if (downPressed && playerPaddle.y < canvas.height - playerPaddle.height) {
-                playerPaddle.y += playerPaddle.speed;
-            }
-            
             // IA para la paleta de la máquina con posibilidad de fallo
             const machinePaddleCenter = machinePaddle.y + machinePaddle.height / 2;
             const isSharpAngle = Math.abs(ball.speedY / ball.speedX) > 1;
