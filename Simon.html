@@ -124,20 +124,20 @@
 .score-container {
     display: flex;
     flex-direction: row; /* Siempre horizontal */
-    justify-content: center;
+    justify-content: space-between; /* Distribuye el espacio */
     align-items: center;
-    gap: 15px;
+    gap: 10px;
     margin-bottom: 30px;
-    width: 100%;
-    max-width: 350px; /* Ancho máximo reducido */
-    padding: 0 10px;
+    width: 90%;
+    max-width: 300px; /* Más estrecho para móviles */
+    padding: 0 5px;
 }
 
 .score-box {
     flex: 1;
     text-align: center;
     background-color: var(--score-bg);
-    padding: 10px 5px;
+    padding: 8px 5px; /* Padding más compacto */
     border-radius: 10px;
     box-shadow: var(--shadow);
     min-width: 0;
@@ -145,49 +145,45 @@
 
 .score-title {
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
     color: #bdc3c7;
-    font-size: 12px; /* Tamaño reducido */
+    font-size: 11px; /* Tamaño más pequeño */
     white-space: nowrap;
 }
 
 .score-value {
-    font-size: 20px; /* Tamaño reducido */
+    font-size: 18px; /* Tamaño más pequeño */
     font-weight: bold;
 }
-        
-        .message {
-            font-size: 18px;
-            margin-bottom: 30px;
-            min-height: 27px;
-            padding: 10px 20px;
-            background-color: var(--score-bg);
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-        }
-        
-        @media (max-width: 600px) {
-            .simon-button {
-                width: 120px;
-                height: 120px;
-            }
-            
-    .score-container {
+
+/* ELIMINA COMPLETAMENTE la media query que cambia a vertical */
+/* O reemplázala con esto: */
+@media (max-width: 600px) {
+    .simon-button {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .controls {
+        display: flex;
         flex-direction: column;
-        gap: 15px;
-        width: 100%;
+        gap: 10px;
     }
-                .score-box {
-        width: 80%;
-        padding: 15px 20px;
-    }
-            
-            .controls {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-            }
+    
+    /* Ajustes adicionales para móviles muy pequeños */
+    @media (max-width: 400px) {
+        .score-container {
+            max-width: 280px;
+            gap: 8px;
         }
+        .score-title {
+            font-size: 10px;
+        }
+        .score-value {
+            font-size: 16px;
+        }
+    }
+}
     </style>
 </head>
 <body>
