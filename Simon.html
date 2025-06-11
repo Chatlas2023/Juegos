@@ -123,42 +123,43 @@
         
 .score-container {
     display: flex;
-    flex-direction: row; /* Siempre en horizontal */
+    flex-direction: row;
     justify-content: center;
     align-items: center;
     gap: 20px;
-    width: auto;
     margin-bottom: 30px;
+    width: 100%; /* Cambiado de auto a 100% */
+    max-width: 400px; /* Ancho máximo para evitar que se estire demasiado */
 }
 
 .score-box {
-    flex: 0 0 auto;
+    flex: 1; /* Cambiado de 0 0 auto a 1 para que ocupen espacio proporcional */
     text-align: center;
     background-color: var(--score-bg);
-    padding: 12px 20px; /* Reducimos un poco el padding para móviles */
+    padding: 12px 5px; /* Padding más uniforme */
     border-radius: 10px;
     box-shadow: var(--shadow);
-    min-width: 100px;
+    min-width: 0; /* Importante para flexbox en móviles */
 }
 
 @media (max-width: 600px) {
     .score-container {
-        gap: 10px; /* Reducimos el espacio entre boxes */
-        width: 100%;
-        justify-content: space-around; /* Distribuye el espacio uniformemente */
+        gap: 10px;
+        padding: 0 10px; /* Añadido padding lateral */
+        max-width: 100%; /* Ocupa todo el ancho disponible */
     }
     
     .score-box {
-        padding: 10px 15px; /* Padding más compacto para móviles */
-        min-width: 80px; /* Ancho mínimo reducido */
+        padding: 8px 5px; /* Padding más ajustado */
     }
     
     .score-title {
-        font-size: 12px; /* Texto un poco más pequeño */
+        font-size: 12px;
+        white-space: nowrap; /* Evita saltos de línea */
     }
     
     .score-value {
-        font-size: 24px; /* Tamaño de número reducido */
+        font-size: 22px; /* Tamaño ligeramente menor */
     }
 }
         
