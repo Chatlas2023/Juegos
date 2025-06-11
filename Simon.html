@@ -205,6 +205,15 @@
         let highScore = localStorage.getItem('simonHighScore') || 0;
         let isGameActive = false;
         let isPlayerTurn = false;
+            // Audio - Configuración única
+    let audioContext;
+    let gainNode;
+    const tones = {
+        green: 392,
+        red: 329.63,
+        yellow: 261.63,
+        blue: 196
+    };
         
         // Actualizar el récord al cargar la página
         highScoreDisplay.textContent = highScore;
@@ -241,7 +250,57 @@
                 button.classList.remove('active');
             }, 300);
         }
+
+
+
+            
+    // Inicializar audio (solo una vez)
+    function initAudio() {
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            gainNode = audioContext.createGain();
+            gainNode.connect(audioContext.destination);
+            gainNode.gain.value = 0.5; // Volumen moderado
+        } catch (e) {
+            console.error("Error inicializando audio:", e);
+        }
+    }
+    
+    // Llamar a initAudio al primer clic del usuario
+    document.body.addEventListener('click', () => {
+        if (!audioContext) {
+            initAudio();
+        }
+    }, { once: true });
+    
+    // Actualizar el récord al cargar la página
+    highScoreDisplay.textContent = highScore;
+    
+    // Resaltar un botón
+    function highlightButton(color) {
+        const button = document.getElementById(color);
+        button.classList.add('active');
         
+        if (!audioContext) initAudio(); // Asegurar que el audio esté inicializado
+        
+        try {
+            // Crear oscilador para este sonido
+            const oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.value = tones[color];
+            oscillator.connect(gainNode);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.3); // Sonido corto
+            
+        } catch (e) {
+            console.error("Error reproduciendo sonido:", e);
+        }
+        
+        setTimeout(() => {
+            button.classList.remove('active');
+        }, 300);
+    }
         // Generar el siguiente paso en la secuencia
         function nextStep() {
             isPlayerTurn = false;
