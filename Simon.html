@@ -182,8 +182,139 @@
     </div>
 
     <script>
-        // (Aquí iría tu código JavaScript del juego)
-        console.log("JavaScript del juego Simon iría aquí");
+ const buttons = document.querySelectorAll('.simon-button');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const scoreDisplay = document.getElementById('score');
+        const highScoreDisplay = document.getElementById('high-score');
+        const messageDisplay = document.getElementById('message');
+        
+        // Variables del juego
+        let sequence = [];
+        let playerSequence = [];
+        let score = 0;
+        let highScore = localStorage.getItem('simonHighScore') || 0;
+        let isGameActive = false;
+        
+        // Actualizar el récord al cargar la página
+        highScoreDisplay.textContent = highScore;
+        
+        // Sonidos (podrías añadir sonidos reales más tarde)
+        function playSound(color) {
+            // Esto es un placeholder - en un juego real, añadirías sonidos aquí
+            console.log(`Sonido: ${color}`);
+        }
+        
+        // Resaltar un botón
+        function highlightButton(color) {
+            const button = document.getElementById(color);
+            button.classList.add('active');
+            playSound(color);
+            
+            setTimeout(() => {
+                button.classList.remove('active');
+            }, 500);
+        }
+        
+        // Generar el siguiente paso en la secuencia
+        function nextStep() {
+            const colors = ['green', 'red', 'yellow', 'blue'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            sequence.push(randomColor);
+            
+            // Mostrar la secuencia al jugador
+            showSequence();
+        }
+        
+        // Mostrar la secuencia al jugador
+        function showSequence() {
+            let i = 0;
+            const interval = setInterval(() => {
+                highlightButton(sequence[i]);
+                i++;
+                
+                if (i >= sequence.length) {
+                    clearInterval(interval);
+                    isGameActive = true;
+                    messageDisplay.textContent = "Tu turno!";
+                }
+            }, 800);
+        }
+        
+        // Manejar el clic del jugador
+        function handleButtonClick(color) {
+            if (!isGameActive) return;
+            
+            highlightButton(color);
+            playerSequence.push(color);
+            
+            // Verificar si el jugador acertó
+            if (playerSequence[playerSequence.length - 1] !== sequence[playerSequence.length - 1]) {
+                gameOver();
+                return;
+            }
+            
+            // Si completó la secuencia correctamente
+            if (playerSequence.length === sequence.length) {
+                playerSequence = [];
+                score++;
+                scoreDisplay.textContent = score;
+                messageDisplay.textContent = "Correcto! Siguiente nivel...";
+                isGameActive = false;
+                
+                setTimeout(() => {
+                    nextStep();
+                }, 1000);
+            }
+        }
+        
+        // Game over
+        function gameOver() {
+            isGameActive = false;
+            messageDisplay.textContent = `Game Over! Puntuación: ${score}`;
+            
+            // Actualizar récord si es necesario
+            if (score > highScore) {
+                highScore = score;
+                highScoreDisplay.textContent = highScore;
+                localStorage.setItem('simonHighScore', highScore);
+            }
+            
+            // Reiniciar variables del juego
+            sequence = [];
+            playerSequence = [];
+            score = 0;
+            scoreDisplay.textContent = score;
+        }
+        
+        // Iniciar juego
+        function startGame() {
+            if (sequence.length > 0) return; // Evitar múltiples inicios
+            
+            messageDisplay.textContent = "Observa la secuencia...";
+            score = 0;
+            scoreDisplay.textContent = score;
+            sequence = [];
+            playerSequence = [];
+            
+            nextStep();
+        }
+        
+        // Reiniciar juego
+        function restartGame() {
+            gameOver(); // Esto limpiará todo
+            startGame();
+        }
+        
+        // Event listeners
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                handleButtonClick(button.id);
+            });
+        });
+        
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', restartGame);
     </script>
 </body>
 </html>
