@@ -54,12 +54,10 @@
             transition: all 0.2s;
         }
 
-        .simon-button:hover {
-            transform: scale(1.02);
-        }
-
-        .simon-button:active {
+        .simon-button.active {
             opacity: 0.8;
+            transform: scale(0.95);
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.9);
         }
 
         #green {
@@ -127,6 +125,14 @@
             background-color: #8e44ad;
         }
 
+        /* MENSAJES */
+        #message {
+            margin: 15px 0;
+            min-height: 24px;
+            font-weight: bold;
+            color: #f1c40f;
+        }
+
         /* RESPONSIVE */
         @media (max-width: 600px) {
             .simon-buttons-container {
@@ -162,27 +168,30 @@
             <button class="simon-button" id="blue"></button>
         </div>
 
+        <!-- MENSAJE -->
+        <div id="message">Presiona Iniciar para jugar</div>
+
         <!-- PUNTUACIÓN -->
         <div class="score-container">
             <div class="score-box">
                 <div class="score-title">Ronda</div>
-                <div class="score-value" id="round">0</div>
+                <div class="score-value" id="score">0</div>
             </div>
             <div class="score-box">
                 <div class="score-title">Mejor</div>
-                <div class="score-value" id="best-score">0</div>
+                <div class="score-value" id="high-score">0</div>
             </div>
         </div>
 
         <!-- CONTROLES -->
         <div class="controls">
             <button id="start-btn">Iniciar</button>
-            <button id="strict-btn">Modo Estricto</button>
+            <button id="restart-btn">Reiniciar</button>
         </div>
     </div>
 
     <script>
- const buttons = document.querySelectorAll('.simon-button');
+        const buttons = document.querySelectorAll('.simon-button');
         const startBtn = document.getElementById('start-btn');
         const restartBtn = document.getElementById('restart-btn');
         const scoreDisplay = document.getElementById('score');
@@ -195,29 +204,49 @@
         let score = 0;
         let highScore = localStorage.getItem('simonHighScore') || 0;
         let isGameActive = false;
+        let isPlayerTurn = false;
         
         // Actualizar el récord al cargar la página
         highScoreDisplay.textContent = highScore;
-        
-        // Sonidos (podrías añadir sonidos reales más tarde)
-        function playSound(color) {
-            // Esto es un placeholder - en un juego real, añadirías sonidos aquí
-            console.log(`Sonido: ${color}`);
-        }
         
         // Resaltar un botón
         function highlightButton(color) {
             const button = document.getElementById(color);
             button.classList.add('active');
-            playSound(color);
+            
+            // Crear un sonido simple (podrías usar audio real)
+            const tones = {
+                green: 392,
+                red: 329.63,
+                yellow: 261.63,
+                blue: 196
+            };
+            
+            // Audio simple con Web Audio API
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.type = 'sine';
+            oscillator.frequency.value = tones[color];
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start();
+            
+            // Parar el sonido después de 300ms
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
+            oscillator.stop(audioContext.currentTime + 0.3);
             
             setTimeout(() => {
                 button.classList.remove('active');
-            }, 500);
+            }, 300);
         }
         
         // Generar el siguiente paso en la secuencia
         function nextStep() {
+            isPlayerTurn = false;
+            messageDisplay.textContent = "Observa la secuencia...";
+            
             const colors = ['green', 'red', 'yellow', 'blue'];
             const randomColor = colors[Math.floor(Math.random() * colors.length)];
             sequence.push(randomColor);
@@ -235,15 +264,17 @@
                 
                 if (i >= sequence.length) {
                     clearInterval(interval);
+                    isPlayerTurn = true;
                     isGameActive = true;
-                    messageDisplay.textContent = "Tu turno!";
+                    messageDisplay.textContent = "Tu turno! Repite la secuencia";
+                    playerSequence = [];
                 }
             }, 800);
         }
         
         // Manejar el clic del jugador
         function handleButtonClick(color) {
-            if (!isGameActive) return;
+            if (!isPlayerTurn) return;
             
             highlightButton(color);
             playerSequence.push(color);
@@ -256,11 +287,11 @@
             
             // Si completó la secuencia correctamente
             if (playerSequence.length === sequence.length) {
-                playerSequence = [];
+                isPlayerTurn = false;
+                isGameActive = false;
                 score++;
                 scoreDisplay.textContent = score;
-                messageDisplay.textContent = "Correcto! Siguiente nivel...";
-                isGameActive = false;
+                messageDisplay.textContent = "¡Correcto! Siguiente nivel...";
                 
                 setTimeout(() => {
                     nextStep();
@@ -271,7 +302,8 @@
         // Game over
         function gameOver() {
             isGameActive = false;
-            messageDisplay.textContent = `Game Over! Puntuación: ${score}`;
+            isPlayerTurn = false;
+            messageDisplay.textContent = `¡Game Over! Puntuación: ${score}`;
             
             // Actualizar récord si es necesario
             if (score > highScore) {
@@ -280,9 +312,6 @@
                 localStorage.setItem('simonHighScore', highScore);
             }
             
-            // Reiniciar variables del juego
-            sequence = [];
-            playerSequence = [];
             score = 0;
             scoreDisplay.textContent = score;
         }
@@ -291,25 +320,34 @@
         function startGame() {
             if (sequence.length > 0) return; // Evitar múltiples inicios
             
-            messageDisplay.textContent = "Observa la secuencia...";
+            messageDisplay.textContent = "Comenzando juego...";
             score = 0;
             scoreDisplay.textContent = score;
             sequence = [];
             playerSequence = [];
             
-            nextStep();
+            setTimeout(() => {
+                nextStep();
+            }, 1000);
         }
         
         // Reiniciar juego
         function restartGame() {
-            gameOver(); // Esto limpiará todo
-            startGame();
+            sequence = [];
+            playerSequence = [];
+            score = 0;
+            scoreDisplay.textContent = score;
+            isGameActive = false;
+            isPlayerTurn = false;
+            messageDisplay.textContent = "Presiona Iniciar para jugar";
         }
         
         // Event listeners
         buttons.forEach(button => {
             button.addEventListener('click', () => {
-                handleButtonClick(button.id);
+                if (isPlayerTurn) {
+                    handleButtonClick(button.id);
+                }
             });
         });
         
