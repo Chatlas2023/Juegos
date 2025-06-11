@@ -154,13 +154,11 @@
         let paddleStartY = 0;
         
         // Eventos táctiles
-        canvas.addEventListener('touchstart', (e) => {
-            if (!gameActive) return;
-            
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            const touchX = touch.clientX - rect.left;
-            const touchY = touch.clientY - rect.top;
+     canvas.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const touchX = touch.clientX - rect.left;
+    const touchY = touch.clientY - rect.top;
             
             // Verificar si el toque está dentro de la paleta del jugador
             if (touchX > playerPaddle.x && 
@@ -198,12 +196,10 @@
         });
         
         // Eventos de ratón para probar en desktop
-        canvas.addEventListener('mousedown', (e) => {
-            if (!gameActive) return;
-            
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
+canvas.addEventListener('mousedown', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
             
             if (mouseX > playerPaddle.x && 
                 mouseX < playerPaddle.x + playerPaddle.width &&
