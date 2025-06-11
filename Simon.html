@@ -123,43 +123,23 @@
         
 .score-container {
     display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
+    justify-content: space-around;
+    width: 300px;
     margin-bottom: 30px;
-    width: 100%; /* Cambiado de auto a 100% */
-    max-width: 400px; /* Ancho máximo para evitar que se estire demasiado */
-}
-
-.score-box {
-    flex: 1; /* Cambiado de 0 0 auto a 1 para que ocupen espacio proporcional */
-    text-align: center;
-    background-color: var(--score-bg);
-    padding: 12px 5px; /* Padding más uniforme */
-    border-radius: 10px;
-    box-shadow: var(--shadow);
-    min-width: 0; /* Importante para flexbox en móviles */
+    flex-direction: row; /* Asegura que los contenedores estén uno al lado del otro */
+    gap: 20px; /* Añade espacio entre los contenedores */
 }
 
 @media (max-width: 600px) {
     .score-container {
+        width: 100%;
+        flex-direction: row; /* Cambia a row para mantenerlos lado a lado en móviles */
         gap: 10px;
-        padding: 0 10px; /* Añadido padding lateral */
-        max-width: 100%; /* Ocupa todo el ancho disponible */
     }
     
     .score-box {
-        padding: 8px 5px; /* Padding más ajustado */
-    }
-    
-    .score-title {
-        font-size: 12px;
-        white-space: nowrap; /* Evita saltos de línea */
-    }
-    
-    .score-value {
-        font-size: 22px; /* Tamaño ligeramente menor */
+        flex: 1; /* Permite que los contenedores ocupen el mismo espacio */
+        min-width: 80px; /* Ajusta el ancho mínimo para pantallas pequeñas */
     }
 }
         
