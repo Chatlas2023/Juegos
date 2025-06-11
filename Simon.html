@@ -213,6 +213,7 @@
         red: 329.63,
         yellow: 261.63,
         blue: 196
+        error: 110
     };
         
         // Actualizar el récord al cargar la página
@@ -338,11 +339,17 @@
             highlightButton(color);
             playerSequence.push(color);
             
-            // Verificar si el jugador acertó
-            if (playerSequence[playerSequence.length - 1] !== sequence[playerSequence.length - 1]) {
-                gameOver();
-                return;
-            }
+    // Verificar si el jugador acertó
+    if (playerSequence[playerSequence.length - 1] !== sequence[playerSequence.length - 1]) {
+        // Efecto visual de error
+        document.body.style.backgroundColor = '#ff0000';
+        setTimeout(() => {
+            document.body.style.backgroundColor = '#2c3e50';
+        }, 200);
+        
+        gameOver();
+        return;
+    }
             
             // Si completó la secuencia correctamente
             if (playerSequence.length === sequence.length) {
@@ -360,6 +367,12 @@
         
         // Game over
         function gameOver() {
+                // Reproducir sonido de error
+    playErrorSound();
+    
+    isGameActive = false;
+    isPlayerTurn = false;
+    messageDisplay.textContent = `¡Game Over! Puntuación: ${score}`;
             isGameActive = false;
             isPlayerTurn = false;
             messageDisplay.textContent = `¡Game Over! Puntuación: ${score}`;
@@ -374,6 +387,37 @@
             score = 0;
             scoreDisplay.textContent = score;
         }
+        function playErrorSound() {
+    if (!audioContext) initAudio();
+    
+    try {
+        const oscillator = audioContext.createOscillator();
+        const errorGain = audioContext.createGain();
+        
+        oscillator.type = 'square'; // Sonido más "duro"
+        oscillator.frequency.value = tones.error;
+        oscillator.connect(errorGain);
+        errorGain.connect(audioContext.destination);
+        
+        // Efecto de caída de frecuencia
+        oscillator.frequency.exponentialRampToValueAtTime(
+            55, // Frecuencia final más grave
+            audioContext.currentTime + 0.5
+        );
+        
+        // Efecto de fade out
+        errorGain.gain.setValueAtTime(0.5, audioContext.currentTime);
+        errorGain.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + 0.5
+        );
+        
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.5);
+    } catch (e) {
+        console.error("Error en sonido de error:", e);
+    }
+}
         
         // Iniciar juego
         function startGame() {
