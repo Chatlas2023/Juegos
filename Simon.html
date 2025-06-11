@@ -121,23 +121,26 @@
             background: linear-gradient(135deg, #e74c3c, #c0392b);
         }
         
-        .score-container {
+.score-container {
     display: flex;
+    flex-direction: row; /* Esto es el valor por defecto, pero lo especificamos */
     justify-content: center;
-    gap: 20px; /* Espacio entre los contenedores */
-    width: 100%;
+    align-items: center; /* Alinea verticalmente los items */
+    gap: 30px; /* Aumentamos el espacio entre los contenedores */
+    width: auto; /* Cambiamos de 100% a auto para que no ocupe todo el ancho */
     margin-bottom: 30px;
-        }
-        
-        .score-box {
-    display: inline-block;
+    flex-wrap: wrap; /* Para que en móvil se adapte */
+}
+
+.score-box {
+    flex: 0 0 auto; /* Evita que los boxes se estiren */
     text-align: center;
     background-color: var(--score-bg);
-    padding: 15px 25px;
+    padding: 15px 30px; /* Aumentamos el padding horizontal */
     border-radius: 10px;
     box-shadow: var(--shadow);
-    min-width: 100px;
-        }
+    min-width: 120px; /* Aumentamos el ancho mínimo */
+}
         
         .score-title {
             font-weight: bold;
@@ -167,11 +170,15 @@
                 height: 120px;
             }
             
-            .score-container {
-                width: 100%;
-                flex-direction: column;
-                gap: 10px;
-            }
+    .score-container {
+        flex-direction: column;
+        gap: 15px;
+        width: 100%;
+    }
+                .score-box {
+        width: 80%;
+        padding: 15px 20px;
+    }
             
             .controls {
                 display: flex;
