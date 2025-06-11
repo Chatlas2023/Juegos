@@ -122,19 +122,21 @@
         }
         
         .score-container {
-            display: flex;
-            justify-content: space-around;
-            width: 300px;
-            margin-bottom: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Espacio entre los contenedores */
+    width: 100%;
+    margin-bottom: 30px;
         }
         
         .score-box {
-            text-align: center;
-            background-color: var(--score-bg);
-            padding: 15px 25px;
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            min-width: 100px;
+    display: inline-block;
+    text-align: center;
+    background-color: var(--score-bg);
+    padding: 15px 25px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    min-width: 100px;
         }
         
         .score-title {
@@ -184,16 +186,16 @@
     
     <div class="message" id="message">Presiona Iniciar para jugar</div>
     
-    <div class="score-container">
-        <div class="score-box">
-            <div class="score-title">Puntuación</div>
-            <div class="score-value" id="score">0</div>
-        </div>
-        <div class="score-box">
-            <div class="score-title">Récord</div>
-            <div class="score-value" id="high-score">0</div>
-        </div>
+<div class="score-container">
+    <div class="score-box">
+        <div class="score-title">Puntuación</div>
+        <div class="score-value" id="score">0</div>
     </div>
+    <div class="score-box">
+        <div class="score-title">Récord</div>
+        <div class="score-value" id="high-score">0</div>
+    </div>
+</div>
     
     <div class="game-container">
         <div class="simon-board">
