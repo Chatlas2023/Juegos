@@ -61,7 +61,7 @@
             width: 50px;
             height: 180px;
             margin: 0 2px;
-            background-color: #ecf0f1;
+            background-color: #ffffff; /* Blanco para notas naturales */
         }
 
         .black-key {
@@ -69,27 +69,21 @@
             height: 120px;
             position: absolute;
             z-index: 1;
-            background-color: #2c3e50;
+            background-color: #000000; /* Negro para semitonos */
             margin-left: -15px;
         }
 
-        /* COLORES DE LAS TECLAS */
-        .color-0 { background-color: #2ecc71; } /* Verde */
-        .color-1 { background-color: #e74c3c; } /* Rojo */
-        .color-2 { background-color: #f1c40f; } /* Amarillo */
-        .color-3 { background-color: #3498db; } /* Azul */
-
         /* POSICIONAMIENTO DE TECLAS NEGRAS */
-        .black-key:nth-child(2) { left: 52px; }
-        .black-key:nth-child(4) { left: 106px; }
-        .black-key:nth-child(6) { left: 212px; }
-        .black-key:nth-child(8) { left: 266px; }
-        .black-key:nth-child(10) { left: 320px; }
-        .black-key:nth-child(12) { left: 426px; }
-        .black-key:nth-child(14) { left: 480px; }
-        .black-key:nth-child(16) { left: 586px; }
-        .black-key:nth-child(18) { left: 640px; }
-        .black-key:nth-child(20) { left: 694px; }
+        .black-key:nth-child(2) { left: 52px; }  /* C#3 */
+        .black-key:nth-child(4) { left: 106px; } /* D#3 */
+        .black-key:nth-child(7) { left: 212px; } /* F#3 */
+        .black-key:nth-child(9) { left: 266px; } /* G#3 */
+        .black-key:nth-child(11) { left: 320px; } /* A#3 */
+        .black-key:nth-child(14) { left: 426px; } /* C#4 */
+        .black-key:nth-child(16) { left: 480px; } /* D#4 */
+        .black-key:nth-child(19) { left: 586px; } /* F#4 */
+        .black-key:nth-child(21) { left: 640px; } /* G#4 */
+        .black-key:nth-child(23) { left: 694px; } /* A#4 */
 
         /* RESPONSIVE */
         @media (max-width: 800px) {
@@ -109,14 +103,14 @@
             }
             .black-key:nth-child(2) { left: 39px; }
             .black-key:nth-child(4) { left: 79px; }
-            .black-key:nth-child(6) { left: 159px; }
-            .black-key:nth-child(8) { left: 199px; }
-            .black-key:nth-child(10) { left: 239px; }
-            .black-key:nth-child(12) { left: 319px; }
-            .black-key:nth-child(14) { left: 359px; }
-            .black-key:nth-child(16) { left: 439px; }
-            .black-key:nth-child(18) { left: 479px; }
-            .black-key:nth-child(20) { left: 519px; }
+            .black-key:nth-child(7) { left: 159px; }
+            .black-key:nth-child(9) { left: 199px; }
+            .black-key:nth-child(11) { left: 239px; }
+            .black-key:nth-child(14) { left: 319px; }
+            .black-key:nth-child(16) { left: 359px; }
+            .black-key:nth-child(19) { left: 439px; }
+            .black-key:nth-child(21) { left: 479px; }
+            .black-key:nth-child(23) { left: 519px; }
         }
 
         @media (max-width: 600px) {
@@ -136,14 +130,14 @@
             }
             .black-key:nth-child(2) { left: 26px; }
             .black-key:nth-child(4) { left: 52px; }
-            .black-key:nth-child(6) { left: 104px; }
-            .black-key:nth-child(8) { left: 130px; }
-            .black-key:nth-child(10) { left: 156px; }
-            .black-key:nth-child(12) { left: 208px; }
-            .black-key:nth-child(14) { left: 234px; }
-            .black-key:nth-child(16) { left: 286px; }
-            .black-key:nth-child(18) { left: 312px; }
-            .black-key:nth-child(20) { left: 338px; }
+            .black-key:nth-child(7) { left: 104px; }
+            .black-key:nth-child(9) { left: 130px; }
+            .black-key:nth-child(11) { left: 156px; }
+            .black-key:nth-child(14) { left: 208px; }
+            .black-key:nth-child(16) { left: 234px; }
+            .black-key:nth-child(19) { left: 286px; }
+            .black-key:nth-child(21) { left: 312px; }
+            .black-key:nth-child(23) { left: 338px; }
         }
     </style>
 </head>
@@ -151,32 +145,31 @@
     <div class="instrument-container">
         <h1>Piano de Colores</h1>
         <div class="piano-container" id="piano">
-            <!-- Teclas blancas (14 notas naturales: C3, D3, E3, F3, G3, A3, B3, C4, D4, E4, F4, G4, A4, B4) -->
-            <button class="key white-key color-0" data-note="C3"></button>
-            <button class="key white-key color-1" data-note="D3"></button>
-            <button class="key white-key color-2" data-note="E3"></button>
-            <button class="key white-key color-3" data-note="F3"></button>
-            <button class="key white-key color-0" data-note="G3"></button>
-            <button class="key white-key color-1" data-note="A3"></button>
-            <button class="key white-key color-2" data-note="B3"></button>
-            <button class="key white-key color-3" data-note="C4"></button>
-            <button class="key white-key color-0" data-note="D4"></button>
-            <button class="key white-key color-1" data-note="E4"></button>
-            <button class="key white-key color-2" data-note="F4"></button>
-            <button class="key white-key color-3" data-note="G4"></button>
-            <button class="key white-key color-0" data-note="A4"></button>
-            <button class="key white-key color-1" data-note="B4"></button>
-            <!-- Teclas negras (10 notas accidentales: C#3, D#3, F#3, G#3, A#3, C#4, D#4, F#4, G#4, A#4) -->
-            <button class="key black-key color-0" data-note="C#3"></button>
-            <button class="key black-key color-1" data-note="D#3"></button>
-            <button class="key black-key color-2" data-note="F#3"></button>
-            <button class="key black-key color-3" data-note="G#3"></button>
-            <button class="key black-key color-0" data-note="A#3"></button>
-            <button class="key black-key color-1" data-note="C#4"></button>
-            <button class="key black-key color-2" data-note="D#4"></button>
-            <button class="key black-key color-3" data-note="F#4"></button>
-            <button class="key black-key color-0" data-note="G#4"></button>
-            <button class="key black-key color-1" data-note="A#4"></button>
+            <!-- Teclas blancas (notas naturales) -->
+            <button class="key white-key" data-note="C3"></button>
+            <button class="key black-key" data-note="C#3"></button>
+            <button class="key white-key" data-note="D3"></button>
+            <button class="key black-key" data-note="D#3"></button>
+            <button class="key white-key" data-note="E3"></button>
+            <button class="key white-key" data-note="F3"></button>
+            <button class="key black-key" data-note="F#3"></button>
+            <button class="key white-key" data-note="G3"></button>
+            <button class="key black-key" data-note="G#3"></button>
+            <button class="key white-key" data-note="A3"></button>
+            <button class="key black-key" data-note="A#3"></button>
+            <button class="key white-key" data-note="B3"></button>
+            <button class="key white-key" data-note="C4"></button>
+            <button class="key black-key" data-note="C#4"></button>
+            <button class="key white-key" data-note="D4"></button>
+            <button class="key black-key" data-note="D#4"></button>
+            <button class="key white-key" data-note="E4"></button>
+            <button class="key white-key" data-note="F4"></button>
+            <button class="key black-key" data-note="F#4"></button>
+            <button class="key white-key" data-note="G4"></button>
+            <button class="key black-key" data-note="G#4"></button>
+            <button class="key white-key" data-note="A4"></button>
+            <button class="key black-key" data-note="A#4"></button>
+            <button class="key white-key" data-note="B4"></button>
         </div>
     </div>
 
