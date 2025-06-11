@@ -156,9 +156,10 @@ function collisionDetection() {
     }
 }
 function drawLives() {
-    const heartIcon = "❤️";
-    const heartSpacing = 30; // Espacio entre corazones
-    const startX = canvas.width - 40; // Posición inicial (esquina derecha)
+    ctx.font = "18px Arial";
+    ctx.fillStyle = "#FFF";
+    ctx.fillText("Vidas: " + lives, 20, 25);
+
     
     ctx.font = "24px Arial";
     ctx.fillStyle = "#FF5252"; // Rojo
