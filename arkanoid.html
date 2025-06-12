@@ -420,23 +420,25 @@
             touchIndicator.style.display = "none";
         });
 
-        function handleTouch(e) {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const touchX = touch.clientX - canvas.getBoundingClientRect().left;
-            
-            // Mostrar indicador táctil
-            touchIndicator.style.display = "block";
-            touchIndicator.style.left = `${touch.clientX}px`;
-            touchIndicator.style.top = `${touch.clientY}px`;
-            
-            // Calcular posición de la paleta
-            paddleX = touchX - paddleWidth / 2;
-            
-            // Limitar la paleta dentro del canvas
-            if (paddleX < 0) paddleX = 0;
-            if (paddleX + paddleWidth > canvas.width) paddleX = canvas.width - paddleWidth;
-        }
+function handleTouch(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const touchX = touch.clientX - rect.left;
+    const touchY = touch.clientY - rect.top;
+    
+    // Mostrar indicador táctil
+    touchIndicator.style.display = "block";
+    touchIndicator.style.left = `${touch.clientX}px`; // Usar clientX directamente
+    touchIndicator.style.top = `${touch.clientY}px`; // Usar clientY directamente
+    
+    // Calcular posición de la paleta
+    paddleX = touchX - paddleWidth / 2;
+    
+    // Limitar la paleta dentro del canvas
+    if (paddleX < 0) paddleX = 0;
+    if (paddleX + paddleWidth > canvas.width) paddleX = canvas.width - paddleWidth;
+}
 
         // Controles de teclado
         document.addEventListener("keydown", keyDownHandler);
