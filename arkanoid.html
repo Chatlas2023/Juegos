@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Romper Ladrillos</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            touch-action: manipulation;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+        }
+
+        #gameCanvas {
+            background: #111;
+            display: block;
+            width: 100%;
+            touch-action: none;
+            border-radius: 8px;
+        }
+
+        #game-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 10px 0;
+            color: white;
+            font-size: 18px;
+            position: relative;
+        }
+
+        #high-score-display {
+            position: absolute;
+            top: -30px;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 149, 221, 0.7);
+            color: white;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 5px 0;
+            border-radius: 5px;
+            z-index: 5;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 10;
+        }
+
+        #restart-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: linear-gradient(to bottom, #0095DD, #0077BB);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        #restart-btn:hover {
+            background: linear-gradient(to bottom, #0077BB, #005599);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.3);
+        }
+
+        #restart-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .game-over-text {
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .score-text {
+            font-size: 24px;
+            margin: 10px 0;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="game-header">
+            <div id="high-score-display">Récord: 0</div>
+            <div id="score">Puntos: 0</div>
+            <div id="level">Nivel: 1</div>
+            <div id="lives">Vidas: ❤️❤️❤️</div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="game-over">
+            <h1 class="game-over-text">¡Game Over!</h1>
+            <p class="score-text" id="final-score">Puntuación final: 0</p>
+            <p class="score-text" id="high-score">Récord: 0</p>
+            <button id="restart-btn">Volver a Jugar</button>
+        </div>
+    </div>
+    <script>
+        // Variables del juego
+        let lives = 3;
+        let score = 0;
+        let level = 1;
+        let highScore = localStorage.getItem('brickBreakerHighScore') || 0;
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+        const levelElement = document.getElementById("level");
+        const livesElement = document.getElementById("lives");
+        const highScoreDisplay = document.getElementById("high-score-display");
+        const gameOverScreen = document.getElementById("game-over");
+        const finalScoreElement = document.getElementById("final-score");
+        const highScoreElement = document.getElementById("high-score");
+        const restartBtn = document.getElementById("restart-btn");
+
+        // Mostrar mejor puntuación al inicio
+        highScoreDisplay.textContent = `Récord: ${highScore}`;
+
+        // Ajustar tamaño del canvas
+        function resizeCanvas() {
+            const container = document.getElementById("game-container");
+            canvas.width = container.offsetWidth;
+            canvas.height = window.innerHeight * 0.7;
+        }
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+
+        // Variables de la pelota
+        let ballX = canvas.width / 2;
+        let ballY = canvas.height - 30;
+        let ballRadius = 10;
+        let ballSpeedX = 4;
+        let ballSpeedY = -4;
+
+        // Variables de la paleta
+        let paddleWidth = 80;
+        let paddleHeight = 12;
+        let paddleX = (canvas.width - paddleWidth) / 2;
+
+        // Controles
+        let rightPressed = false;
+        let leftPressed = false;
+        let isGameOver = false;
+        let isLevelComplete = false;
+
+        // Configuración de ladrillos
+        const brickRowCount = 8;
+        const brickColumnCount = 6;
+        const brickWidth = 50;
+        const brickHeight = 18;
+        const brickPadding = 8;
+        const brickOffsetTop = 30;
+        const brickOffsetLeft = 20;
+        
+        // Colores y estilos mejorados para los ladrillos
+        const brickStyles = [
+            { 
+                fill: "#FF5252", 
+                stroke: "#D32F2F",
+                pattern: "brick",
+                highlight: "#FF8A80"
+            },
+            { 
+                fill: "#FF9800", 
+                stroke: "#F57C00",
+                pattern: "diagonal",
+                highlight: "#FFB74D"
+            },
+            { 
+                fill: "#FFEB3B", 
+                stroke: "#FBC02D",
+                pattern: "dots",
+                highlight: "#FFF176"
+            },
+            { 
+                fill: "#4CAF50", 
+                stroke: "#388E3C",
+                pattern: "brick",
+                highlight: "#81C784"
+            },
+            { 
+                fill: "#2196F3", 
+                stroke: "#1976D2",
+                pattern: "waves",
+                highlight: "#64B5F6"
+            },
+            { 
+                fill: "#9C27B0", 
+                stroke: "#7B1FA2",
+                pattern: "zigzag",
+                highlight: "#BA68C8"
+            },
+            { 
+                fill: "#E91E63", 
+                stroke: "#C2185B",
+                pattern: "checker",
+                highlight: "#F06292"
+            },
+            { 
+                fill: "#FFFFFF", 
+                stroke: "#E0E0E0",
+                pattern: "grid",
+                highlight: "#FAFAFA"
+            }
+        ];
+
+        let bricks = [];
+        function createBricks() {
+            bricks = [];
+            for (let c = 0; c < brickColumnCount; c++) {
+                bricks[c] = [];
+                for (let r = 0; r < brickRowCount; r++) {
+                    bricks[c][r] = { x: 0, y: 0, status: 1 };
+                }
+            }
+        }
+        createBricks();
+
+        // Funciones para dibujar patrones en los ladrillos
+        function drawBrickPattern(ctx, pattern, x, y, width, height, color, highlight) {
+            ctx.save();
+            
+            switch(pattern) {
+                case "brick":
+                    // Patrón de ladrillos tradicional
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y, width, height);
+                    
+                    ctx.strokeStyle = highlight;
+                    ctx.lineWidth = 1;
+                    
+                    // Líneas horizontales
+                    for (let i = 1; i < 3; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(x, y + i * (height/3));
+                        ctx.lineTo(x + width, y + i * (height/3));
+                        ctx.stroke();
+                    }
+                    
+                    // Líneas verticales escalonadas
+                    for (let i = 0; i < 4; i++) {
+                        const offset = (i % 2 === 0) ? 0 : width/2;
+                        ctx.beginPath();
+                        ctx.moveTo(x + offset + i * (width/2), y);
+                        ctx.lineTo(x + offset + i * (width/2), y + height);
+                        ctx.stroke();
+                    }
+                    break;
+                    
+                case "diagonal":
+                    // Patrón diagonal
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y, width, height);
+                    
+                    ctx.strokeStyle = highlight;
+                    ctx.lineWidth = 2;
+                    
+                    for (let i = -2; i < 4; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(x + i * 15, y);
+                        ctx.lineTo(x + i * 15 + 15, y + height);
+                        ctx.stroke();
+                    }
+                    break;
+                    
+                case "dots":
+                    // Patrón de puntos
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y, width, height);
+                    
+                    ctx.fillStyle = highlight;
+                    const dotSize = 2;
+                    const dotSpacing = 6;
+                    
+                    for (let iy = y + dotSpacing; iy < y + height; iy += dotSpacing) {
+                        for (let ix = x + dotSpacing; ix < x + width; ix += dotSpacing) {
+                            ctx.beginPath();
+                            ctx.arc(ix, iy, dotSize, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                    break;
+                    
+                case "waves":
+                    // Patrón de ondas
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y, width, height);
+                    
+                    ctx.strokeStyle = highlight;
+                    ctx.lineWidth = 2;
+                    
+                    ctx.beginPath();
+                    for (let i = 0; i < width; i += 5) {
+                        const waveHeight = Math.sin(i * 0.2) * 4;
+                        if (i === 0) {
+                            ctx.moveTo(x + i, y + height/2 + waveHeight);
+                        } else {
+                            ctx.lineTo(x + i, y + height/2 + waveHeight);
+                        }
+                    }
+                    ctx.stroke();
+                    break;
+                    
+                case "zigzag":
+                    // Patrón en zigzag
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y, width, height);
+                    
+                    ctx.strokeStyle = highlight;
+                    ctx.lineWidth = 2;
+                    
+                    ctx.beginPath();
+                    for (let i = 0; i < width; i += 10) {
+                        const zigzag = (i / 10) % 2 === 0 ? height/4 : height*3/4;
+                        if (i === 0) {
+                            ctx.moveTo(x + i, y + zigzag);
+                        } else {
+                            ctx.lineTo(x + i, y + zigzag);
+                        }
+                    }
+                    ctx.stroke();
+                    break;
+                    
+                case "checker":
+                    // Patrón de ajedrez
+                    const squareSize = 6;
+                    for (let iy = 0; iy < height; iy += squareSize) {
+                        for (let ix = 0; ix < width; ix += squareSize) {
+                            ctx.fillStyle = ((ix + iy) / squareSize) % 2 === 0 ? color : highlight;
+                            ctx.fillRect(x + ix, y + iy, squareSize, squareSize);
+                        }
+                    }
+                    break;
+                    
+                case "grid":
+                    // Patrón de rejilla
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y, width, height);
+                    
+                    ctx.strokeStyle = highlight;
+                    ctx.lineWidth = 1;
+                    
+                    // Líneas horizontales
+                    for (let i = 1; i < 4; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(x, y + i * (height/4));
+                        ctx.lineTo(x + width, y + i * (height/4));
+                        ctx.stroke();
+                    }
+                    
+                    // Líneas verticales
+                    for (let i = 1; i < 6; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(x + i * (width/5), y);
+                        ctx.lineTo(x + i * (width/5), y + height);
+                        ctx.stroke();
+                    }
+                    break;
+                    
+                default:
+                    // Estilo sólido por defecto
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y, width, height);
+            }
+            
+            ctx.restore();
+        }
+
+        // Controles táctiles para móvil
+        canvas.addEventListener("touchmove", (e) => {
+            const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+            paddleX = touchX - paddleWidth / 2;
+            if (paddleX < 0) paddleX = 0;
+            if (paddleX + paddleWidth > canvas.width) paddleX = canvas.width - paddleWidth;
+        });
+
+        // Controles de teclado
+        document.addEventListener("keydown", keyDownHandler);
+        document.addEventListener("keyup", keyUpHandler);
+
+        function keyDownHandler(e) {
+            if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
+            if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
+            if (e.key === " " && isGameOver) restartGame(); // Reiniciar con espacio
+        }
+
+        function keyUpHandler(e) {
+            if (e.key === "Right" || e.key === "ArrowRight") rightPressed = false;
+            if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = false;
+        }
+
+        // Dibujar elementos
+        function drawBall() {
+            // Pelota con efecto de brillo
+            const gradient = ctx.createRadialGradient(
+                ballX - ballRadius/3, ballY - ballRadius/3, ballRadius/4,
+                ballX, ballY, ballRadius
+            );
+            gradient.addColorStop(0, "#FFFFFF");
+            gradient.addColorStop(0.7, "#FFEB3B");
+            gradient.addColorStop(1, "#FF9800");
+            
+            ctx.beginPath();
+            ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Borde de la pelota
+            ctx.strokeStyle = "#FFC107";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        function drawPaddle() {
+            // Paleta con efecto 3D y degradado
+            const gradient = ctx.createLinearGradient(
+                paddleX, canvas.height - paddleHeight - 5,
+                paddleX, canvas.height - 5
+            );
+            gradient.addColorStop(0, "#0095DD");
+            gradient.addColorStop(0.5, "#0077BB");
+            gradient.addColorStop(1, "#005599");
+            
+            // Cuerpo principal de la paleta
+            ctx.beginPath();
+            ctx.roundRect(paddleX, canvas.height - paddleHeight - 5, paddleWidth, paddleHeight, [6]);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // Borde superior con brillo
+            ctx.strokeStyle = "#4FC3F7";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Efecto de reflejo en la parte superior
+            ctx.beginPath();
+            ctx.moveTo(paddleX + 3, canvas.height - paddleHeight - 5 + 2);
+            ctx.lineTo(paddleX + paddleWidth - 3, canvas.height - paddleHeight - 5 + 2);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // Marcas decorativas en la paleta
+            ctx.beginPath();
+            for (let i = 1; i < 4; i++) {
+                const markX = paddleX + i * (paddleWidth / 4);
+                ctx.moveTo(markX, canvas.height - paddleHeight - 5 + 4);
+                ctx.lineTo(markX, canvas.height - 5 - 4);
+            }
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            ctx.closePath();
+        }
+
+        function drawBricks() {
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    if (bricks[c][r].status === 1) {
+                        const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
+                        const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
+                        bricks[c][r].x = brickX;
+                        bricks[c][r].y = brickY;
+                        
+                        const style = brickStyles[r % brickStyles.length];
+                        drawBrickPattern(ctx, style.pattern, brickX, brickY, brickWidth, brickHeight, style.fill, style.highlight);
+                        
+                        // Borde del ladrillo
+                        ctx.strokeStyle = style.stroke;
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(brickX, brickY, brickWidth, brickHeight);
+                    }
+                }
+            }
+        }
+
+        // Actualizar marcadores
+        function updateScore() {
+            scoreElement.textContent = `Puntos: ${score}`;
+            levelElement.textContent = `Nivel: ${level}`;
+            livesElement.textContent = `Vidas: ${'❤️'.repeat(lives)}`;
+            
+            // Actualizar récord si es necesario
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('brickBreakerHighScore', highScore);
+                highScoreDisplay.textContent = `Récord: ${highScore}`;
+            }
+        }
+
+        // Detección de colisiones
+        function collisionDetection() {
+            for (let c = 0; c < brickColumnCount; c++) {
+                for (let r = 0; r < brickRowCount; r++) {
+                    const brick = bricks[c][r];
+                    if (brick.status === 1) {
+                        if (
+                            ballX > brick.x &&
+                            ballX < brick.x + brickWidth &&
+                            ballY > brick.y &&
+                            ballY < brick.y + brickHeight
+                        ) {
+                            ballSpeedY = -ballSpeedY;
+                            brick.status = 0;
+                            score += 10;
+                            updateScore();
+                            
+                            // Verificar si se completó el nivel
+                            let allBricksDestroyed = true;
+                            for (let c = 0; c < brickColumnCount; c++) {
+                                for (let r = 0; r < brickRowCount; r++) {
+                                    if (bricks[c][r].status === 1) {
+                                        allBricksDestroyed = false;
+                                        break;
+                                    }
+                                }
+                                if (!allBricksDestroyed) break;
+                            }
+                            
+                            if (allBricksDestroyed) {
+                                isLevelComplete = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Mostrar pantalla de Game Over
+        function showGameOver() {
+            // Actualizar mejor puntuación si es necesario
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('brickBreakerHighScore', highScore);
+                highScoreDisplay.textContent = `Récord: ${highScore}`;
+            }
+            
+            finalScoreElement.textContent = `Puntuación final: ${score}`;
+            highScoreElement.textContent = `Récord: ${highScore}`;
+            gameOverScreen.style.display = "flex";
+        }
+
+        // Reiniciar el juego
+        function restartGame() {
+            lives = 3;
+            score = 0;
+            level = 1;
+            isGameOver = false;
+            isLevelComplete = false;
+            
+            ballX = canvas.width / 2;
+            ballY = canvas.height - 30;
+            ballSpeedX = 4;
+            ballSpeedY = -4;
+            paddleX = (canvas.width - paddleWidth) / 2;
+            
+            createBricks();
+            updateScore();
+            gameOverScreen.style.display = "none";
+            
+            // Reiniciar el bucle del juego
+            if (!animationFrameId) {
+                gameLoop();
+            }
+        }
+
+        // Evento para el botón de reinicio
+        restartBtn.addEventListener("click", restartGame);
+
+        let animationFrameId = null;
+        // Bucle principal del juego
+        function gameLoop() {
+            if (isGameOver) {
+                showGameOver();
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+                return;
+            }
+            
+            if (isLevelComplete) {
+                level++;
+                updateScore();
+                createBricks();
+                ballX = canvas.width / 2;
+                ballY = canvas.height - 30;
+                ballSpeedX = 4 + level;
+                ballSpeedY = -4 - level;
+                paddleX = (canvas.width - paddleWidth) / 2;
+                isLevelComplete = false;
+                
+                // Pequeña pausa antes de comenzar el nuevo nivel
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "#FFF";
+                ctx.font = "24px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText(`Nivel ${level}`, canvas.width / 2, canvas.height / 2);
+                setTimeout(() => {
+                    animationFrameId = requestAnimationFrame(gameLoop);
+                }, 1000);
+                return;
+            }
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBricks();
+            drawBall();
+            drawPaddle();
+            collisionDetection();
+
+            // Movimiento de la paleta
+            if (rightPressed && paddleX < canvas.width - paddleWidth) {
+                paddleX += 7;
+            } else if (leftPressed && paddleX > 0) {
+                paddleX -= 7;
+            }
+
+            // Rebote en paredes
+            if (ballX + ballSpeedX > canvas.width - ballRadius || ballX + ballSpeedX < ballRadius) {
+                ballSpeedX = -ballSpeedX;
+            }
+            
+            // Rebote en techo
+            if (ballY + ballSpeedY < ballRadius) {
+                ballSpeedY = -ballSpeedY;
+            }
+            
+            // Rebote en paleta o pérdida de vida
+            if (ballY + ballSpeedY > canvas.height - ballRadius) {
+                if (ballX > paddleX - ballRadius && ballX < paddleX + paddleWidth + ballRadius) {
+                    ballSpeedY = -ballSpeedY;
+                    
+                    // Efecto de partículas al golpear la paleta
+                    for (let i = 0; i < 5; i++) {
+                        setTimeout(() => {
+                            ctx.fillStyle = `rgba(255, ${200 + Math.random() * 55}, ${Math.random() * 100}, 0.7)`;
+                            ctx.beginPath();
+                            ctx.arc(
+                                ballX + (Math.random() * 10 - 5), 
+                                canvas.height - paddleHeight - 10, 
+                                Math.random() * 3 + 1, 
+                                0, 
+                                Math.PI * 2
+                            );
+                            ctx.fill();
+                        }, i * 50);
+                    }
+                } else {
+                    lives--;
+                    updateScore();
+                    
+                    if (lives <= 0) {
+                        isGameOver = true;
+                    } else {
+                        // Resetear posición
+                        ballX = canvas.width / 2;
+                        ballY = canvas.height - 30;
+                        ballSpeedX = 4;
+                        ballSpeedY = -4;
+                        paddleX = (canvas.width - paddleWidth) / 2;
+                    }
+                }
+            }
+
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // Iniciar juego
+        updateScore();
+        highScoreElement.textContent = `Récord: ${highScore}`;
+        gameLoop();
+    </script>
+</body>
+</html>
