@@ -109,19 +109,6 @@
             margin: 10px 0;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
-
-        #touch-indicator {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            background: rgba(0, 149, 221, 0.3);
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.7);
-            pointer-events: none;
-            display: none;
-            z-index: 5;
-            transform: translate(-50%, -50%);
-        }
     </style>
 </head>
 <body>
@@ -133,8 +120,7 @@
             <div id="lives">Vidas: ❤️❤️❤️</div>
         </div>
         <canvas id="gameCanvas"></canvas>
-        <div id="touch-indicator"></div>
-        
+              
         <div id="game-over">
             <h1 class="game-over-text">¡Game Over!</h1>
             <p class="score-text" id="final-score">Puntuación final: 0</p>
@@ -417,7 +403,7 @@
         canvas.addEventListener("touchstart", handleTouch);
         canvas.addEventListener("touchmove", handleTouch);
         canvas.addEventListener("touchend", () => {
-            touchIndicator.style.display = "none";
+           
         });
 
         function handleTouch(e) {
@@ -426,13 +412,8 @@
             const rect = canvas.getBoundingClientRect();
             
             // Calcular posición corregida considerando el scroll de la página
-            const touchX = touch.clientX - rect.left;
-            const touchY = touch.clientY - rect.top;
-            
-            // Mostrar indicador exactamente donde se toca
-            touchIndicator.style.display = "block";
-            touchIndicator.style.left = `${touch.clientX}px`;
-            touchIndicator.style.top = `${touch.clientY}px`;
+            //  const touchX = touch.clientX - rect.left;
+             // const touchY = touch.clientY - rect.top;
             
             // Calcular posición de la paleta en el canvas (con escala correcta)
             const scaleX = canvas.width / rect.width;
