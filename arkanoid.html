@@ -109,6 +109,19 @@
             margin: 10px 0;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
+
+        #touch-indicator {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 149, 221, 0.3);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            pointer-events: none;
+            display: none;
+            z-index: 5;
+            transform: translate(-50%, -50%);
+        }
     </style>
 </head>
 <body>
@@ -120,6 +133,7 @@
             <div id="lives">Vidas: ❤️❤️❤️</div>
         </div>
         <canvas id="gameCanvas"></canvas>
+        <div id="touch-indicator"></div>
         
         <div id="game-over">
             <h1 class="game-over-text">¡Game Over!</h1>
@@ -144,7 +158,12 @@
         const finalScoreElement = document.getElementById("final-score");
         const highScoreElement = document.getElementById("high-score");
         const restartBtn = document.getElementById("restart-btn");
+        const touchIndicator = document.getElementById("touch-indicator");
 
+        // Variables para control táctil
+        let isTouchDevice = false;
+        let touchOffset = 100;
+        
         // Mostrar mejor puntuación al inicio
         highScoreDisplay.textContent = `Récord: ${highScore}`;
 
@@ -153,6 +172,7 @@
             const container = document.getElementById("game-container");
             canvas.width = container.offsetWidth;
             canvas.height = window.innerHeight * 0.7;
+            touchOffset = canvas.height * 0.15; // 15% del alto del canvas
         }
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
@@ -166,7 +186,7 @@
 
         // Variables de la paleta
         let paddleWidth = 80;
-        let paddleHeight = 12;
+        let paddleHeight = 10;
         let paddleX = (canvas.width - paddleWidth) / 2;
 
         // Controles
@@ -184,7 +204,6 @@
         const brickOffsetTop = 30;
         const brickOffsetLeft = 20;
         
-        // Colores y estilos mejorados para los ladrillos
         const brickStyles = [
             { 
                 fill: "#FF5252", 
@@ -254,14 +273,12 @@
             
             switch(pattern) {
                 case "brick":
-                    // Patrón de ladrillos tradicional
                     ctx.fillStyle = color;
                     ctx.fillRect(x, y, width, height);
                     
                     ctx.strokeStyle = highlight;
                     ctx.lineWidth = 1;
                     
-                    // Líneas horizontales
                     for (let i = 1; i < 3; i++) {
                         ctx.beginPath();
                         ctx.moveTo(x, y + i * (height/3));
@@ -269,7 +286,6 @@
                         ctx.stroke();
                     }
                     
-                    // Líneas verticales escalonadas
                     for (let i = 0; i < 4; i++) {
                         const offset = (i % 2 === 0) ? 0 : width/2;
                         ctx.beginPath();
@@ -280,7 +296,6 @@
                     break;
                     
                 case "diagonal":
-                    // Patrón diagonal
                     ctx.fillStyle = color;
                     ctx.fillRect(x, y, width, height);
                     
@@ -296,7 +311,6 @@
                     break;
                     
                 case "dots":
-                    // Patrón de puntos
                     ctx.fillStyle = color;
                     ctx.fillRect(x, y, width, height);
                     
@@ -314,7 +328,6 @@
                     break;
                     
                 case "waves":
-                    // Patrón de ondas
                     ctx.fillStyle = color;
                     ctx.fillRect(x, y, width, height);
                     
@@ -334,7 +347,6 @@
                     break;
                     
                 case "zigzag":
-                    // Patrón en zigzag
                     ctx.fillStyle = color;
                     ctx.fillRect(x, y, width, height);
                     
@@ -354,7 +366,6 @@
                     break;
                     
                 case "checker":
-                    // Patrón de ajedrez
                     const squareSize = 6;
                     for (let iy = 0; iy < height; iy += squareSize) {
                         for (let ix = 0; ix < width; ix += squareSize) {
@@ -365,14 +376,12 @@
                     break;
                     
                 case "grid":
-                    // Patrón de rejilla
                     ctx.fillStyle = color;
                     ctx.fillRect(x, y, width, height);
                     
                     ctx.strokeStyle = highlight;
                     ctx.lineWidth = 1;
                     
-                    // Líneas horizontales
                     for (let i = 1; i < 4; i++) {
                         ctx.beginPath();
                         ctx.moveTo(x, y + i * (height/4));
@@ -380,7 +389,6 @@
                         ctx.stroke();
                     }
                     
-                    // Líneas verticales
                     for (let i = 1; i < 6; i++) {
                         ctx.beginPath();
                         ctx.moveTo(x + i * (width/5), y);
@@ -390,7 +398,6 @@
                     break;
                     
                 default:
-                    // Estilo sólido por defecto
                     ctx.fillStyle = color;
                     ctx.fillRect(x, y, width, height);
             }
@@ -398,13 +405,38 @@
             ctx.restore();
         }
 
-        // Controles táctiles para móvil
-        canvas.addEventListener("touchmove", (e) => {
-            const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+        // Detectar dispositivo táctil
+        function checkTouchDevice() {
+            isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints;
+            if (isTouchDevice) {
+                paddleHeight = 14;
+            }
+        }
+
+        // Controles táctiles mejorados
+        canvas.addEventListener("touchstart", handleTouch);
+        canvas.addEventListener("touchmove", handleTouch);
+        canvas.addEventListener("touchend", () => {
+            touchIndicator.style.display = "none";
+        });
+
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const touchX = touch.clientX - canvas.getBoundingClientRect().left;
+            
+            // Mostrar indicador táctil
+            touchIndicator.style.display = "block";
+            touchIndicator.style.left = `${touch.clientX}px`;
+            touchIndicator.style.top = `${touch.clientY}px`;
+            
+            // Calcular posición de la paleta
             paddleX = touchX - paddleWidth / 2;
+            
+            // Limitar la paleta dentro del canvas
             if (paddleX < 0) paddleX = 0;
             if (paddleX + paddleWidth > canvas.width) paddleX = canvas.width - paddleWidth;
-        });
+        }
 
         // Controles de teclado
         document.addEventListener("keydown", keyDownHandler);
@@ -413,7 +445,7 @@
         function keyDownHandler(e) {
             if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
             if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
-            if (e.key === " " && isGameOver) restartGame(); // Reiniciar con espacio
+            if (e.key === " " && isGameOver) restartGame();
         }
 
         function keyUpHandler(e) {
@@ -423,7 +455,6 @@
 
         // Dibujar elementos
         function drawBall() {
-            // Pelota con efecto de brillo
             const gradient = ctx.createRadialGradient(
                 ballX - ballRadius/3, ballY - ballRadius/3, ballRadius/4,
                 ballX, ballY, ballRadius
@@ -437,7 +468,6 @@
             ctx.fillStyle = gradient;
             ctx.fill();
             
-            // Borde de la pelota
             ctx.strokeStyle = "#FFC107";
             ctx.lineWidth = 2;
             ctx.stroke();
@@ -445,46 +475,47 @@
         }
 
         function drawPaddle() {
-            // Paleta con efecto 3D y degradado
+            const paddleY = isTouchDevice ? 
+                canvas.height - paddleHeight - 5 - touchOffset : 
+                canvas.height - paddleHeight - 5;
+            
             const gradient = ctx.createLinearGradient(
-                paddleX, canvas.height - paddleHeight - 5,
-                paddleX, canvas.height - 5
+                paddleX, paddleY,
+                paddleX, paddleY + paddleHeight
             );
             gradient.addColorStop(0, "#0095DD");
             gradient.addColorStop(0.5, "#0077BB");
             gradient.addColorStop(1, "#005599");
             
-            // Cuerpo principal de la paleta
             ctx.beginPath();
-            ctx.roundRect(paddleX, canvas.height - paddleHeight - 5, paddleWidth, paddleHeight, [6]);
+            ctx.roundRect(paddleX, paddleY, paddleWidth, paddleHeight, [6]);
             ctx.fillStyle = gradient;
             ctx.fill();
             
-            // Borde superior con brillo
             ctx.strokeStyle = "#4FC3F7";
             ctx.lineWidth = 2;
             ctx.stroke();
             
-            // Efecto de reflejo en la parte superior
             ctx.beginPath();
-            ctx.moveTo(paddleX + 3, canvas.height - paddleHeight - 5 + 2);
-            ctx.lineTo(paddleX + paddleWidth - 3, canvas.height - paddleHeight - 5 + 2);
+            ctx.moveTo(paddleX + 3, paddleY + 2);
+            ctx.lineTo(paddleX + paddleWidth - 3, paddleY + 2);
             ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
             ctx.lineWidth = 1;
             ctx.stroke();
             
-            // Marcas decorativas en la paleta
             ctx.beginPath();
             for (let i = 1; i < 4; i++) {
                 const markX = paddleX + i * (paddleWidth / 4);
-                ctx.moveTo(markX, canvas.height - paddleHeight - 5 + 4);
-                ctx.lineTo(markX, canvas.height - 5 - 4);
+                ctx.moveTo(markX, paddleY + 4);
+                ctx.lineTo(markX, paddleY + paddleHeight - 4);
             }
             ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
             ctx.lineWidth = 1;
             ctx.stroke();
             
             ctx.closePath();
+            
+            return paddleY;
         }
 
         function drawBricks() {
@@ -499,7 +530,6 @@
                         const style = brickStyles[r % brickStyles.length];
                         drawBrickPattern(ctx, style.pattern, brickX, brickY, brickWidth, brickHeight, style.fill, style.highlight);
                         
-                        // Borde del ladrillo
                         ctx.strokeStyle = style.stroke;
                         ctx.lineWidth = 1;
                         ctx.strokeRect(brickX, brickY, brickWidth, brickHeight);
@@ -514,7 +544,6 @@
             levelElement.textContent = `Nivel: ${level}`;
             livesElement.textContent = `Vidas: ${'❤️'.repeat(lives)}`;
             
-            // Actualizar récord si es necesario
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('brickBreakerHighScore', highScore);
@@ -523,7 +552,7 @@
         }
 
         // Detección de colisiones
-        function collisionDetection() {
+        function collisionDetection(paddleY) {
             for (let c = 0; c < brickColumnCount; c++) {
                 for (let r = 0; r < brickRowCount; r++) {
                     const brick = bricks[c][r];
@@ -539,7 +568,6 @@
                             score += 10;
                             updateScore();
                             
-                            // Verificar si se completó el nivel
                             let allBricksDestroyed = true;
                             for (let c = 0; c < brickColumnCount; c++) {
                                 for (let r = 0; r < brickRowCount; r++) {
@@ -562,7 +590,6 @@
 
         // Mostrar pantalla de Game Over
         function showGameOver() {
-            // Actualizar mejor puntuación si es necesario
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('brickBreakerHighScore', highScore);
@@ -592,7 +619,6 @@
             updateScore();
             gameOverScreen.style.display = "none";
             
-            // Reiniciar el bucle del juego
             if (!animationFrameId) {
                 gameLoop();
             }
@@ -622,7 +648,6 @@
                 paddleX = (canvas.width - paddleWidth) / 2;
                 isLevelComplete = false;
                 
-                // Pequeña pausa antes de comenzar el nuevo nivel
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = "#FFF";
                 ctx.font = "24px Arial";
@@ -637,39 +662,34 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBricks();
             drawBall();
-            drawPaddle();
-            collisionDetection();
+            const paddleY = drawPaddle();
+            collisionDetection(paddleY);
 
-            // Movimiento de la paleta
             if (rightPressed && paddleX < canvas.width - paddleWidth) {
                 paddleX += 7;
             } else if (leftPressed && paddleX > 0) {
                 paddleX -= 7;
             }
 
-            // Rebote en paredes
             if (ballX + ballSpeedX > canvas.width - ballRadius || ballX + ballSpeedX < ballRadius) {
                 ballSpeedX = -ballSpeedX;
             }
             
-            // Rebote en techo
             if (ballY + ballSpeedY < ballRadius) {
                 ballSpeedY = -ballSpeedY;
             }
             
-            // Rebote en paleta o pérdida de vida
-            if (ballY + ballSpeedY > canvas.height - ballRadius) {
+            if (ballY + ballSpeedY > paddleY - ballRadius) {
                 if (ballX > paddleX - ballRadius && ballX < paddleX + paddleWidth + ballRadius) {
                     ballSpeedY = -ballSpeedY;
                     
-                    // Efecto de partículas al golpear la paleta
                     for (let i = 0; i < 5; i++) {
                         setTimeout(() => {
                             ctx.fillStyle = `rgba(255, ${200 + Math.random() * 55}, ${Math.random() * 100}, 0.7)`;
                             ctx.beginPath();
                             ctx.arc(
                                 ballX + (Math.random() * 10 - 5), 
-                                canvas.height - paddleHeight - 10, 
+                                paddleY - 10, 
                                 Math.random() * 3 + 1, 
                                 0, 
                                 Math.PI * 2
@@ -677,14 +697,13 @@
                             ctx.fill();
                         }, i * 50);
                     }
-                } else {
+                } else if (ballY + ballSpeedY > canvas.height - ballRadius) {
                     lives--;
                     updateScore();
                     
                     if (lives <= 0) {
                         isGameOver = true;
                     } else {
-                        // Resetear posición
                         ballX = canvas.width / 2;
                         ballY = canvas.height - 30;
                         ballSpeedX = 4;
@@ -700,6 +719,7 @@
         }
 
         // Iniciar juego
+        checkTouchDevice();
         updateScore();
         highScoreElement.textContent = `Récord: ${highScore}`;
         gameLoop();
