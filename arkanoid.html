@@ -172,7 +172,7 @@
             const container = document.getElementById("game-container");
             canvas.width = container.offsetWidth;
             canvas.height = window.innerHeight * 0.7;
-            touchOffset = canvas.height * 0.15; // 15% del alto del canvas
+            touchOffset = canvas.height * 0.15;
         }
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
@@ -413,7 +413,7 @@
             }
         }
 
-        // Controles táctiles mejorados
+        // Controles táctiles mejorados con corrección de posición
         canvas.addEventListener("touchstart", handleTouch);
         canvas.addEventListener("touchmove", handleTouch);
         canvas.addEventListener("touchend", () => {
@@ -423,15 +423,22 @@
         function handleTouch(e) {
             e.preventDefault();
             const touch = e.touches[0];
-            const touchX = touch.clientX - canvas.getBoundingClientRect().left;
+            const rect = canvas.getBoundingClientRect();
             
-            // Mostrar indicador táctil
+            // Calcular posición corregida considerando el scroll de la página
+            const touchX = touch.clientX - rect.left;
+            const touchY = touch.clientY - rect.top;
+            
+            // Mostrar indicador exactamente donde se toca
             touchIndicator.style.display = "block";
             touchIndicator.style.left = `${touch.clientX}px`;
             touchIndicator.style.top = `${touch.clientY}px`;
             
-            // Calcular posición de la paleta
-            paddleX = touchX - paddleWidth / 2;
+            // Calcular posición de la paleta en el canvas (con escala correcta)
+            const scaleX = canvas.width / rect.width;
+            const canvasTouchX = (touch.clientX - rect.left) * scaleX;
+            
+            paddleX = canvasTouchX - paddleWidth / 2;
             
             // Limitar la paleta dentro del canvas
             if (paddleX < 0) paddleX = 0;
