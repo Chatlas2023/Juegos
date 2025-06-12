@@ -166,7 +166,7 @@
 
         // Variables de la pelota
         let ballX = canvas.width / 2;
-        let ballY = canvas.height - 30;
+        let ballY = canvas.height - 100; // Posición inicial más arriba
         let ballRadius = 10;
         let ballSpeedX = 0; // Inicialmente 0 hasta que se mueva la paleta
         let ballSpeedY = 0; // Inicialmente 0 hasta que se mueva la paleta
@@ -175,6 +175,7 @@
         let paddleWidth = 80;
         let paddleHeight = 40; // Hacemos la paleta más alta (cuadrada)
         let paddleX = (canvas.width - paddleWidth) / 2;
+        const paddleOffsetFromBottom = 60; // La paleta está 60px desde el fondo (bajada 1cm aprox)
 
         // Controles
         let rightPressed = false;
@@ -473,9 +474,7 @@
         }
 
         function drawPaddle() {
-            const paddleY = isTouchDevice ? 
-                canvas.height - paddleHeight - 5 - touchOffset : 
-                canvas.height - paddleHeight - 5;
+            const paddleY = canvas.height - paddleHeight - paddleOffsetFromBottom;
             
             const gradient = ctx.createLinearGradient(
                 paddleX, paddleY,
@@ -610,7 +609,7 @@
             gameStarted = false;
             
             ballX = canvas.width / 2;
-            ballY = canvas.height - 30;
+            ballY = canvas.height - paddleOffsetFromBottom - paddleHeight - ballRadius - 5; // Pelota sobre la paleta
             ballSpeedX = 0; // Pelota no se mueve hasta que el jugador mueva la paleta
             ballSpeedY = 0; // Pelota no se mueve hasta que el jugador mueva la paleta
             paddleX = (canvas.width - paddleWidth) / 2;
@@ -642,7 +641,7 @@
                 updateScore();
                 createBricks();
                 ballX = canvas.width / 2;
-                ballY = canvas.height - 30;
+                ballY = canvas.height - paddleOffsetFromBottom - paddleHeight - ballRadius - 5; // Pelota sobre la paleta
                 ballSpeedX = 0; // Pelota no se mueve hasta que el jugador mueva la paleta
                 ballSpeedY = 0; // Pelota no se mueve hasta que el jugador mueva la paleta
                 paddleX = (canvas.width - paddleWidth) / 2;
@@ -717,7 +716,7 @@
                             isGameOver = true;
                         } else {
                             ballX = canvas.width / 2;
-                            ballY = canvas.height - 30;
+                            ballY = canvas.height - paddleOffsetFromBottom - paddleHeight - ballRadius - 5; // Pelota sobre la paleta
                             ballSpeedX = 0; // Pelota no se mueve hasta que el jugador mueva la paleta
                             ballSpeedY = 0; // Pelota no se mueve hasta que el jugador mueva la paleta
                             paddleX = (canvas.width - paddleWidth) / 2;
@@ -737,6 +736,10 @@
         checkTouchDevice();
         updateScore();
         highScoreElement.textContent = `Récord: ${highScore}`;
+        
+        // Posición inicial de la pelota sobre la paleta
+        ballY = canvas.height - paddleOffsetFromBottom - paddleHeight - ballRadius - 5;
+        
         gameLoop();
     </script>
 </body>
