@@ -122,7 +122,7 @@
         <canvas id="gameCanvas"></canvas>
               
         <div id="game-over">
-            <h1 class="game-over-text">¡Game Over!</h1>
+            <h1 class="game-over-text">¡Te quedaste sin vidas!</h1>
             <p class="score-text" id="final-score">Puntuación final: 0</p>
             <p class="score-text" id="high-score">Récord: 0</p>
             <button id="restart-btn">Volver a Jugar</button>
@@ -150,6 +150,7 @@
         let isTouchDevice = false;
         let touchOffset = 100;
         let gameStarted = false; // Variable para controlar si el juego ha comenzado
+        let animationFrameId = null;
         
         // Mostrar mejor puntuación al inicio
         highScoreDisplay.textContent = `Récord: ${highScore}`;
@@ -614,12 +615,55 @@
             }
         }
 
-        // Bucle principal del juego (modificar la parte de detección de pérdida)
+        // Mostrar pantalla de Game Over
+        function showGameOver() {
+            finalScoreElement.textContent = `Puntuación final: ${score}`;
+            highScoreElement.textContent = `Récord: ${highScore}`;
+            gameOverScreen.style.display = "flex";
+        }
+
+        // Reiniciar el juego completamente
+        function restartGame() {
+            // Cancelar el bucle de animación actual si existe
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            
+            // Restablecer todas las variables del juego
+            lives = 3;
+            score = 0;
+            level = 1;
+            ballX = canvas.width / 2;
+            ballY = canvas.height - paddleOffsetFromBottom - paddleHeight - ballRadius - 5;
+            ballSpeedX = 0;
+            ballSpeedY = 0;
+            paddleX = (canvas.width - paddleWidth) / 2;
+            rightPressed = false;
+            leftPressed = false;
+            isGameOver = false;
+            isLevelComplete = false;
+            gameStarted = false;
+            
+            // Crear nuevos ladrillos
+            createBricks();
+            
+            // Actualizar marcadores
+            updateScore();
+            
+            // Ocultar pantalla de Game Over
+            gameOverScreen.style.display = "none";
+            
+            // Iniciar nuevo bucle de juego
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // Configurar el botón de reinicio
+        restartBtn.addEventListener("click", restartGame);
+
+        // Bucle principal del juego
         function gameLoop() {
             if (isGameOver) {
                 showGameOver();
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
                 return;
             }
             
@@ -679,23 +723,23 @@
                     ballSpeedY = -ballSpeedY;
                 }
                 
-                // Pérdida de pelota (ahora más estricto)
+                // Pérdida de pelota
                 if (ballY + ballSpeedY > canvas.height + ballRadius) {
                     lives--;
                     updateScore();
                     
                     if (lives <= 0) {
                         isGameOver = true;
+                        showGameOver();
+                        return;
                     } else {
-                        // Reiniciar el nivel actual en lugar de pasar al siguiente
+                        // Reiniciar el nivel actual
                         ballX = canvas.width / 2;
                         ballY = canvas.height - paddleOffsetFromBottom - paddleHeight - ballRadius - 5;
                         ballSpeedX = 0;
                         ballSpeedY = 0;
                         paddleX = (canvas.width - paddleWidth) / 2;
                         gameStarted = false;
-                        
-                        // No se reinician los ladrillos, se mantiene el nivel actual
                     }
                 }
 
@@ -715,7 +759,8 @@
         // Posición inicial de la pelota sobre la paleta
         ballY = canvas.height - paddleOffsetFromBottom - paddleHeight - ballRadius - 5;
         
-        gameLoop();
+        // Iniciar el bucle del juego
+        animationFrameId = requestAnimationFrame(gameLoop);
     </script>
 </body>
 </html>
