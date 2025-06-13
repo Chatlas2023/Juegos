@@ -421,13 +421,12 @@ function handleTouch(e) {
     paddleX = canvasTouchX - paddleWidth / 2;
     
     // Iniciar el juego si no ha comenzado
-    if (!gameStarted) {
-        gameStarted = true;
-        // Dirección inicial basada en la posición del toque
-        const direction = (canvasTouchX > canvas.width / 2) ? 1 : -1;
-        ballSpeedX = (4 + level) * direction;
-        ballSpeedY = -4 - level;
-    }
+if (!gameStarted) {
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.font = "16px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Mueve la paleta para comenzar", canvas.width/2, canvas.height/2 + 50);
+}
     
     // Limitar la paleta dentro del canvas
     if (paddleX < 0) paddleX = 0;
