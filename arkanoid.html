@@ -617,9 +617,7 @@
         // Bucle principal del juego (modificar la parte de detección de pérdida)
         function gameLoop() {
             if (isGameOver) {
-                showGameOver();
-                cancelAnimationFrame(animationFrameId);
-                animationFrameId = null;
+           
                 return;
             }
             
@@ -686,6 +684,8 @@
                     
                     if (lives <= 0) {
                         isGameOver = true;
+                             showGameOver(); // Añadir esta línea
+                        return; // Salir del gameLoop inmediatamente
                     } else {
                         // Reiniciar el nivel actual en lugar de pasar al siguiente
                         ballX = canvas.width / 2;
@@ -706,6 +706,37 @@
             
             animationFrameId = requestAnimationFrame(gameLoop);
         }
+        function restartGame() {
+    lives = 3;
+    score = 0;
+    level = 1;
+    isGameOver = false;
+    gameStarted = false;
+    
+    createBricks();
+    ballX = canvas.width / 2;
+    ballY = canvas.height - paddleOffsetFromBottom - paddleHeight - ballRadius - 5;
+    ballSpeedX = 0;
+    ballSpeedY = 0;
+    paddleX = (canvas.width - paddleWidth) / 2;
+    
+    updateScore();
+    gameOverScreen.style.display = "none";
+    
+    // Si el juego estaba pausado, reiniciar el bucle
+    if (!animationFrameId) {
+        animationFrameId = requestAnimationFrame(gameLoop);
+    }
+}
+
+// Asignar el evento al botón de reinicio
+restartBtn.addEventListener("click", restartGame);
+        function showGameOver() {
+    gameOverScreen.style.display = "flex";
+    finalScoreElement.textContent = `Puntuación final: ${score}`;
+    highScoreElement.textContent = `Récord: ${highScore}`;
+    isGameOver = true;
+}
 
         // Iniciar juego
         checkTouchDevice();
