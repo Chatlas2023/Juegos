@@ -149,8 +149,6 @@
         // Variables para control táctil
         let isTouchDevice = false;
         let touchOffset = 100;
-        let gameStarted = false; // Variable para controlar si el juego ha comenzado
-        let animationFrameId = null;
         
         // Mostrar mejor puntuación al inicio
         highScoreDisplay.textContent = `Récord: ${highScore}`;
@@ -167,16 +165,15 @@
 
         // Variables de la pelota
         let ballX = canvas.width / 2;
-        let ballY = canvas.height - 100; // Posición inicial más arriba
+        let ballY = canvas.height - 30;
         let ballRadius = 10;
-        let ballSpeedX = 0; // Inicialmente 0 hasta que se mueva la paleta
-        let ballSpeedY = 0; // Inicialmente 0 hasta que se mueva la paleta
+        let ballSpeedX = 4;
+        let ballSpeedY = -4;
 
-        // Variables de la paleta (ahora cuadrada)
+        // Variables de la paleta
         let paddleWidth = 80;
-        let paddleHeight = 40; // Hacemos la paleta más alta (cuadrada)
+        let paddleHeight = 10;
         let paddleX = (canvas.width - paddleWidth) / 2;
-        const paddleOffsetFromBottom = 60; // La paleta está 60px desde el fondo (bajada 1cm aprox)
 
         // Controles
         let rightPressed = false;
@@ -398,7 +395,7 @@
         function checkTouchDevice() {
             isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints;
             if (isTouchDevice) {
-                paddleHeight = 40; // Mantenemos la altura cuadrada incluso en dispositivos táctiles
+                paddleHeight = 14;
             }
         }
 
@@ -409,45 +406,35 @@
            
         });
 
-// Modifica la función handleTouch
-function handleTouch(e) {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    
-    const scaleX = canvas.width / rect.width;
-    const canvasTouchX = (touch.clientX - rect.left) * scaleX;
-    
-    paddleX = canvasTouchX - paddleWidth / 2;
-    
-    // Iniciar el juego si no ha comenzado
-if (!gameStarted) {
-    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-    ctx.font = "16px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("Mueve la paleta para comenzar", canvas.width/2, canvas.height/2 + 50);
-}
-    
-    // Limitar la paleta dentro del canvas
-    if (paddleX < 0) paddleX = 0;
-    if (paddleX + paddleWidth > canvas.width) paddleX = canvas.width - paddleWidth;
-}
+        function handleTouch(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            
+            // Calcular posición corregida considerando el scroll de la página
+            //  const touchX = touch.clientX - rect.left;
+             // const touchY = touch.clientY - rect.top;
+            
+            // Calcular posición de la paleta en el canvas (con escala correcta)
+            const scaleX = canvas.width / rect.width;
+            const canvasTouchX = (touch.clientX - rect.left) * scaleX;
+            
+            paddleX = canvasTouchX - paddleWidth / 2;
+            
+            // Limitar la paleta dentro del canvas
+            if (paddleX < 0) paddleX = 0;
+            if (paddleX + paddleWidth > canvas.width) paddleX = canvas.width - paddleWidth;
+        }
 
-// Modifica la función keyDownHandler
-function keyDownHandler(e) {
-    if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
-    if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
-    if (e.key === " " && isGameOver) restartGame();
-    
-    // Iniciar el juego si no ha comenzado
-    if (!gameStarted && (e.key === "Right" || e.key === "ArrowRight" || e.key === "Left" || e.key === "ArrowLeft")) {
-        gameStarted = true;
-        // Dirección inicial basada en la tecla presionada
-        const direction = (e.key === "Right" || e.key === "ArrowRight") ? 1 : -1;
-        ballSpeedX = (4 + level) * direction;
-        ballSpeedY = -4 - level;
-    }
-}
+        // Controles de teclado
+        document.addEventListener("keydown", keyDownHandler);
+        document.addEventListener("keyup", keyUpHandler);
+
+        function keyDownHandler(e) {
+            if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
+            if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
+            if (e.key === " " && isGameOver) restartGame();
+        }
 
         function keyUpHandler(e) {
             if (e.key === "Right" || e.key === "ArrowRight") rightPressed = false;
@@ -476,7 +463,9 @@ function keyDownHandler(e) {
         }
 
         function drawPaddle() {
-            const paddleY = canvas.height - paddleHeight - paddleOffsetFromBottom;
+            const paddleY = isTouchDevice ? 
+                canvas.height - paddleHeight - 5 - touchOffset : 
+                canvas.height - paddleHeight - 5;
             
             const gradient = ctx.createLinearGradient(
                 paddleX, paddleY,
@@ -552,7 +541,6 @@ function keyDownHandler(e) {
 
         // Detección de colisiones
         function collisionDetection(paddleY) {
-            // Colisión con ladrillos
             for (let c = 0; c < brickColumnCount; c++) {
                 for (let r = 0; r < brickRowCount; r++) {
                     const brick = bricks[c][r];
@@ -581,132 +569,147 @@ function keyDownHandler(e) {
                             
                             if (allBricksDestroyed) {
                                 isLevelComplete = true;
-                                gameStarted = false;
                             }
-                        }
-                    }
-                }
-            }
-
-            // Colisión con la paleta (más precisa)
-            if (ballY + ballRadius > paddleY && ballY - ballRadius < paddleY + paddleHeight) {
-                if (ballX + ballRadius > paddleX && ballX - ballRadius < paddleX + paddleWidth) {
-                    // Solo rebota si golpea la parte superior de la paleta
-                    if (ballY + ballRadius >= paddleY && ballY - ballSpeedY - ballRadius <= paddleY) {
-                        ballSpeedY = -Math.abs(ballSpeedY); // Asegura que siempre rebote hacia arriba
-                        ballY = paddleY - ballRadius - 1; // Coloca la pelota justo encima de la paleta
-                        
-                        // Efecto visual
-                        for (let i = 0; i < 5; i++) {
-                            setTimeout(() => {
-                                ctx.fillStyle = `rgba(255, ${200 + Math.random() * 55}, ${Math.random() * 100}, 0.7)`;
-                                ctx.beginPath();
-                                ctx.arc(
-                                    ballX + (Math.random() * 10 - 5), 
-                                    paddleY - 10, 
-                                    Math.random() * 3 + 1, 
-                                    0, 
-                                    Math.PI * 2
-                                );
-                                ctx.fill();
-                            }, i * 50);
                         }
                     }
                 }
             }
         }
 
-        // Bucle principal del juego (modificar la parte de detección de pérdida)
-// Bucle principal del juego - Versión corregida
-function gameLoop() {
-    if (isGameOver) {
-        animationFrameId = null;
-        return;
-    }
-    
-    if (isLevelComplete) {
-        level++;
-        updateScore();
-        createBricks();
-        ballX = canvas.width / 2;
-        ballY = canvas.height - paddleOffsetFromBottom - paddleHeight - ballRadius - 5;
-        ballSpeedX = 0;
-        ballSpeedY = 0;
-        paddleX = (canvas.width - paddleWidth) / 2;
-        isLevelComplete = false;
-        gameStarted = false;
-        
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "#FFF";
-        ctx.font = "24px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText(`Nivel ${level}`, canvas.width / 2, canvas.height / 2);
-        setTimeout(() => {
-            animationFrameId = requestAnimationFrame(gameLoop);
-        }, 1000);
-        return;
-    }
-    
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Dibujar elementos y obtener la posición Y de la paleta
-    drawBricks();
-    drawBall();
-    const paddleY = drawPaddle(); // Guardamos el valor de retorno
-    
-    // Detección de colisiones (¡ESTA ES LA LÍNEA QUE FALTABA!)
-    collisionDetection(paddleY);
-
-    // Resto del código del gameLoop...
-    // Movimiento de la paleta, rebotes, etc...
-    
-    animationFrameId = requestAnimationFrame(gameLoop);
-}
-        function restartGame() {
-                if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-    }
-    lives = 3;
-    score = 0;
-    level = 1;
-    isGameOver = false;
-    gameStarted = false;
-            isLevelComplete = false;
-    
-    createBricks();
-    ballX = canvas.width / 2;
-    ballY = canvas.height - paddleOffsetFromBottom - paddleHeight - ballRadius - 5;
-    ballSpeedX = 0;
-    ballSpeedY = 0;
-    paddleX = (canvas.width - paddleWidth) / 2;
-    
-    updateScore();
-    gameOverScreen.style.display = "none";
-    
-    // Si el juego estaba pausado, reiniciar el bucle
-    if (!animationFrameId) {
-        animationFrameId = requestAnimationFrame(gameLoop);
-    }
-}
-
-// Asignar el evento al botón de reinicio
-restartBtn.addEventListener("click", restartGame);
+        // Mostrar pantalla de Game Over
         function showGameOver() {
-    gameOverScreen.style.display = "flex";
-    finalScoreElement.textContent = `Puntuación final: ${score}`;
-    highScoreElement.textContent = `Récord: ${highScore}`;
-    isGameOver = true;
-}
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('brickBreakerHighScore', highScore);
+                highScoreDisplay.textContent = `Récord: ${highScore}`;
+            }
+            
+            finalScoreElement.textContent = `Puntuación final: ${score}`;
+            highScoreElement.textContent = `Récord: ${highScore}`;
+            gameOverScreen.style.display = "flex";
+        }
+
+        // Reiniciar el juego
+        function restartGame() {
+            lives = 3;
+            score = 0;
+            level = 1;
+            isGameOver = false;
+            isLevelComplete = false;
+            
+            ballX = canvas.width / 2;
+            ballY = canvas.height - 30;
+            ballSpeedX = 4;
+            ballSpeedY = -4;
+            paddleX = (canvas.width - paddleWidth) / 2;
+            
+            createBricks();
+            updateScore();
+            gameOverScreen.style.display = "none";
+            
+            if (!animationFrameId) {
+                gameLoop();
+            }
+        }
+
+        // Evento para el botón de reinicio
+        restartBtn.addEventListener("click", restartGame);
+
+        let animationFrameId = null;
+        // Bucle principal del juego
+        function gameLoop() {
+            if (isGameOver) {
+                showGameOver();
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+                return;
+            }
+            
+            if (isLevelComplete) {
+                level++;
+                updateScore();
+                createBricks();
+                ballX = canvas.width / 2;
+                ballY = canvas.height - 30;
+                ballSpeedX = 4 + level;
+                ballSpeedY = -4 - level;
+                paddleX = (canvas.width - paddleWidth) / 2;
+                isLevelComplete = false;
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "#FFF";
+                ctx.font = "24px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText(`Nivel ${level}`, canvas.width / 2, canvas.height / 2);
+                setTimeout(() => {
+                    animationFrameId = requestAnimationFrame(gameLoop);
+                }, 1000);
+                return;
+            }
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBricks();
+            drawBall();
+            const paddleY = drawPaddle();
+            collisionDetection(paddleY);
+
+            if (rightPressed && paddleX < canvas.width - paddleWidth) {
+                paddleX += 7;
+            } else if (leftPressed && paddleX > 0) {
+                paddleX -= 7;
+            }
+
+            if (ballX + ballSpeedX > canvas.width - ballRadius || ballX + ballSpeedX < ballRadius) {
+                ballSpeedX = -ballSpeedX;
+            }
+            
+            if (ballY + ballSpeedY < ballRadius) {
+                ballSpeedY = -ballSpeedY;
+            }
+            
+            if (ballY + ballSpeedY > paddleY - ballRadius) {
+                if (ballX > paddleX - ballRadius && ballX < paddleX + paddleWidth + ballRadius) {
+                    ballSpeedY = -ballSpeedY;
+                    
+                    for (let i = 0; i < 5; i++) {
+                        setTimeout(() => {
+                            ctx.fillStyle = `rgba(255, ${200 + Math.random() * 55}, ${Math.random() * 100}, 0.7)`;
+                            ctx.beginPath();
+                            ctx.arc(
+                                ballX + (Math.random() * 10 - 5), 
+                                paddleY - 10, 
+                                Math.random() * 3 + 1, 
+                                0, 
+                                Math.PI * 2
+                            );
+                            ctx.fill();
+                        }, i * 50);
+                    }
+                } else if (ballY + ballSpeedY > canvas.height - ballRadius) {
+                    lives--;
+                    updateScore();
+                    
+                    if (lives <= 0) {
+                        isGameOver = true;
+                    } else {
+                        ballX = canvas.width / 2;
+                        ballY = canvas.height - 30;
+                        ballSpeedX = 4;
+                        ballSpeedY = -4;
+                        paddleX = (canvas.width - paddleWidth) / 2;
+                    }
+                }
+            }
+
+            ballX += ballSpeedX;
+            ballY += ballSpeedY;
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
 
         // Iniciar juego
         checkTouchDevice();
         updateScore();
         highScoreElement.textContent = `Récord: ${highScore}`;
-        
-        // Posición inicial de la pelota sobre la paleta
-        ballY = canvas.height - paddleOffsetFromBottom - paddleHeight - ballRadius - 5;
-        
         gameLoop();
     </script>
 </body>
