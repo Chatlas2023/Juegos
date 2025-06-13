@@ -150,6 +150,7 @@
         let isTouchDevice = false;
         let touchOffset = 100;
         let gameStarted = false; // Variable para controlar si el juego ha comenzado
+        let animationFrameId = null;
         
         // Mostrar mejor puntuación al inicio
         highScoreDisplay.textContent = `Récord: ${highScore}`;
@@ -615,11 +616,11 @@
         }
 
         // Bucle principal del juego (modificar la parte de detección de pérdida)
-        function gameLoop() {
-            if (isGameOver) {
-           
-                return;
-            }
+function gameLoop() {
+    if (isGameOver) {
+        animationFrameId = null; // Asegurarse de limpiar el ID
+        return;
+    }
             
             if (isLevelComplete) {
                 level++;
@@ -644,11 +645,12 @@
                 return;
             }
             
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBricks();
-            drawBall();
-            const paddleY = drawPaddle();
-            collisionDetection(paddleY);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Dibujar el estado inicial
+    drawBricks();
+    drawBall();
+    drawPaddle();
 
             // Movimiento de la paleta
             if (rightPressed && paddleX < canvas.width - paddleWidth) {
@@ -707,11 +709,16 @@
             animationFrameId = requestAnimationFrame(gameLoop);
         }
         function restartGame() {
+                if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
     lives = 3;
     score = 0;
     level = 1;
     isGameOver = false;
     gameStarted = false;
+            isLevelComplete = false;
     
     createBricks();
     ballX = canvas.width / 2;
