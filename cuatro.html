@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adivina la Secuencia</title>
+    <title>Juego de Secuencias</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,12 +15,6 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-        }
-
-        h1 {
-            color: #f1c40f;
-            margin-bottom: 20px;
-            text-align: center;
         }
 
         .game-container {
@@ -94,11 +88,11 @@
         }
 
         .feedback-dot.exact {
-            background-color: #2ecc71; /* Verde para bien */
+            background-color: #2ecc71;
         }
 
         .feedback-dot.partial {
-            background-color: #f1c40f; /* Amarillo para regular */
+            background-color: #f1c40f;
         }
 
         .controls {
@@ -134,27 +128,10 @@
         .hidden {
             display: none;
         }
-
-        #secret-code {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 20px;
-            justify-content: center;
-        }
-
-        .secret-color {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-        }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <h1>Adivina la Secuencia</h1>
-        
-        <div id="secret-code" class="hidden"></div>
-        
         <div class="message" id="message">Selecciona colores para tu primer intento</div>
         
         <div class="color-palette" id="color-palette">
@@ -191,7 +168,6 @@
         const messageEl = document.getElementById('message');
         const checkBtn = document.getElementById('check-btn');
         const newGameBtn = document.getElementById('new-game-btn');
-        const secretCodeEl = document.getElementById('secret-code');
         
         // Variables del juego
         let secretCode = [];
@@ -208,17 +184,6 @@
                 const randomIndex = Math.floor(Math.random() * COLORS.length);
                 secretCode.push(COLORS[randomIndex].id);
             }
-            
-            // Mostrar código secreto (para pruebas, luego se puede ocultar)
-            secretCodeEl.innerHTML = '';
-            secretCode.forEach(colorId => {
-                const color = COLORS.find(c => c.id === colorId);
-                const colorEl = document.createElement('div');
-                colorEl.className = 'secret-color';
-                colorEl.style.backgroundColor = color.value;
-                secretCodeEl.appendChild(colorEl);
-            });
-            secretCodeEl.classList.add('hidden'); // Oculta el código secreto en producción
             
             // Limpiar tablero
             gameBoard.innerHTML = '';
@@ -336,7 +301,6 @@
             if (feedback.exact === CODE_LENGTH) {
                 gameOver = true;
                 messageEl.textContent = '¡Ganaste! Has adivinado la secuencia.';
-                secretCodeEl.classList.remove('hidden');
                 checkBtn.classList.add('hidden');
                 newGameBtn.classList.remove('hidden');
                 return;
@@ -347,8 +311,7 @@
             
             if (currentAttempt >= MAX_ATTEMPTS) {
                 gameOver = true;
-                messageEl.textContent = `¡Game Over! La secuencia era:`;
-                secretCodeEl.classList.remove('hidden');
+                messageEl.textContent = '¡Game Over! No adivinaste la secuencia.';
                 checkBtn.classList.add('hidden');
                 newGameBtn.classList.remove('hidden');
                 return;
@@ -365,27 +328,26 @@
             let exact = 0;
             let partial = 0;
             
-            // Hacer copias para no modificar los originales
             const attemptCopy = [...attempt];
             const secretCopy = [...secret];
             
-            // Primero contar los exactos (mismo color, misma posición)
+            // Contar exactos
             for (let i = 0; i < secretCopy.length; i++) {
                 if (attemptCopy[i] === secretCopy[i]) {
                     exact++;
-                    attemptCopy[i] = null; // Marcamos como ya contado
+                    attemptCopy[i] = null;
                     secretCopy[i] = null;
                 }
             }
             
-            // Luego contar los parciales (mismo color, distinta posición)
+            // Contar parciales
             for (let i = 0; i < secretCopy.length; i++) {
                 if (secretCopy[i] === null) continue;
                 
                 const index = attemptCopy.indexOf(secretCopy[i]);
                 if (index !== -1) {
                     partial++;
-                    attemptCopy[index] = null; // Marcamos como ya contado
+                    attemptCopy[index] = null;
                 }
             }
             
