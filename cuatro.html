@@ -45,7 +45,9 @@
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6);
             transition: transform 0.2s;
             user-select: none;
-            touch-action: none;
+            /* touch-action: none;  Se remueve o modifica para permitir el manejo táctil */
+            position: relative; /* Necesario para posicionar el clon al arrastrar */
+            z-index: 1;
         }
 
         .color-option:active {
@@ -56,6 +58,19 @@
             opacity: 0.5;
             transform: scale(1.1);
         }
+
+        /* Estilo para el clon de arrastre */
+        .color-option-clone {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            opacity: 0.8;
+            pointer-events: none; /* Asegura que no interfiera con otros eventos */
+            z-index: 1000; /* Para que esté por encima de otros elementos */
+        }
+
 
         .game-board {
             display: flex;
@@ -184,13 +199,11 @@
             <div id="secret-code-container" class="hidden">
                 <div class="secret-code">
                     <span>El código era:</span>
-                    <!-- Los slots del código secreto se agregarán con JS -->
-                </div>
+                    </div>
             </div>
             
             <div class="game-board" id="game-board">
-                <!-- Filas de intentos se generarán con JS -->
-            </div>
+                </div>
             
             <div class="controls">
                 <button id="check-btn">Comprobar</button>
@@ -199,8 +212,7 @@
         </div>
         
         <div class="color-palette" id="color-palette">
-            <!-- Colores disponibles se generarán con JS -->
-        </div>
+            </div>
     </div>
 
     <script>
@@ -233,7 +245,8 @@
         let selectedColor = null;
         let gameOver = false;
         let draggedColor = null;
-        
+        let draggingClone = null; // Para el clon visual en dispositivos táctiles
+
         // Inicializar el juego
         function initGame() {
             // Generar código secreto
@@ -265,12 +278,15 @@
                     slot.className = 'guess-slot';
                     slot.dataset.position = j;
                     
-                    // Eventos para arrastrar y soltar
+                    // Eventos para arrastrar y soltar (para PC)
                     slot.addEventListener('dragover', handleDragOver);
                     slot.addEventListener('dragenter', handleDragEnter);
                     slot.addEventListener('dragleave', handleDragLeave);
                     slot.addEventListener('drop', handleDrop);
                     
+                    // Eventos táctiles (para móvil)
+                    slot.addEventListener('touchend', handleTouchEndSlot);
+
                     row.appendChild(slot);
                 }
                 
@@ -299,10 +315,15 @@
                 colorEl.dataset.color = color.id;
                 colorEl.draggable = true;
                 
-                // Eventos de arrastre
+                // Eventos de arrastre (para PC)
                 colorEl.addEventListener('dragstart', handleDragStart);
                 colorEl.addEventListener('dragend', handleDragEnd);
                 
+                // Eventos táctiles (para móvil)
+                colorEl.addEventListener('touchstart', handleTouchStart);
+                colorEl.addEventListener('touchmove', handleTouchMove);
+                colorEl.addEventListener('touchend', handleTouchEndColor);
+
                 colorPalette.appendChild(colorEl);
             });
         }
@@ -327,7 +348,7 @@
             secretCodeContainer.classList.remove('hidden');
         }
         
-        // Manejar inicio de arrastre
+        // Manejar inicio de arrastre (PC)
         function handleDragStart(e) {
             draggedColor = e.target.dataset.color;
             e.target.classList.add('dragging');
@@ -335,18 +356,18 @@
             e.dataTransfer.effectAllowed = 'copy';
         }
         
-        // Manejar fin de arrastre
+        // Manejar fin de arrastre (PC)
         function handleDragEnd(e) {
             e.target.classList.remove('dragging');
         }
         
-        // Manejar cuando un elemento se arrastra sobre un slot
+        // Manejar cuando un elemento se arrastra sobre un slot (PC)
         function handleDragOver(e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'copy';
         }
         
-        // Manejar entrada a un slot
+        // Manejar entrada a un slot (PC)
         function handleDragEnter(e) {
             e.preventDefault();
             if (!e.target.classList.contains('filled')) {
@@ -354,20 +375,20 @@
             }
         }
         
-        // Manejar salida de un slot
+        // Manejar salida de un slot (PC)
         function handleDragLeave(e) {
             e.target.classList.remove('highlight');
         }
         
-        // Manejar cuando se suelta un color en un slot
+        // Manejar cuando se suelta un color en un slot (PC)
         function handleDrop(e) {
             e.preventDefault();
             e.target.classList.remove('highlight');
             
             if (gameOver || !draggedColor) return;
             
-            // Limpiar el slot primero
-            e.target.className = 'guess-slot';
+            // Limpiar el slot primero (si ya hay un color)
+            e.target.className = 'guess-slot'; // Restablece las clases para eliminar 'filled'
             e.target.style.backgroundColor = '';
             
             // Llenar con el color arrastrado
@@ -378,7 +399,100 @@
                 e.target.dataset.color = draggedColor;
             }
         }
-        
+
+        // --- Manejo de eventos táctiles ---
+
+        function handleTouchStart(e) {
+            e.preventDefault(); // Previene el scroll y el zoom
+            if (gameOver) return;
+
+            const touchedColorElement = e.target;
+            draggedColor = touchedColorElement.dataset.color;
+
+            // Crear un clon visual para arrastrar
+            draggingClone = touchedColorElement.cloneNode(true);
+            draggingClone.classList.add('color-option-clone');
+            draggingClone.style.backgroundColor = touchedColorElement.style.backgroundColor;
+            document.body.appendChild(draggingClone);
+
+            // Posicionar el clon inicialmente
+            const touch = e.touches[0];
+            draggingClone.style.left = `${touch.pageX - draggingClone.offsetWidth / 2}px`;
+            draggingClone.style.top = `${touch.pageY - draggingClone.offsetHeight / 2}px`;
+
+            touchedColorElement.classList.add('dragging'); // Para dar un feedback visual al original
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault(); // Previene el scroll
+            if (!draggingClone || gameOver) return;
+
+            const touch = e.touches[0];
+            draggingClone.style.left = `${touch.pageX - draggingClone.offsetWidth / 2}px`;
+            draggingClone.style.top = `${touch.pageY - draggingClone.offsetHeight / 2}px`;
+
+            // Resaltar el slot debajo del dedo
+            const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+            // Remover highlight de todos los slots primero
+            document.querySelectorAll('.guess-slot').forEach(slot => {
+                slot.classList.remove('highlight');
+            });
+
+            if (targetElement && targetElement.classList.contains('guess-slot') && !targetElement.classList.contains('filled')) {
+                targetElement.classList.add('highlight');
+            }
+        }
+
+        function handleTouchEndColor(e) {
+            e.preventDefault(); // Previene que se disparen eventos de ratón después del touch
+            if (draggingClone) {
+                draggingClone.remove();
+                draggingClone = null;
+            }
+            e.target.classList.remove('dragging');
+            draggedColor = null; // Reinicia el color arrastrado después de soltar
+
+            // Asegurarse de remover el highlight de cualquier slot
+            document.querySelectorAll('.guess-slot').forEach(slot => {
+                slot.classList.remove('highlight');
+            });
+        }
+
+        function handleTouchEndSlot(e) {
+            e.preventDefault(); // Previene que se disparen eventos de ratón
+            if (gameOver || !draggedColor) return;
+
+            const targetSlot = e.currentTarget; // El slot donde se soltó
+            targetSlot.classList.remove('highlight');
+
+            // Solo colocar el color si es la fila actual y no está lleno
+            if (targetSlot.closest('.guess-row') === currentRow) {
+                // Limpiar el slot primero (si ya hay un color)
+                targetSlot.className = 'guess-slot'; // Restablece las clases para eliminar 'filled'
+                targetSlot.style.backgroundColor = '';
+
+                // Llenar con el color arrastrado
+                const color = COLORS.find(c => c.id === draggedColor);
+                if (color) {
+                    targetSlot.style.backgroundColor = color.value;
+                    targetSlot.classList.add('filled');
+                    targetSlot.dataset.color = draggedColor;
+                }
+            }
+
+            if (draggingClone) {
+                draggingClone.remove();
+                draggingClone = null;
+            }
+            draggedColor = null; // Reinicia el color arrastrado después de soltar
+            
+            // Remover la clase 'dragging' de todos los elementos color-option,
+            // ya que touchstart la agrega y touchEndColor solo la remueve del target original.
+            document.querySelectorAll('.color-option.dragging').forEach(el => {
+                el.classList.remove('dragging');
+            });
+        }
+
         // Comprobar el intento actual
         function checkAttempt() {
             if (gameOver) return;
