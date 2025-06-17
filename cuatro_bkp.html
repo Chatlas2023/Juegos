@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -99,6 +99,7 @@
             margin-top: 20px;
             display: flex;
             justify-content: center;
+            gap: 10px;
         }
 
         .controls button {
@@ -128,11 +129,47 @@
         .hidden {
             display: none;
         }
+
+        .secret-code {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .secret-slot {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+
+        .win-message {
+            color: #2ecc71;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
     <div class="game-container">
         <div class="message" id="message">Selecciona colores para tu primer intento</div>
+        <div id="win-message" class="win-message hidden">¡Ganaste!</div>
+        <div id="secret-code-container" class="hidden">
+            <div class="secret-code">
+                <span>El código era:</span>
+                <!-- Los slots del código secreto se agregarán con JS -->
+            </div>
+        </div>
         
         <div class="color-palette" id="color-palette">
             <!-- Colores disponibles se generarán con JS -->
@@ -166,6 +203,8 @@
         const colorPalette = document.getElementById('color-palette');
         const gameBoard = document.getElementById('game-board');
         const messageEl = document.getElementById('message');
+        const winMessageEl = document.getElementById('win-message');
+        const secretCodeContainer = document.getElementById('secret-code-container');
         const checkBtn = document.getElementById('check-btn');
         const newGameBtn = document.getElementById('new-game-btn');
         
@@ -185,11 +224,13 @@
                 secretCode.push(COLORS[randomIndex].id);
             }
             
-            // Limpiar tablero
+            // Limpiar tablero y mensajes
             gameBoard.innerHTML = '';
             currentAttempt = 0;
             gameOver = false;
             messageEl.textContent = 'Selecciona colores para tu primer intento';
+            winMessageEl.classList.add('hidden');
+            secretCodeContainer.classList.add('hidden');
             checkBtn.classList.remove('hidden');
             newGameBtn.classList.add('hidden');
             
@@ -234,6 +275,26 @@
                 colorEl.addEventListener('click', () => selectColor(color.id));
                 colorPalette.appendChild(colorEl);
             });
+        }
+        
+        // Mostrar el código secreto
+        function showSecretCode() {
+            const secretCodeElement = secretCodeContainer.querySelector('.secret-code');
+            // Limpiar slots anteriores
+            while (secretCodeElement.children.length > 1) {
+                secretCodeElement.removeChild(secretCodeElement.lastChild);
+            }
+            
+            // Agregar los slots del código secreto
+            secretCode.forEach(colorId => {
+                const color = COLORS.find(c => c.id === colorId);
+                const slot = document.createElement('div');
+                slot.className = 'secret-slot';
+                slot.style.backgroundColor = color.value;
+                secretCodeElement.appendChild(slot);
+            });
+            
+            secretCodeContainer.classList.remove('hidden');
         }
         
         // Seleccionar un color de la paleta
@@ -300,7 +361,8 @@
             // Verificar si ganó
             if (feedback.exact === CODE_LENGTH) {
                 gameOver = true;
-                messageEl.textContent = '¡Ganaste! Has adivinado la secuencia.';
+                messageEl.textContent = '';
+                winMessageEl.classList.remove('hidden');
                 checkBtn.classList.add('hidden');
                 newGameBtn.classList.remove('hidden');
                 return;
@@ -314,6 +376,7 @@
                 messageEl.textContent = '¡Game Over! No adivinaste la secuencia.';
                 checkBtn.classList.add('hidden');
                 newGameBtn.classList.remove('hidden');
+                showSecretCode();
                 return;
             }
             
