@@ -110,19 +110,21 @@
         }
 
         .controls button {
-            background-color: #9b59b6;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            margin: 0 5px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s;
+    background-color: #9b59b6;
+    color: white;
+    border: none;
+    padding: 12px 40px; /* Aumentar el padding para hacerlo más largo */
+    border-radius: 8px; /* Bordes más suaves */
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px; /* Tamaño de fuente un poco más grande */
+    width: 200px; /* Ancho fijo para hacerlo más largo */
+    transition: background 0.3s, transform 0.2s;
         }
 
         .controls button:hover {
-            background-color: #8e44ad;
+    background-color: #8e44ad;
+    transform: scale(1.05); /* Efecto sutil al pasar el mouse */
         }
 
         /* MENSAJES */
@@ -184,164 +186,117 @@
         </div>
 
         <!-- CONTROLES -->
-        <div class="controls">
-            <button id="start-btn">Iniciar</button>
-            <button id="restart-btn">Reiniciar</button>
-        </div>
+<div class="controls">
+    <button id="control-btn">Iniciar</button>
+</div>
     </div>
 
     <script>
-        const buttons = document.querySelectorAll('.simon-button');
-        const startBtn = document.getElementById('start-btn');
-        const restartBtn = document.getElementById('restart-btn');
-        const scoreDisplay = document.getElementById('score');
-        const highScoreDisplay = document.getElementById('high-score');
-        const messageDisplay = document.getElementById('message');
-        
-        // Variables del juego
-        let sequence = [];
-        let playerSequence = [];
-        let score = 0;
-        let highScore = localStorage.getItem('simonHighScore') || 0;
-        let isGameActive = false;
-        let isPlayerTurn = false;
-            // Audio - Configuración única
-    let audioContext;
-    let gainNode;
-    const tones = {
-        green: 392,
-        red: 329.63,
-        yellow: 261.63,
-        blue: 196,
-        error: 110
-    };
-        
-        // Actualizar el récord al cargar la página
-        highScoreDisplay.textContent = highScore;
-        
-        // Resaltar un botón
-        function highlightButton(color) {
-            const button = document.getElementById(color);
-            button.classList.add('active');
-            
-            // Crear un sonido simple (podrías usar audio real)
-            const tones = {
-                green: 392,
-                red: 329.63,
-                yellow: 261.63,
-                blue: 196
-            };
-            
-            // Audio simple con Web Audio API
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.type = 'sine';
-            oscillator.frequency.value = tones[color];
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            oscillator.start();
-            
-            // Parar el sonido después de 300ms
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.3);
-            oscillator.stop(audioContext.currentTime + 0.3);
-            
-            setTimeout(() => {
-                button.classList.remove('active');
-            }, 300);
-        }
+const buttons = document.querySelectorAll('.simon-button');
+const controlBtn = document.getElementById('control-btn'); // Reemplazar startBtn y restartBtn
+const scoreDisplay = document.getElementById('score');
+const highScoreDisplay = document.getElementById('high-score');
+const messageDisplay = document.getElementById('message');
 
+// Variables del juego
+let sequence = [];
+let playerSequence = [];
+let score = 0;
+let highScore = localStorage.getItem('simonHighScore') || 0;
+let isGameActive = false;
+let isPlayerTurn = false;
+let audioContext;
+let gainNode;
+const tones = {
+    green: 587.33,   // Reemplaza 392 (G4 → D5)
+    red: 493.88,     // Reemplaza 329.63 (E4 → B4)
+    yellow: 392.00,  // Reemplaza 261.63 (C4 → G4)
+    blue: 293.66, 
+    error: 110
+};
 
+// Actualizar el récord al cargar la página
+highScoreDisplay.textContent = highScore;
 
-            
-    // Inicializar audio (solo una vez)
-    function initAudio() {
-        try {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            gainNode = audioContext.createGain();
-            gainNode.connect(audioContext.destination);
-            gainNode.gain.value = 0.5; // Volumen moderado
-        } catch (e) {
-            console.error("Error inicializando audio:", e);
-        }
+// Inicializar audio (solo una vez)
+function initAudio() {
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        gainNode = audioContext.createGain();
+        gainNode.connect(audioContext.destination);
+        gainNode.gain.value = 0.5; // Volumen moderado
+    } catch (e) {
+        console.error("Error inicializando audio:", e);
+    }
+}
+
+// Llamar a initAudio al primer clic del usuario
+document.body.addEventListener('click', () => {
+    if (!audioContext) {
+        initAudio();
+    }
+}, { once: true });
+
+// Resaltar un botón
+function highlightButton(color) {
+    const button = document.getElementById(color);
+    button.classList.add('active');
+    
+    if (!audioContext) initAudio(); // Asegurar que el audio esté inicializado
+    
+    try {
+        const oscillator = audioContext.createOscillator();
+        oscillator.type = 'sine';
+        oscillator.frequency.value = tones[color];
+        oscillator.connect(gainNode);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.3); // Sonido corto
+    } catch (e) {
+        console.error("Error reproduciendo sonido:", e);
     }
     
-    // Llamar a initAudio al primer clic del usuario
-    document.body.addEventListener('click', () => {
-        if (!audioContext) {
-            initAudio();
-        }
-    }, { once: true });
+    setTimeout(() => {
+        button.classList.remove('active');
+    }, 300);
+}
+
+// Generar el siguiente paso en la secuencia
+function nextStep() {
+    isPlayerTurn = false;
+    messageDisplay.textContent = "Observa la secuencia...";
     
-    // Actualizar el récord al cargar la página
-    highScoreDisplay.textContent = highScore;
+    const colors = ['green', 'red', 'yellow', 'blue'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    sequence.push(randomColor);
     
-    // Resaltar un botón
-    function highlightButton(color) {
-        const button = document.getElementById(color);
-        button.classList.add('active');
+    showSequence();
+}
+
+// Mostrar la secuencia al jugador
+function showSequence() {
+    let i = 0;
+    const interval = setInterval(() => {
+        highlightButton(sequence[i]);
+        i++;
         
-        if (!audioContext) initAudio(); // Asegurar que el audio esté inicializado
-        
-        try {
-            // Crear oscilador para este sonido
-            const oscillator = audioContext.createOscillator();
-            oscillator.type = 'sine';
-            oscillator.frequency.value = tones[color];
-            oscillator.connect(gainNode);
-            
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.3); // Sonido corto
-            
-        } catch (e) {
-            console.error("Error reproduciendo sonido:", e);
+        if (i >= sequence.length) {
+            clearInterval(interval);
+            isPlayerTurn = true;
+            isGameActive = true;
+            messageDisplay.textContent = "Tu turno! Repite la secuencia";
+            playerSequence = [];
         }
-        
-        setTimeout(() => {
-            button.classList.remove('active');
-        }, 300);
-    }
-        // Generar el siguiente paso en la secuencia
-        function nextStep() {
-            isPlayerTurn = false;
-            messageDisplay.textContent = "Observa la secuencia...";
-            
-            const colors = ['green', 'red', 'yellow', 'blue'];
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            sequence.push(randomColor);
-            
-            // Mostrar la secuencia al jugador
-            showSequence();
-        }
-        
-        // Mostrar la secuencia al jugador
-        function showSequence() {
-            let i = 0;
-            const interval = setInterval(() => {
-                highlightButton(sequence[i]);
-                i++;
-                
-                if (i >= sequence.length) {
-                    clearInterval(interval);
-                    isPlayerTurn = true;
-                    isGameActive = true;
-                    messageDisplay.textContent = "Tu turno! Repite la secuencia";
-                    playerSequence = [];
-                }
-            }, 800);
-        }
-        
-        // Manejar el clic del jugador
-        function handleButtonClick(color) {
-            if (!isPlayerTurn) return;
-            
-            highlightButton(color);
-            playerSequence.push(color);
-            
-    // Verificar si el jugador acertó
+    }, 800);
+}
+
+// Manejar el clic del jugador
+function handleButtonClick(color) {
+    if (!isPlayerTurn) return;
+    
+    highlightButton(color);
+    playerSequence.push(color);
+    
     if (playerSequence[playerSequence.length - 1] !== sequence[playerSequence.length - 1]) {
-        // Efecto visual de error
         document.body.style.backgroundColor = '#ff0000';
         setTimeout(() => {
             document.body.style.backgroundColor = '#2c3e50';
@@ -350,67 +305,36 @@
         gameOver();
         return;
     }
-            
-            // Si completó la secuencia correctamente
-            if (playerSequence.length === sequence.length) {
-                isPlayerTurn = false;
-                isGameActive = false;
-                score++;
-                scoreDisplay.textContent = score;
-                messageDisplay.textContent = "¡Correcto! Siguiente nivel...";
-                
-                setTimeout(() => {
-                    nextStep();
-                }, 1000);
-            }
-        }
-        
-        // Game over
-        function gameOver() {
-                // Reproducir sonido de error
-    playErrorSound();
     
-    isGameActive = false;
-    isPlayerTurn = false;
-    messageDisplay.textContent = `¡Game Over! Puntuación: ${score}`;
-            isGameActive = false;
-            isPlayerTurn = false;
-            messageDisplay.textContent = `¡Game Over! Puntuación: ${score}`;
-            
-            // Actualizar récord si es necesario
-            if (score > highScore) {
-                highScore = score;
-                highScoreDisplay.textContent = highScore;
-                localStorage.setItem('simonHighScore', highScore);
-            }
-            
-            score = 0;
-            scoreDisplay.textContent = score;
-        }
-        function playErrorSound() {
+    if (playerSequence.length === sequence.length) {
+        isPlayerTurn = false;
+        isGameActive = false;
+        score++;
+        scoreDisplay.textContent = score;
+        messageDisplay.textContent = "¡Correcto! Siguiente nivel...";
+        
+        setTimeout(() => {
+            nextStep();
+        }, 1000);
+    }
+}
+
+// Reproducir sonido de error
+function playErrorSound() {
     if (!audioContext) initAudio();
     
     try {
         const oscillator = audioContext.createOscillator();
         const errorGain = audioContext.createGain();
         
-        oscillator.type = 'square'; // Sonido más "duro"
+        oscillator.type = 'square';
         oscillator.frequency.value = tones.error;
         oscillator.connect(errorGain);
         errorGain.connect(audioContext.destination);
         
-        // Efecto de caída de frecuencia
-        oscillator.frequency.exponentialRampToValueAtTime(
-            55, // Frecuencia final más grave
-            audioContext.currentTime + 0.5
-        );
-        
-        // Efecto de fade out
+        oscillator.frequency.exponentialRampToValueAtTime(55, audioContext.currentTime + 0.5);
         errorGain.gain.setValueAtTime(0.5, audioContext.currentTime);
-        errorGain.gain.exponentialRampToValueAtTime(
-            0.01,
-            audioContext.currentTime + 0.5
-        );
+        errorGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
         
         oscillator.start();
         oscillator.stop(audioContext.currentTime + 0.5);
@@ -418,44 +342,72 @@
         console.error("Error en sonido de error:", e);
     }
 }
-        
-        // Iniciar juego
-        function startGame() {
-            if (sequence.length > 0) return; // Evitar múltiples inicios
-            
-            messageDisplay.textContent = "Comenzando juego...";
-            score = 0;
-            scoreDisplay.textContent = score;
-            sequence = [];
-            playerSequence = [];
-            
-            setTimeout(() => {
-                nextStep();
-            }, 1000);
+
+// Game over
+function gameOver() {
+    playErrorSound();
+    isGameActive = false;
+    isPlayerTurn = false;
+    messageDisplay.textContent = `¡Game Over! Puntuación: ${score}`;
+    controlBtn.textContent = "Iniciar"; // Cambiar texto a "Iniciar"
+    
+    if (score > highScore) {
+        highScore = score;
+        highScoreDisplay.textContent = highScore;
+        localStorage.setItem('simonHighScore', highScore);
+    }
+    
+    score = 0;
+    scoreDisplay.textContent = score;
+}
+
+// Iniciar juego
+function startGame() {
+    if (sequence.length > 0) return; // Evitar múltiples inicios
+    
+    messageDisplay.textContent = "Comenzando juego...";
+    score = 0;
+    scoreDisplay.textContent = score;
+    sequence = [];
+    playerSequence = [];
+    controlBtn.textContent = "Reiniciar"; // Cambiar texto a "Reiniciar"
+    
+    setTimeout(() => {
+        nextStep();
+    }, 1000);
+}
+
+// Reiniciar juego
+function restartGame() {
+    sequence = [];
+    playerSequence = [];
+    score = 0;
+    scoreDisplay.textContent = score;
+    isGameActive = false;
+    isPlayerTurn = false;
+    messageDisplay.textContent = "Presiona Iniciar para jugar";
+    controlBtn.textContent = "Iniciar"; // Cambiar texto a "Iniciar"
+}
+
+// Manejar el clic del botón único
+function handleControlClick() {
+    if (isGameActive || sequence.length > 0) {
+        restartGame();
+    } else {
+        startGame();
+    }
+}
+
+// Event listeners
+buttons.forEach(button => {
+    button.addEventListener('click', () => {
+        if (isPlayerTurn) {
+            handleButtonClick(button.id);
         }
-        
-        // Reiniciar juego
-        function restartGame() {
-            sequence = [];
-            playerSequence = [];
-            score = 0;
-            scoreDisplay.textContent = score;
-            isGameActive = false;
-            isPlayerTurn = false;
-            messageDisplay.textContent = "Presiona Iniciar para jugar";
-        }
-        
-        // Event listeners
-        buttons.forEach(button => {
-            button.addEventListener('click', () => {
-                if (isPlayerTurn) {
-                    handleButtonClick(button.id);
-                }
-            });
-        });
-        
-        startBtn.addEventListener('click', startGame);
-        restartBtn.addEventListener('click', restartGame);
+    });
+});
+
+controlBtn.addEventListener('click', handleControlClick);
     </script>
 </body>
 </html>
