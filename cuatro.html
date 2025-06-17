@@ -34,21 +34,15 @@
 
 .color-palette {
     display: flex;
-    flex-direction: row; /* Mantenemos horizontal para móviles */
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 2px; /* Espacio mínimo entre colores */
-    margin: 0 auto; /* Centrado horizontal */
-    padding: 5px;
-    width: fit-content; /* Que ocupe solo el espacio necesario */
-    max-width: 100%;
+    flex-direction: column;
+    gap: 5px;
     position: absolute;
-    bottom: 20%; /* Posición vertical desde abajo (ajustable) */
-    left: 50%;
-    transform: translateX(-50%); /* Centrado horizontal exacto */
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
     background-color: rgba(52, 73, 94, 0.7);
     border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    padding: 10px;
 }
 
         .color-option {
