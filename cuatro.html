@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Juego de Secuencias</title>
     <style>
         body {
@@ -20,25 +20,26 @@
         }
 
         .game-wrapper {
-            display: flex;
-            gap: 20px;
-            width: 100%;
-            max-width: 600px;
-            margin-top: 30px; /* Mover todo el juego 3cm abajo */
+    position: relative;
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 600px;
+    margin-top: 30px;
         }
 
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-        }
+.game-container {
+    width: 100%;
+}
 
         .color-palette {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-left: 20px;
-            margin-top: 30px; /* Mover paleta de colores 3cm abajo */
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 30px 0;
+    width: 100%;
         }
 
         .color-option {
