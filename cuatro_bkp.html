@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -17,32 +17,56 @@
             min-height: 100vh;
         }
 
+        .game-wrapper {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+
         .game-container {
             display: flex;
             flex-direction: column;
-            width: 100%;
-            max-width: 400px;
+            flex-grow: 1;
         }
 
         .color-palette {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
+            flex-direction: column;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-left: 20px;
         }
 
         .color-option {
             width: 50px;
             height: 50px;
             border-radius: 10px;
-            cursor: pointer;
+            cursor: grab;
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6);
             transition: transform 0.2s;
+            user-select: none;
+            position: relative;
+            z-index: 1;
         }
 
-        .color-option:hover {
-            transform: scale(1.05);
+        .color-option:active {
+            cursor: grabbing;
+        }
+
+        .color-option.dragging {
+            opacity: 0.5;
+            transform: scale(1.1);
+        }
+
+        .color-option-clone {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            opacity: 0.8;
+            pointer-events: none;
+            z-index: 1000;
         }
 
         .game-board {
@@ -67,11 +91,15 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: pointer;
         }
 
         .guess-slot.filled {
             border: none;
+        }
+
+        .guess-slot.highlight {
+            border-color: white;
+            background-color: #3d566e;
         }
 
         .feedback {
@@ -161,27 +189,28 @@
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="message" id="message">Selecciona colores para tu primer intento</div>
-        <div id="win-message" class="win-message hidden">¡Ganaste!</div>
-        <div id="secret-code-container" class="hidden">
-            <div class="secret-code">
-                <span>El código era:</span>
-                <!-- Los slots del código secreto se agregarán con JS -->
+    <div class="game-wrapper">
+        <div class="game-container">
+            <div class="message" id="message">Arrastra colores a los espacios vacíos</div>
+            <div id="win-message" class="win-message hidden">¡Ganaste!</div>
+            <div id="secret-code-container" class="hidden">
+                <div class="secret-code">
+                    <span>El código era:</span>
+                </div>
+            </div>
+            
+            <div class="game-board" id="game-board">
+                <!-- Las filas se generarán dinámicamente -->
+            </div>
+            
+            <div class="controls">
+                <button id="check-btn">Comprobar</button>
+                <button id="new-game-btn" class="hidden">Nuevo Juego</button>
             </div>
         </div>
         
         <div class="color-palette" id="color-palette">
-            <!-- Colores disponibles se generarán con JS -->
-        </div>
-        
-        <div class="game-board" id="game-board">
-            <!-- Filas de intentos se generarán con JS -->
-        </div>
-        
-        <div class="controls">
-            <button id="check-btn">Comprobar</button>
-            <button id="new-game-btn" class="hidden">Nuevo Juego</button>
+            <!-- Los colores se generarán dinámicamente -->
         </div>
     </div>
 
@@ -212,9 +241,11 @@
         let secretCode = [];
         let currentAttempt = 0;
         let currentRow = null;
-        let selectedColor = null;
         let gameOver = false;
-        
+        let draggedColor = null;
+        let draggingClone = null;
+        let activeTouch = null;
+
         // Inicializar el juego
         function initGame() {
             // Generar código secreto
@@ -228,7 +259,7 @@
             gameBoard.innerHTML = '';
             currentAttempt = 0;
             gameOver = false;
-            messageEl.textContent = 'Selecciona colores para tu primer intento';
+            messageEl.textContent = 'Arrastra colores a los espacios vacíos';
             winMessageEl.classList.add('hidden');
             secretCodeContainer.classList.add('hidden');
             checkBtn.classList.remove('hidden');
@@ -245,7 +276,19 @@
                     const slot = document.createElement('div');
                     slot.className = 'guess-slot';
                     slot.dataset.position = j;
-                    slot.addEventListener('click', () => fillSlot(slot));
+                    
+                    // Eventos para arrastrar y soltar (para PC)
+                    slot.addEventListener('dragover', handleDragOver);
+                    slot.addEventListener('dragenter', handleDragEnter);
+                    slot.addEventListener('dragleave', handleDragLeave);
+                    slot.addEventListener('drop', handleDrop);
+                    
+                    // Eventos táctiles (para móvil)
+                    slot.addEventListener('touchstart', handleTouchStartSlot);
+                    slot.addEventListener('touchmove', handleTouchMoveSlot);
+                    slot.addEventListener('touchend', handleTouchEndSlot);
+                    slot.addEventListener('touchcancel', handleTouchCancel);
+
                     row.appendChild(slot);
                 }
                 
@@ -272,7 +315,18 @@
                 colorEl.id = `option-${color.id}`;
                 colorEl.style.backgroundColor = color.value;
                 colorEl.dataset.color = color.id;
-                colorEl.addEventListener('click', () => selectColor(color.id));
+                colorEl.draggable = true;
+                
+                // Eventos de arrastre (para PC)
+                colorEl.addEventListener('dragstart', handleDragStart);
+                colorEl.addEventListener('dragend', handleDragEnd);
+                
+                // Eventos táctiles (para móvil)
+                colorEl.addEventListener('touchstart', handleTouchStartColor);
+                colorEl.addEventListener('touchmove', handleTouchMoveColor);
+                colorEl.addEventListener('touchend', handleTouchEndColor);
+                colorEl.addEventListener('touchcancel', handleTouchCancel);
+
                 colorPalette.appendChild(colorEl);
             });
         }
@@ -297,33 +351,199 @@
             secretCodeContainer.classList.remove('hidden');
         }
         
-        // Seleccionar un color de la paleta
-        function selectColor(colorId) {
-            selectedColor = colorId;
-            
-            // Resaltar color seleccionado
-            document.querySelectorAll('.color-option').forEach(option => {
-                option.style.border = option.dataset.color === colorId ? '3px solid white' : 'none';
-            });
+        // --- Manejo de eventos para PC ---
+        
+        function handleDragStart(e) {
+            draggedColor = e.target.dataset.color;
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.dataset.color);
+            e.dataTransfer.effectAllowed = 'copy';
         }
         
-        // Llenar un slot con el color seleccionado
-        function fillSlot(slot) {
-            if (!selectedColor || gameOver || !slot.classList.contains('guess-slot')) return;
-            
-            // Limpiar el slot primero
-            slot.className = 'guess-slot';
-            slot.style.backgroundColor = '';
-            
-            // Llenar con el color seleccionado
-            const color = COLORS.find(c => c.id === selectedColor);
-            if (color) {
-                slot.style.backgroundColor = color.value;
-                slot.classList.add('filled');
-                slot.dataset.color = selectedColor;
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            draggedColor = null;
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        }
+        
+        function handleDragEnter(e) {
+            e.preventDefault();
+            if (!e.target.classList.contains('filled')) {
+                e.target.classList.add('highlight');
             }
         }
         
+        function handleDragLeave(e) {
+            e.target.classList.remove('highlight');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('highlight');
+            
+            if (gameOver || !draggedColor) return;
+            
+            // Solo permitir colocar en la fila actual
+            if (e.target.closest('.guess-row') !== currentRow) return;
+            
+            // Limpiar el slot primero (si ya hay un color)
+            e.target.className = 'guess-slot';
+            e.target.style.backgroundColor = '';
+            e.target.dataset.color = '';
+            
+            // Llenar con el color arrastrado
+            const color = COLORS.find(c => c.id === draggedColor);
+            if (color) {
+                e.target.style.backgroundColor = color.value;
+                e.target.classList.add('filled');
+                e.target.dataset.color = draggedColor;
+            }
+        }
+
+        // --- Manejo de eventos táctiles ---
+
+        function handleTouchStartColor(e) {
+            if (gameOver) return;
+            
+            const touch = e.touches[0];
+            activeTouch = touch.identifier;
+            
+            const touchedColorElement = e.target;
+            draggedColor = touchedColorElement.dataset.color;
+            
+            // Crear un clon visual para arrastrar
+            draggingClone = touchedColorElement.cloneNode(true);
+            draggingClone.classList.add('color-option-clone');
+            draggingClone.style.backgroundColor = touchedColorElement.style.backgroundColor;
+            document.body.appendChild(draggingClone);
+            
+            // Posicionar el clon
+            updateClonePosition(touch);
+            
+            touchedColorElement.classList.add('dragging');
+        }
+
+        function handleTouchMoveColor(e) {
+            if (!draggingClone) return;
+            
+            // Encontrar el touch correcto (puede haber múltiples)
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === activeTouch) {
+                    updateClonePosition(touch);
+                    highlightSlotUnderTouch(touch);
+                    break;
+                }
+            }
+        }
+
+        function handleTouchEndColor(e) {
+            if (!draggingClone) return;
+            
+            // Encontrar el touch correcto
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === activeTouch) {
+                    // Verificar si se soltó sobre un slot
+                    const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+                    if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
+                        placeColorInSlot(elementUnderTouch);
+                    }
+                    
+                    cleanupAfterTouch();
+                    break;
+                }
+            }
+        }
+
+        function handleTouchStartSlot(e) {
+            // Permitir cambiar colores en los slots tocándolos
+            if (gameOver || e.target.closest('.guess-row') !== currentRow) return;
+            
+            const slot = e.target;
+            if (slot.classList.contains('filled')) {
+                // Eliminar el color existente
+                slot.className = 'guess-slot';
+                slot.style.backgroundColor = '';
+                slot.dataset.color = '';
+            }
+        }
+
+        function handleTouchMoveSlot(e) {
+            // No hacer nada durante el movimiento en el slot
+        }
+
+        function handleTouchEndSlot(e) {
+            // No hacer nada al soltar en el slot (el manejo está en handleTouchEndColor)
+        }
+
+        function handleTouchCancel(e) {
+            cleanupAfterTouch();
+        }
+
+        function updateClonePosition(touch) {
+            if (!draggingClone) return;
+            draggingClone.style.left = `${touch.pageX - draggingClone.offsetWidth / 2}px`;
+            draggingClone.style.top = `${touch.pageY - draggingClone.offsetHeight / 2}px`;
+        }
+
+        function highlightSlotUnderTouch(touch) {
+            // Remover highlight de todos los slots primero
+            document.querySelectorAll('.guess-slot').forEach(slot => {
+                slot.classList.remove('highlight');
+            });
+            
+            const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
+                // Solo resaltar si es un slot vacío en la fila actual
+                if (!elementUnderTouch.classList.contains('filled') && 
+                    elementUnderTouch.closest('.guess-row') === currentRow) {
+                    elementUnderTouch.classList.add('highlight');
+                }
+            }
+        }
+
+        function placeColorInSlot(slot) {
+            if (gameOver || !draggedColor || slot.closest('.guess-row') !== currentRow) return;
+            
+            // Limpiar el slot primero (si ya hay un color)
+            slot.className = 'guess-slot';
+            slot.style.backgroundColor = '';
+            slot.dataset.color = '';
+            
+            // Llenar con el color arrastrado
+            const color = COLORS.find(c => c.id === draggedColor);
+            if (color) {
+                slot.style.backgroundColor = color.value;
+                slot.classList.add('filled');
+                slot.dataset.color = draggedColor;
+            }
+        }
+
+        function cleanupAfterTouch() {
+            if (draggingClone) {
+                draggingClone.remove();
+                draggingClone = null;
+            }
+            
+            // Remover highlight de todos los slots
+            document.querySelectorAll('.guess-slot').forEach(slot => {
+                slot.classList.remove('highlight');
+            });
+            
+            // Remover clase dragging de todos los colores
+            document.querySelectorAll('.color-option.dragging').forEach(el => {
+                el.classList.remove('dragging');
+            });
+            
+            draggedColor = null;
+            activeTouch = null;
+        }
+
         // Comprobar el intento actual
         function checkAttempt() {
             if (gameOver) return;
@@ -331,7 +551,7 @@
             // Obtener los colores del intento actual
             const slots = currentRow.querySelectorAll('.guess-slot.filled');
             if (slots.length < CODE_LENGTH) {
-                messageEl.textContent = 'Debes seleccionar 4 colores';
+                messageEl.textContent = 'Debes completar todos los espacios';
                 return;
             }
             
@@ -383,7 +603,7 @@
             // Preparar siguiente fila
             currentRow = gameBoard.children[currentAttempt];
             currentRow.style.opacity = '1';
-            messageEl.textContent = `Intento ${currentAttempt + 1} de ${MAX_ATTEMPTS}. Selecciona colores.`;
+            messageEl.textContent = `Intento ${currentAttempt + 1} de ${MAX_ATTEMPTS}. Arrastra colores.`;
         }
         
         // Calcular feedback (bien y regular)
