@@ -1,1 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Secuencias</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c3e50;
+            color: white;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
 
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .color-palette {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .color-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6);
+            transition: transform 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.05);
+        }
+
+        .game-board {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .guess-row {
+            display: flex;
+            gap: 5px;
+            height: 50px;
+        }
+
+        .guess-slot {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background-color: #34495e;
+            border: 2px dashed #7f8c8d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .guess-slot.filled {
+            border: none;
+        }
+
+        .feedback {
+            display: flex;
+            gap: 5px;
+            margin-left: 10px;
+            align-items: center;
+        }
+
+        .feedback-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .feedback-dot.exact {
+            background-color: #2ecc71;
+        }
+
+        .feedback-dot.partial {
+            background-color: #f1c40f;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .controls button {
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .controls button:hover {
+            background-color: #8e44ad;
+        }
+
+        .message {
+            margin: 15px 0;
+            text-align: center;
+            min-height: 24px;
+            font-weight: bold;
+            color: #f1c40f;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .secret-code {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+
+        .secret-slot {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+
+        .win-message {
+            color: #2ecc71;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="message" id="message">Selecciona colores para tu primer intento</div>
+        <div id="win-message" class="win-message hidden">¡Ganaste!</div>
+        <div id="secret-code-container" class="secret-code hidden"></div>
+        
+        <div class="color-palette" id="color-palette">
+            <!-- Colores disponibles se generarán con JS -->
+        </div>
+        
+        <div class="game-board" id="game-board">
+            <!-- Filas de intentos se generarán con JS -->
+        </div>
+        
+        <div class="controls">
+            <button id="check-btn">Comprobar</button>
+            <button id="new-game-btn" class="hidden">Nuevo Juego</button>
+        </div>
+    </div>
+
+    <script>
+        // Configuración del juego
+        const COLORS = [
+            {id: 'red', value: '#e74c3c'},
+            {id: 'blue', value: '#3498db'},
+            {id: 'green', value: '#2ecc71'},
+            {id: 'yellow', value: '#f1c40f'},
+            {id: 'purple', value: '#9b59b6'},
+            {id: 'orange', value: '#e67e22'}
+        ];
+        
+        const CODE_LENGTH = 4;
+        const MAX_ATTEMPTS = 10;
+        
+        // Elementos del DOM
+        const colorPalette = document.getElementById('color-palette');
+        const gameBoard = document.getElementById('game-board');
+        const messageEl = document.getElementById('message');
+        const winMessageEl = document.getElementById('win-message');
+        const secretCodeContainer = document.getElementById('secret-code-container');
+        const checkBtn = document.getElementById('check-btn');
+        const newGameBtn = document.getElementById('new-game-btn');
+        
+        // Variables del juego
+        let secretCode = [];
+        let currentAttempt = 0;
+        let currentRow = null;
+        let selectedColor = null;
+        let gameOver = false;
+        
+        // Inicializar el juego
+        function initGame() {
+            // Generar código secreto
+            secretCode = [];
+            for (let i = 0; i < CODE_LENGTH; i++) {
+                const randomIndex = Math.floor(Math.random() * COLORS.length);
+                secretCode.push(COLORS[randomIndex].id);
+            }
+            
+            // Limpiar tablero
+            gameBoard.innerHTML = '';
+            currentAttempt = 0;
+            gameOver = false;
+            messageEl.textContent = 'Selecciona colores para tu primer intento';
+            winMessageEl.classList.add('hidden');
+            secretCodeContainer.classList.add('hidden');
+            checkBtn.classList.remove('hidden');
+            newGameBtn.classList.add('hidden');
+            
+            // Crear filas de intentos
+            for (let i = 0; i < MAX_ATTEMPTS; i++) {
+                const row = document.createElement('div');
+                row.className = 'guess-row';
+                row.dataset.attempt = i;
+                
+                // Crear slots para colores
+                for (let j = 0; j < CODE_LENGTH; j++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'guess-slot';
+                    slot.dataset.position = j;
+                    slot.addEventListener('click', () => fillSlot(slot));
+                    row.appendChild(slot);
+                }
+                
+                // Crear área de feedback
+                const feedback = document.createElement('div');
+                feedback.className = 'feedback';
+                row.appendChild(feedback);
+                
+                gameBoard.appendChild(row);
+                
+                // Ocultar filas futuras
+                if (i > 0) {
+                    row.style.opacity = '0.5';
+                }
+            }
+            
+            currentRow = gameBoard.children[0];
+            
+            // Crear paleta de colores
+            colorPalette.innerHTML = '';
+            COLORS.forEach(color => {
+                const colorEl = document.createElement('div');
+                colorEl.className = 'color-option';
+                colorEl.id = `option-${color.id}`;
+                colorEl.style.backgroundColor = color.value;
+                colorEl.dataset.color = color.id;
+                colorEl.addEventListener('click', () => selectColor(color.id));
+                colorPalette.appendChild(colorEl);
+            });
+        }
+        
+        // Mostrar el código secreto
+        function showSecretCode() {
+            secretCodeContainer.innerHTML = '<div>El código era:</div>';
+            secretCode.forEach(colorId => {
+                const color = COLORS.find(c => c.id === colorId);
+                const slot = document.createElement('div');
+                slot.className = 'secret-slot';
+                slot.style.backgroundColor = color.value;
+                secretCodeContainer.appendChild(slot);
+            });
+            secretCodeContainer.classList.remove('hidden');
+        }
+        
+        // Seleccionar un color de la paleta
+        function selectColor(colorId) {
+            selectedColor = colorId;
+            
+            // Resaltar color seleccionado
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.style.border = option.dataset.color === colorId ? '3px solid white' : 'none';
+            });
+        }
+        
+        // Llenar un slot con el color seleccionado
+        function fillSlot(slot) {
+            if (!selectedColor || gameOver || !slot.classList.contains('guess-slot')) return;
+            
+            // Limpiar el slot primero
+            slot.className = 'guess-slot';
+            slot.style.backgroundColor = '';
+            
+            // Llenar con el color seleccionado
+            const color = COLORS.find(c => c.id === selectedColor);
+            if (color) {
+                slot.style.backgroundColor = color.value;
+                slot.classList.add('filled');
+                slot.dataset.color = selectedColor;
+            }
+        }
+        
+        // Comprobar el intento actual
+        function checkAttempt() {
+            if (gameOver) return;
+            
+            // Obtener los colores del intento actual
+            const slots = currentRow.querySelectorAll('.guess-slot.filled');
+            if (slots.length < CODE_LENGTH) {
+                messageEl.textContent = 'Debes seleccionar 4 colores';
+                return;
+            }
+            
+            const attempt = Array.from(slots).map(slot => slot.dataset.color);
+            
+            // Calcular feedback
+            const feedback = calculateFeedback(attempt, secretCode);
+            
+            // Mostrar feedback
+            const feedbackEl = currentRow.querySelector('.feedback');
+            feedbackEl.innerHTML = '';
+            
+            // Mostrar puntos exactos primero
+            for (let i = 0; i < feedback.exact; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'feedback-dot exact';
+                feedbackEl.appendChild(dot);
+            }
+            
+            // Luego puntos parciales
+            for (let i = 0; i < feedback.partial; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'feedback-dot partial';
+                feedbackEl.appendChild(dot);
+            }
+            
+            // Verificar si ganó
+            if (feedback.exact === CODE_LENGTH) {
+                gameOver = true;
+                messageEl.textContent = '';
+                winMessageEl.classList.remove('hidden');
+                checkBtn.classList.add('hidden');
+                newGameBtn.classList.remove('hidden');
+                return;
+            }
+            
+            // Pasar al siguiente intento
+            currentAttempt++;
+            
+            if (currentAttempt >= MAX_ATTEMPTS) {
+                gameOver = true;
+                messageEl.textContent = '¡Game Over! No adivinaste la secuencia.';
+                checkBtn.classList.add('hidden');
+                newGameBtn.classList.remove('hidden');
+                showSecretCode();
+                return;
+            }
+            
+            // Preparar siguiente fila
+            currentRow = gameBoard.children[currentAttempt];
+            currentRow.style.opacity = '1';
+            messageEl.textContent = `Intento ${currentAttempt + 1} de ${MAX_ATTEMPTS}. Selecciona colores.`;
+        }
+        
+        // Calcular feedback (bien y regular)
+        function calculateFeedback(attempt, secret) {
+            let exact = 0;
+            let partial = 0;
+            
+            const attemptCopy = [...attempt];
+            const secretCopy = [...secret];
+            
+            // Contar exactos
+            for (let i = 0; i < secretCopy.length; i++) {
+                if (attemptCopy[i] === secretCopy[i]) {
+                    exact++;
+                    attemptCopy[i] = null;
+                    secretCopy[i] = null;
+                }
+            }
+            
+            // Contar parciales
+            for (let i = 0; i < secretCopy.length; i++) {
+                if (secretCopy[i] === null) continue;
+                
+                const index = attemptCopy.indexOf(secretCopy[i]);
+                if (index !== -1) {
+                    partial++;
+                    attemptCopy[index] = null;
+                }
+            }
+            
+            return { exact, partial };
+        }
+        
+        // Event listeners
+        checkBtn.addEventListener('click', checkAttempt);
+        newGameBtn.addEventListener('click', initGame);
+        
+        // Iniciar el juego al cargar
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
