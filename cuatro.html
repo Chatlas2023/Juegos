@@ -38,7 +38,8 @@
             gap: 20px;
             position: absolute;
             right: 20px;
-            top: 0;
+            top: 30px; /* Bajamos 3cm (30px) desde la parte superior */
+            width: 70px; /* Ancho ajustado al contenido */
         }
 
         .color-palette {
@@ -48,6 +49,7 @@
             background-color: rgba(52, 73, 94, 0.7);
             border-radius: 10px;
             padding: 10px;
+            width: 70px; /* Ancho fijo para contener solo los colores */
         }
 
         .color-option {
@@ -140,19 +142,21 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            width: 100%;
         }
 
         .controls button {
             background-color: #9b59b6;
             color: white;
             border: none;
-            padding: 12px 25px;
+            padding: 12px 10px; /* Ajuste de padding para el nuevo ancho */
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             font-size: 16px;
             transition: background 0.3s;
             width: 100%;
+            box-sizing: border-box;
         }
 
         .controls button:hover {
@@ -496,7 +500,6 @@
 
         function handleTouchMoveSlot(e) {
             // No hacer nada durante el movimiento en el slot, ya que el manejo está en handleTouchMoveColor
-            // Opcional: Podrías necesitar un e.preventDefault() aquí si se arrastran colores fuera del slot y quieres evitar el pull-to-refresh en esa acción también.
         }
 
         function handleTouchEndSlot(e) {
