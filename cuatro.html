@@ -20,30 +20,35 @@
         }
 
         .game-wrapper {
-    position: relative;
-    display: flex;
-    gap: 20px;
-    width: 100%;
-    max-width: 600px;
-    margin-top: 30px;
+            position: relative;
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 30px;
         }
 
-.game-container {
-    width: 100%;
-}
+        .game-container {
+            width: 100%;
+        }
 
-.color-palette {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    background-color: rgba(52, 73, 94, 0.7);
-    border-radius: 10px;
-    padding: 10px;
-}
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: absolute;
+            right: 20px;
+            top: 0;
+        }
+
+        .color-palette {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            background-color: rgba(52, 73, 94, 0.7);
+            border-radius: 10px;
+            padding: 10px;
+        }
 
         .color-option {
             width: 50px;
@@ -132,9 +137,8 @@
         }
 
         .controls {
-            margin-top: 20px;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             gap: 10px;
         }
 
@@ -148,6 +152,7 @@
             font-weight: bold;
             font-size: 16px;
             transition: background 0.3s;
+            width: 100%;
         }
 
         .controls button:hover {
@@ -209,15 +214,16 @@
             
             <div class="game-board" id="game-board">
                 </div>
-            
+        </div>
+        
+        <div class="right-panel">
             <div class="controls">
                 <button id="check-btn">Comprobar</button>
                 <button id="new-game-btn" class="hidden">Nuevo Juego</button>
             </div>
+            <div class="color-palette" id="color-palette">
+                </div>
         </div>
-        
-        <div class="color-palette" id="color-palette">
-            </div>
     </div>
 
     <script>
@@ -667,4 +673,3 @@
     </script>
 </body>
 </html>
-el botón sigue apareciendo abajo, no arriba. revisa
