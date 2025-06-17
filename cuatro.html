@@ -422,12 +422,8 @@
             // Solo permitir colocar en la fila actual
             if (e.target.closest('.guess-row') !== currentRow) return;
             
-            // Si estamos arrastrando desde un slot, limpiar el slot original
-            if (draggedElement && draggedElement.classList.contains('guess-slot')) {
-                draggedElement.className = 'guess-slot';
-                draggedElement.style.backgroundColor = '';
-                draggedElement.dataset.color = '';
-            }
+            // No hacemos nada si el slot de destino ya está lleno
+            if (e.target.classList.contains('filled')) return;
             
             // Limpiar el slot destino primero (si ya hay un color)
             e.target.className = 'guess-slot';
@@ -604,12 +600,8 @@
         function placeColorInSlot(slot) {
             if (gameOver || !draggedColor || slot.closest('.guess-row') !== currentRow) return;
             
-            // Si estamos arrastrando desde un slot, limpiar el slot original
-            if (draggedElement && draggedElement.classList.contains('guess-slot')) {
-                draggedElement.className = 'guess-slot';
-                draggedElement.style.backgroundColor = '';
-                draggedElement.dataset.color = '';
-            }
+            // No hacemos nada si el slot de destino ya está lleno
+            if (slot.classList.contains('filled')) return;
             
             // Limpiar el slot destino primero (si ya hay un color)
             slot.className = 'guess-slot';
