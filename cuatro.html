@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -135,6 +135,7 @@
             gap: 10px;
             margin: 20px 0;
             justify-content: center;
+            align-items: center;
         }
 
         .secret-slot {
@@ -163,7 +164,12 @@
     <div class="game-container">
         <div class="message" id="message">Selecciona colores para tu primer intento</div>
         <div id="win-message" class="win-message hidden">¡Ganaste!</div>
-        <div id="secret-code-container" class="secret-code hidden"></div>
+        <div id="secret-code-container" class="hidden">
+            <div class="secret-code">
+                <span>El código era:</span>
+                <!-- Los slots del código secreto se agregarán con JS -->
+            </div>
+        </div>
         
         <div class="color-palette" id="color-palette">
             <!-- Colores disponibles se generarán con JS -->
@@ -218,7 +224,7 @@
                 secretCode.push(COLORS[randomIndex].id);
             }
             
-            // Limpiar tablero
+            // Limpiar tablero y mensajes
             gameBoard.innerHTML = '';
             currentAttempt = 0;
             gameOver = false;
@@ -273,14 +279,21 @@
         
         // Mostrar el código secreto
         function showSecretCode() {
-            secretCodeContainer.innerHTML = '<div>El código era:</div>';
+            const secretCodeElement = secretCodeContainer.querySelector('.secret-code');
+            // Limpiar slots anteriores
+            while (secretCodeElement.children.length > 1) {
+                secretCodeElement.removeChild(secretCodeElement.lastChild);
+            }
+            
+            // Agregar los slots del código secreto
             secretCode.forEach(colorId => {
                 const color = COLORS.find(c => c.id === colorId);
                 const slot = document.createElement('div');
                 slot.className = 'secret-slot';
                 slot.style.backgroundColor = color.value;
-                secretCodeContainer.appendChild(slot);
+                secretCodeElement.appendChild(slot);
             });
+            
             secretCodeContainer.classList.remove('hidden');
         }
         
