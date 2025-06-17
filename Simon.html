@@ -19,9 +19,12 @@
         }
 
 .game-container {
-    width: calc(100% - 200px); /* Deja espacio para el panel derecho */
+    width: calc(100% - 200px);
     max-width: 600px;
-    margin-right: 180px; /* Ajusta según sea necesario */
+    margin-right: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
         h1 {
@@ -85,6 +88,7 @@
             margin-bottom: 20px;
         }
         /* Panel derecho con controles y paleta */
+
 .right-panel {
     display: flex;
     flex-direction: column;
@@ -94,33 +98,35 @@
     right: 20px;
     top: 50%;
     transform: translateY(-50%);
+    z-index: 10;
 }
 
-/* Controles (botones) */
-.controls {
+/* Controles (botones) - Estilo específico para el panel derecho */
+.right-panel .controls {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin: 0;
-    width: 100%;
+    width: 120px; /* Ancho fijo para los botones */
 }
 
-.controls button {
+.right-panel .controls button {
     background-color: #9b59b6;
     color: white;
     border: none;
-    padding: 12px 20px;
+    padding: 12px 15px;
     border-radius: 8px;
     cursor: pointer;
     font-weight: bold;
     font-size: 16px;
-    transition: background 0.3s;
+    transition: all 0.3s;
     width: 100%;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    text-align: center;
 }
 
-.controls button:hover {
+.right-panel .controls button:hover {
     background-color: #8e44ad;
+    transform: scale(1.05);
 }
 
 /* Paleta de colores */
@@ -166,28 +172,7 @@
             font-weight: bold;
         }
 
-        /* CONTROLES */
-        .controls {
-            margin-top: 20px;
-        }
 
-        .controls button {
-    background-color: #9b59b6;
-    color: white;
-    border: none;
-    padding: 12px 40px; /* Aumentar el padding para hacerlo más largo */
-    border-radius: 8px; /* Bordes más suaves */
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 16px; /* Tamaño de fuente un poco más grande */
-    width: 200px; /* Ancho fijo para hacerlo más largo */
-    transition: background 0.3s, transform 0.2s;
-        }
-
-        .controls button:hover {
-    background-color: #8e44ad;
-    transform: scale(1.05); /* Efecto sutil al pasar el mouse */
-        }
 
         /* MENSAJES */
         #message {
@@ -259,7 +244,8 @@
 
     <script>
 const buttons = document.querySelectorAll('.simon-button');
-const controlBtn = document.getElementById('control-btn'); // Reemplazar startBtn y restartBtn
+const checkBtn = document.getElementById('check-btn');
+const newGameBtn = document.getElementById('new-game-btn');
 const scoreDisplay = document.getElementById('score');
 const highScoreDisplay = document.getElementById('high-score');
 const messageDisplay = document.getElementById('message');
