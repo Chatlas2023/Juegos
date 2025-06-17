@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Juego de Secuencias</title>
     <style>
         body {
@@ -15,27 +15,35 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            /* Evitar pull-to-refresh en móviles */
+            overscroll-behavior-y: contain;
         }
 
         .game-wrapper {
-            display: flex;
-            gap: 20px;
-            width: 100%;
-            max-width: 600px;
+    position: relative;
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 600px;
+    margin-top: 30px;
         }
 
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-        }
+.game-container {
+    width: 100%;
+}
 
-        .color-palette {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-left: 20px;
-        }
+.color-palette {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(52, 73, 94, 0.7);
+    border-radius: 10px;
+    padding: 10px;
+}
 
         .color-option {
             width: 50px;
@@ -200,8 +208,7 @@
             </div>
             
             <div class="game-board" id="game-board">
-                <!-- Las filas se generarán dinámicamente -->
-            </div>
+                </div>
             
             <div class="controls">
                 <button id="check-btn">Comprobar</button>
@@ -210,8 +217,7 @@
         </div>
         
         <div class="color-palette" id="color-palette">
-            <!-- Los colores se generarán dinámicamente -->
-        </div>
+            </div>
     </div>
 
     <script>
@@ -409,6 +415,9 @@
         function handleTouchStartColor(e) {
             if (gameOver) return;
             
+            // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
+            e.preventDefault(); 
+
             const touch = e.touches[0];
             activeTouch = touch.identifier;
             
@@ -430,6 +439,9 @@
         function handleTouchMoveColor(e) {
             if (!draggingClone) return;
             
+            // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
+            e.preventDefault(); 
+
             // Encontrar el touch correcto (puede haber múltiples)
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
@@ -464,6 +476,9 @@
             // Permitir cambiar colores en los slots tocándolos
             if (gameOver || e.target.closest('.guess-row') !== currentRow) return;
             
+            // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
+            e.preventDefault(); 
+
             const slot = e.target;
             if (slot.classList.contains('filled')) {
                 // Eliminar el color existente
@@ -474,7 +489,8 @@
         }
 
         function handleTouchMoveSlot(e) {
-            // No hacer nada durante el movimiento en el slot
+            // No hacer nada durante el movimiento en el slot, ya que el manejo está en handleTouchMoveColor
+            // Opcional: Podrías necesitar un e.preventDefault() aquí si se arrastran colores fuera del slot y quieres evitar el pull-to-refresh en esa acción también.
         }
 
         function handleTouchEndSlot(e) {
@@ -640,7 +656,12 @@
         // Event listeners
         checkBtn.addEventListener('click', checkAttempt);
         newGameBtn.addEventListener('click', initGame);
-        
+                // Prevenir el comportamiento de pull-to-refresh
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches[0].clientY < 50) {
+                e.preventDefault();
+            }
+        }, { passive: false });
         // Iniciar el juego al cargar
         window.addEventListener('DOMContentLoaded', initGame);
     </script>
