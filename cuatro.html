@@ -10,7 +10,8 @@
             background-color: #2c3e50;
             color: white;
             margin: 0;
-            padding: 10px;
+            /* Añadimos un padding superior para crear un espacio seguro */
+            padding: 30px 10px 10px 10px; /* 30px arriba, 10px a los lados y abajo */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -35,6 +36,8 @@
             flex-direction: column;
             gap: 10px;
             margin-left: 20px;
+            /* Añadimos un margin-top a la paleta de colores para bajarla también */
+            margin-top: 30px; /* Ajusta este valor si necesitas más o menos espacio */
         }
 
         .color-option {
@@ -200,8 +203,7 @@
             </div>
             
             <div class="game-board" id="game-board">
-                <!-- Las filas se generarán dinámicamente -->
-            </div>
+                </div>
             
             <div class="controls">
                 <button id="check-btn">Comprobar</button>
@@ -210,8 +212,7 @@
         </div>
         
         <div class="color-palette" id="color-palette">
-            <!-- Los colores se generarán dinámicamente -->
-        </div>
+            </div>
     </div>
 
     <script>
@@ -409,6 +410,9 @@
         function handleTouchStartColor(e) {
             if (gameOver) return;
             
+            // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
+            e.preventDefault(); 
+
             const touch = e.touches[0];
             activeTouch = touch.identifier;
             
@@ -430,6 +434,9 @@
         function handleTouchMoveColor(e) {
             if (!draggingClone) return;
             
+            // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
+            e.preventDefault(); 
+
             // Encontrar el touch correcto (puede haber múltiples)
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
@@ -464,6 +471,9 @@
             // Permitir cambiar colores en los slots tocándolos
             if (gameOver || e.target.closest('.guess-row') !== currentRow) return;
             
+            // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
+            e.preventDefault(); 
+
             const slot = e.target;
             if (slot.classList.contains('filled')) {
                 // Eliminar el color existente
@@ -474,7 +484,8 @@
         }
 
         function handleTouchMoveSlot(e) {
-            // No hacer nada durante el movimiento en el slot
+            // No hacer nada durante el movimiento en el slot, ya que el manejo está en handleTouchMoveColor
+            // Opcional: Podrías necesitar un e.preventDefault() aquí si se arrastran colores fuera del slot y quieres evitar el pull-to-refresh en esa acción también.
         }
 
         function handleTouchEndSlot(e) {
