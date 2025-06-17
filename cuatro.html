@@ -20,60 +20,30 @@
         }
 
         .game-wrapper {
-            position: relative;
-            display: flex;
-            gap: 20px;
-            width: 100%;
-            max-width: 600px;
-            margin-top: 30px;
-            /* Added flex-direction to stack content vertically on smaller screens if needed, 
-               but for desktop, it will arrange side-by-side due to max-width and gap */
+    position: relative;
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 600px;
+    margin-top: 30px;
         }
 
-        .game-container {
-            width: 100%;
-            display: flex; /* Added to arrange children vertically within the container */
-            flex-direction: column; /* Stacks messages, controls, and game board vertically */
-            gap: 15px; /* Added some spacing between sections */
-        }
+.game-container {
+    width: 100%;
+}
 
-        .color-palette {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            position: absolute;
-            right: -80px; /* Adjusted to place it outside the game-container for larger screens */
-            top: 50%;
-            transform: translateY(-50%);
-            background-color: rgba(52, 73, 94, 0.7);
-            border-radius: 10px;
-            padding: 10px;
-            z-index: 2; /* Ensure it stays on top */
-        }
-
-        @media (max-width: 768px) { /* Adjust for smaller screens like tablets and phones */
-            .game-wrapper {
-                flex-direction: column; /* Stack game-container and color-palette vertically */
-                align-items: center;
-                gap: 30px;
-            }
-
-            .color-palette {
-                position: static; /* Remove absolute positioning */
-                transform: none;
-                flex-direction: row; /* Arrange colors horizontally at the top or bottom */
-                flex-wrap: wrap; /* Allow colors to wrap to the next line */
-                justify-content: center;
-                width: auto;
-                margin-top: 20px;
-                order: -1; /* Place palette above game-container on small screens */
-            }
-
-            .game-container {
-                gap: 10px; /* Reduce gap for smaller screens */
-            }
-        }
-
+.color-palette {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(52, 73, 94, 0.7);
+    border-radius: 10px;
+    padding: 10px;
+}
 
         .color-option {
             width: 50px;
@@ -129,7 +99,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-shrink: 0; /* Prevent slots from shrinking */
         }
 
         .guess-slot.filled {
@@ -146,8 +115,6 @@
             gap: 5px;
             margin-left: 10px;
             align-items: center;
-            flex-grow: 1; /* Allow feedback section to take available space */
-            justify-content: flex-end; /* Align feedback dots to the right */
         }
 
         .feedback-dot {
@@ -165,7 +132,7 @@
         }
 
         .controls {
-            margin-top: 10px; /* Reduced margin as it's now part of flex column */
+            margin-top: 20px;
             display: flex;
             justify-content: center;
             gap: 10px;
@@ -188,7 +155,7 @@
         }
 
         .message {
-            margin: 0; /* Removed margin as game-container handles spacing */
+            margin: 15px 0;
             text-align: center;
             min-height: 24px;
             font-weight: bold;
@@ -199,31 +166,25 @@
             display: none;
         }
 
-        .secret-code-container { /* Renamed for clarity */
-            margin: 0; /* Removed margin */
-            text-align: center;
-        }
-
         .secret-code {
             display: flex;
             gap: 10px;
+            margin: 20px 0;
             justify-content: center;
             align-items: center;
-            margin-top: 10px; /* Add some space above the code itself */
         }
 
         .secret-slot {
             width: 40px;
             height: 40px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Added subtle shadow */
         }
 
         .win-message {
             color: #2ecc71;
             font-size: 24px;
             font-weight: bold;
-            margin: 0; /* Removed margin */
+            margin: 20px 0;
             text-align: center;
             animation: pulse 1.5s infinite;
         }
@@ -240,12 +201,6 @@
         <div class="game-container">
             <div class="message" id="message">Arrastra colores a los espacios vacíos</div>
             <div id="win-message" class="win-message hidden">¡Ganaste!</div>
-            
-            <div class="controls">
-                <button id="check-btn">Comprobar</button>
-                <button id="new-game-btn" class="hidden">Nuevo Juego</button>
-            </div>
-
             <div id="secret-code-container" class="hidden">
                 <div class="secret-code">
                     <span>El código era:</span>
@@ -253,11 +208,16 @@
             </div>
             
             <div class="game-board" id="game-board">
+                </div>
+            
+            <div class="controls">
+                <button id="check-btn">Comprobar</button>
+                <button id="new-game-btn" class="hidden">Nuevo Juego</button>
             </div>
         </div>
         
         <div class="color-palette" id="color-palette">
-        </div>
+            </div>
     </div>
 
     <script>
@@ -381,7 +341,7 @@
         function showSecretCode() {
             const secretCodeElement = secretCodeContainer.querySelector('.secret-code');
             // Limpiar slots anteriores
-            while (secretCodeElement.children.length > 1) { // Keep the "El código era:" span
+            while (secretCodeElement.children.length > 1) {
                 secretCodeElement.removeChild(secretCodeElement.lastChild);
             }
             
@@ -641,7 +601,6 @@
                 winMessageEl.classList.remove('hidden');
                 checkBtn.classList.add('hidden');
                 newGameBtn.classList.remove('hidden');
-                showSecretCode();
                 return;
             }
             
@@ -699,23 +658,13 @@
         newGameBtn.addEventListener('click', initGame);
                 // Prevenir el comportamiento de pull-to-refresh
         document.addEventListener('touchmove', function(e) {
-            // Check if the target is within an element that should scroll
-            let targetElement = e.target;
-            while (targetElement) {
-                if (targetElement.scrollHeight > targetElement.clientHeight && 
-                    (window.getComputedStyle(targetElement).overflowY === 'scroll' || 
-                     window.getComputedStyle(targetElement).overflowY === 'auto')) {
-                    // Allow scroll for this element
-                    return;
-                }
-                targetElement = targetElement.parentNode;
+            if (e.touches[0].clientY < 50) {
+                e.preventDefault();
             }
-
-            // If no scrollable parent, prevent default (pull-to-refresh)
-            e.preventDefault();
         }, { passive: false });
         // Iniciar el juego al cargar
         window.addEventListener('DOMContentLoaded', initGame);
     </script>
 </body>
 </html>
+el botón sigue apareciendo abajo, no arriba. revisa
