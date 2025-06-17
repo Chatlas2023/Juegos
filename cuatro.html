@@ -200,6 +200,7 @@
             </div>
             
             <div class="game-board" id="game-board">
+                <!-- Las filas se generarán dinámicamente -->
             </div>
             
             <div class="controls">
@@ -209,6 +210,7 @@
         </div>
         
         <div class="color-palette" id="color-palette">
+            <!-- Los colores se generarán dinámicamente -->
         </div>
     </div>
 
@@ -239,7 +241,6 @@
         let secretCode = [];
         let currentAttempt = 0;
         let currentRow = null;
-        let selectedColor = null;
         let gameOver = false;
         let draggedColor = null;
         let draggingClone = null;
@@ -497,7 +498,7 @@
             });
             
             const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot') {
+            if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
                 // Solo resaltar si es un slot vacío en la fila actual
                 if (!elementUnderTouch.classList.contains('filled') && 
                     elementUnderTouch.closest('.guess-row') === currentRow) {
