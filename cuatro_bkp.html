@@ -125,14 +125,22 @@
 
         .feedback {
             display: flex;
-            gap: 5px;
+            flex-direction: column;
+            gap: 2px;
             margin-left: 10px;
             align-items: center;
+            justify-content: center;
+            width: 30px;
+        }
+
+        .feedback-row {
+            display: flex;
+            gap: 2px;
         }
 
         .feedback-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
         }
 
@@ -142,6 +150,29 @@
 
         .feedback-dot.partial {
             background-color: #f1c40f;
+        }
+
+        .feedback-dot.wrong {
+            position: relative;
+        }
+
+        .feedback-dot.wrong::before,
+        .feedback-dot.wrong::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 1px;
+            background-color: #e74c3c;
+            top: 50%;
+            left: 0;
+        }
+
+        .feedback-dot.wrong::before {
+            transform: rotate(45deg);
+        }
+
+        .feedback-dot.wrong::after {
+            transform: rotate(-45deg);
         }
 
         .controls {
@@ -318,6 +349,16 @@
                 // Crear área de feedback
                 const feedback = document.createElement('div');
                 feedback.className = 'feedback';
+                
+                // Crear las dos filas de feedback
+                const feedbackRow1 = document.createElement('div');
+                feedbackRow1.className = 'feedback-row';
+                feedback.appendChild(feedbackRow1);
+                
+                const feedbackRow2 = document.createElement('div');
+                feedbackRow2.className = 'feedback-row';
+                feedback.appendChild(feedbackRow2);
+                
                 row.appendChild(feedback);
                 
                 gameBoard.appendChild(row);
@@ -662,20 +703,35 @@
             
             // Mostrar feedback
             const feedbackEl = currentRow.querySelector('.feedback');
-            feedbackEl.innerHTML = '';
+            const feedbackRows = feedbackEl.querySelectorAll('.feedback-row');
             
-            // Mostrar puntos exactos primero
+            // Limpiar feedback anterior
+            feedbackRows.forEach(row => row.innerHTML = '');
+            
+            // Mostrar puntos exactos (verde)
             for (let i = 0; i < feedback.exact; i++) {
                 const dot = document.createElement('div');
                 dot.className = 'feedback-dot exact';
-                feedbackEl.appendChild(dot);
+                // Colocar en la primera o segunda fila según corresponda
+                feedbackRows[i < 2 ? 0 : 1].appendChild(dot);
             }
             
-            // Luego puntos parciales
+            // Mostrar puntos parciales (amarillo)
             for (let i = 0; i < feedback.partial; i++) {
                 const dot = document.createElement('div');
                 dot.className = 'feedback-dot partial';
-                feedbackEl.appendChild(dot);
+                // Colocar después de los exactos
+                const totalDots = feedback.exact + feedback.partial;
+                feedbackRows[(feedback.exact + i) < 2 ? 0 : 1].appendChild(dot);
+            }
+            
+            // Mostrar puntos incorrectos (x roja)
+            for (let i = 0; i < feedback.wrong; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'feedback-dot wrong';
+                // Colocar después de los otros
+                const totalDots = feedback.exact + feedback.partial + feedback.wrong;
+                feedbackRows[(feedback.exact + feedback.partial + i) < 2 ? 0 : 1].appendChild(dot);
             }
             
             // Verificar si ganó
@@ -706,7 +762,7 @@
             messageEl.textContent = `Intento ${currentAttempt + 1} de ${MAX_ATTEMPTS}. Arrastra colores.`;
         }
         
-        // Calcular feedback (bien y regular)
+        // Calcular feedback (bien, regular y mal)
         function calculateFeedback(attempt, secret) {
             let exact = 0;
             let partial = 0;
@@ -734,7 +790,10 @@
                 }
             }
             
-            return { exact, partial };
+            // Contar incorrectos (colores que no están en el código secreto)
+            const wrong = attemptCopy.filter(color => color !== null).length;
+            
+            return { exact, partial, wrong };
         }
         
         // Event listeners
