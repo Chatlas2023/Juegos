@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Night Driver Smooth</title>
+    <title>Night Driver First-Person</title>
     <style>
         body {
             margin: 0;
@@ -73,7 +73,7 @@
 <body>
     <div id="ui">
         <div>Tiempo: <span id="time">0</span>s</div>
-        <div>Ver. 1.1    Vidas: <span id="lives">3</span></div>
+        <div>Ver. 1.2    Vidas: <span id="lives">3</span></div>
     </div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
@@ -81,8 +81,8 @@
         <div class="arrow-btn" id="rightBtn">→</div>
     </div>
     <div id="startScreen">
-        <h1>NIGHT DRIVER SMOOTH</h1>
-        <p>Desliza los dedos o usa los botones para esquivar las curvas.</p>
+        <h1>NIGHT DRIVER FIRST-PERSON</h1>
+        <p>Usa los botones para mantenerte en la carretera</p>
         <button id="startButton">START</button>
     </div>
 
@@ -112,48 +112,81 @@
         let roadCurve = 0; // Curva actual de la ruta
         let targetCurve = 0; // Curva objetivo (para interpolación)
         let segments = []; // Segmentos de la ruta
-        const segmentCount = 50; // Más segmentos = mayor fluidez
-        let segmentSpeed = 0.005; // Velocidad reducida
+        const segmentCount = 100; // Más segmentos para mayor fluidez
+        let segmentSpeed = 0.003; // Velocidad reducida
 
         // Inicializar segmentos de la ruta
         function initRoad() {
             segments = [];
             for (let i = 0; i < segmentCount; i++) {
+                // Usamos una función cuadrática para la distancia para mejor perspectiva
+                const distance = (i / segmentCount) ** 2;
                 segments.push({
-                    distance: i / segmentCount, // 0 (cerca) a 1 (lejos)
+                    distance: distance,
                     curve: 0,
-                    width: 0.3 + (i / segmentCount) * 0.7 // Ancho progresivo
+                    width: 0.8 + (1 - distance) * 1.5, // Ancho progresivo (más ancho cerca)
+                    height: 10 + (1 - distance) * 50 // Altura progresiva (más alto cerca)
                 });
             }
         }
 
-        // Dibujar la ruta con efecto de perspectiva
+        // Dibujar la ruta con efecto de perspectiva en primera persona
         function drawRoad() {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            for (let i = 0; i < segments.length; i++) {
+            // Dibujar segmentos de más lejano a más cercano
+            for (let i = segments.length - 1; i >= 0; i--) {
                 const seg = segments[i];
-                const yPos = canvas.height * (1 - seg.distance); // Posición vertical
-                const alpha = 1 - seg.distance * 0.8; // Transparencia (más oscuro al fondo)
-
+                
+                // Posición vertical (usamos una función logarítmica para mejor perspectiva)
+                const yPos = canvas.height * 0.7 * (1 - Math.sqrt(seg.distance));
+                
                 // Calcular desplazamiento horizontal por curva
-                const xOffset = roadCurve * seg.distance * canvas.width * 0.4;
+                const xOffset = roadCurve * (1 - seg.distance) * canvas.width * 0.5;
+                
+                // Tamaño del segmento (mucho más grande cerca)
+                const segmentHeight = seg.height * (1 - seg.distance);
+                
+                // Color (más brillante cerca)
+                const alpha = 0.2 + (1 - seg.distance) * 0.8;
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
 
                 // Dibujar bordes izquierdo y derecho
-                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                const segmentWidth = canvas.width * seg.width * (1 - seg.distance);
+                
                 ctx.fillRect(
-                    canvas.width / 2 - (canvas.width * seg.width) / 2 + xOffset - 15,
+                    canvas.width / 2 - segmentWidth / 2 + xOffset - 20,
                     yPos,
-                    10,
-                    5
+                    15,
+                    segmentHeight
                 );
                 ctx.fillRect(
-                    canvas.width / 2 + (canvas.width * seg.width) / 2 + xOffset + 5,
+                    canvas.width / 2 + segmentWidth / 2 + xOffset + 5,
                     yPos,
-                    10,
-                    5
+                    15,
+                    segmentHeight
                 );
+                
+                // Dibujar líneas de conexión entre segmentos para mejor efecto 3D
+                if (i < segments.length - 1) {
+                    const nextSeg = segments[i + 1];
+                    const nextYPos = canvas.height * 0.7 * (1 - Math.sqrt(nextSeg.distance));
+                    const nextXOffset = roadCurve * (1 - nextSeg.distance) * canvas.width * 0.5;
+                    const nextSegmentWidth = canvas.width * nextSeg.width * (1 - nextSeg.distance);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width / 2 - segmentWidth / 2 + xOffset - 12.5, yPos);
+                    ctx.lineTo(canvas.width / 2 - nextSegmentWidth / 2 + nextXOffset - 12.5, nextYPos);
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.7})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width / 2 + segmentWidth / 2 + xOffset + 12.5, yPos);
+                    ctx.lineTo(canvas.width / 2 + nextSegmentWidth / 2 + nextXOffset + 12.5, nextYPos);
+                    ctx.stroke();
+                }
             }
         }
 
@@ -164,16 +197,18 @@
                 seg.distance -= segmentSpeed;
                 if (seg.distance <= 0) {
                     seg.distance = 1;
-                    seg.curve = Math.random() * 2 - 1; // Nueva curva aleatoria al "reutilizar" el segmento
+                    // Curvas más suaves y progresivas
+                    targetCurve = Math.sin(time * 0.01) * 0.8; // Usamos función seno para curvas naturales
+                    seg.curve = targetCurve;
                 }
             });
 
             // Interpolar la curva para suavizar cambios
-            roadCurve += (targetCurve - roadCurve) * 0.02;
-            targetCurve = segments[0].curve; // La curva objetivo es la del segmento más cercano
+            roadCurve += (targetCurve - roadCurve) * 0.01;
 
             // Detectar colisión (solo en curvas pronunciadas)
-            const collisionThreshold = 0.4;
+            const collisionThreshold = 0.5;
+            const frontSeg = segments[0];
             if (
                 (playerPos === -1 && roadCurve < -collisionThreshold) ||
                 (playerPos === 1 && roadCurve > collisionThreshold)
@@ -184,7 +219,7 @@
             }
 
             // Actualizar tiempo
-            time += segmentSpeed * 20;
+            time += segmentSpeed * 30;
             timeElement.textContent = time.toFixed(1);
         }
 
@@ -193,6 +228,7 @@
             gameRunning = false;
             cancelAnimationFrame(gameLoopId);
             startScreen.style.display = 'flex';
+            startButton.textContent = 'REINICIAR';
         }
 
         // Bucle principal
