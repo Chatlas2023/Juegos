@@ -443,47 +443,48 @@
             e.dataTransfer.dropEffect = 'copy';
         }
         
-        function handleDragEnter(e) {
-            e.preventDefault();
-            if (!e.target.classList.contains('filled')) {
-                e.target.classList.add('highlight');
-            }
-        }
+function handleDragEnter(e) {
+    e.preventDefault();
+    // Solo resaltar si es un slot de la fila actual
+    if (!e.target.classList.contains('filled') && e.target.closest('.guess-row') === currentRow) {
+        e.target.classList.add('highlight');
+    }
+}
         
         function handleDragLeave(e) {
             e.target.classList.remove('highlight');
         }
         
-        function handleDrop(e) {
-            e.preventDefault();
-            e.target.classList.remove('highlight');
-            
-            if (gameOver || !draggedColor) return;
-            
-            // Solo permitir colocar en la fila actual
-            if (e.target.closest('.guess-row') !== currentRow) return;
-            
-            // No hacemos nada si el slot de destino ya está lleno
-            if (e.target.classList.contains('filled')) return;
-            
-            // Limpiar el slot destino primero (si ya hay un color)
-            e.target.className = 'guess-slot';
-            e.target.style.backgroundColor = '';
-            e.target.dataset.color = '';
-            
-            // Llenar con el color arrastrado
-            const color = COLORS.find(c => c.id === draggedColor);
-            if (color) {
-                e.target.style.backgroundColor = color.value;
-                e.target.classList.add('filled');
-                e.target.dataset.color = draggedColor;
-                e.target.draggable = true;
-                
-                // Configurar eventos de arrastre para el nuevo slot lleno
-                e.target.addEventListener('dragstart', handleDragStart);
-                e.target.addEventListener('dragend', handleDragEnd);
-            }
-        }
+function handleDrop(e) {
+    e.preventDefault();
+    e.target.classList.remove('highlight');
+    
+    if (gameOver || !draggedColor) return;
+    
+    // Solo permitir colocar en la fila actual
+    if (e.target.closest('.guess-row') !== currentRow) return;
+    
+    // Permitir reemplazar colores en slots llenos de la fila actual
+    // (quitamos la condición que impedía soltar en slots llenos)
+    
+    // Limpiar el slot destino primero
+    e.target.className = 'guess-slot';
+    e.target.style.backgroundColor = '';
+    e.target.dataset.color = '';
+    
+    // Llenar con el color arrastrado
+    const color = COLORS.find(c => c.id === draggedColor);
+    if (color) {
+        e.target.style.backgroundColor = color.value;
+        e.target.classList.add('filled');
+        e.target.dataset.color = draggedColor;
+        e.target.draggable = true;
+        
+        // Configurar eventos de arrastre para el nuevo slot lleno
+        e.target.addEventListener('dragstart', handleDragStart);
+        e.target.addEventListener('dragend', handleDragEnd);
+    }
+}
 
         // --- Manejo de eventos táctiles ---
 
@@ -622,47 +623,46 @@
             draggingClone.style.top = `${touch.pageY - draggingClone.offsetHeight / 2}px`;
         }
 
-        function highlightSlotUnderTouch(touch) {
-            // Remover highlight de todos los slots primero
-            document.querySelectorAll('.guess-slot').forEach(slot => {
-                slot.classList.remove('highlight');
-            });
-            
-            const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
-            if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
-                // Solo resaltar si es un slot vacío en la fila actual
-                if (!elementUnderTouch.classList.contains('filled') && 
-                    elementUnderTouch.closest('.guess-row') === currentRow) {
-                    elementUnderTouch.classList.add('highlight');
-                }
-            }
+function highlightSlotUnderTouch(touch) {
+    // Remover highlight de todos los slots primero
+    document.querySelectorAll('.guess-slot').forEach(slot => {
+        slot.classList.remove('highlight');
+    });
+    
+    const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
+        // Solo resaltar si es un slot de la fila actual
+        if (elementUnderTouch.closest('.guess-row') === currentRow) {
+            elementUnderTouch.classList.add('highlight');
         }
+    }
+}
 
-        function placeColorInSlot(slot) {
-            if (gameOver || !draggedColor || slot.closest('.guess-row') !== currentRow) return;
-            
-            // No hacemos nada si el slot de destino ya está lleno
-            if (slot.classList.contains('filled')) return;
-            
-            // Limpiar el slot destino primero (si ya hay un color)
-            slot.className = 'guess-slot';
-            slot.style.backgroundColor = '';
-            slot.dataset.color = '';
-            
-            // Llenar con el color arrastrado
-            const color = COLORS.find(c => c.id === draggedColor);
-            if (color) {
-                slot.style.backgroundColor = color.value;
-                slot.classList.add('filled');
-                slot.dataset.color = draggedColor;
-                
-                // Configurar eventos táctiles para el nuevo slot lleno
-                slot.addEventListener('touchstart', handleTouchStartSlot);
-                slot.addEventListener('touchmove', handleTouchMoveSlot);
-                slot.addEventListener('touchend', handleTouchEndSlot);
-                slot.addEventListener('touchcancel', handleTouchCancel);
-            }
-        }
+function placeColorInSlot(slot) {
+    if (gameOver || !draggedColor || slot.closest('.guess-row') !== currentRow) return;
+    
+    // Permitir reemplazar colores en slots llenos de la fila actual
+    // (quitamos la condición que impedía soltar en slots llenos)
+    
+    // Limpiar el slot destino primero
+    slot.className = 'guess-slot';
+    slot.style.backgroundColor = '';
+    slot.dataset.color = '';
+    
+    // Llenar con el color arrastrado
+    const color = COLORS.find(c => c.id === draggedColor);
+    if (color) {
+        slot.style.backgroundColor = color.value;
+        slot.classList.add('filled');
+        slot.dataset.color = draggedColor;
+        
+        // Configurar eventos táctiles para el nuevo slot lleno
+        slot.addEventListener('touchstart', handleTouchStartSlot);
+        slot.addEventListener('touchmove', handleTouchMoveSlot);
+        slot.addEventListener('touchend', handleTouchEndSlot);
+        slot.addEventListener('touchcancel', handleTouchCancel);
+    }
+}
 
         function cleanupAfterTouch() {
             if (draggingClone) {
