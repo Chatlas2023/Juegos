@@ -73,7 +73,7 @@
 <body>
     <div id="ui">
         <div>TIME: <span id="time">0</span>s</div>
-        <div>Ver 1.5 VIDAS: <span id="lives">3</span></div>
+        <div>Ver 1.7 VIDAS: <span id="lives">3</span></div>
     </div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
@@ -98,7 +98,7 @@
 
         // Configuración optimizada
         const ROAD_WIDTH_BASE = 0.6;  // Ancho base de la ruta (cerca)
-        const ROAD_WIDTH_FAR = 0.1;   // Ancho de la ruta lejana (más estrecho para mejor perspectiva)
+        const ROAD_WIDTH_FAR = 0.1;   // Ancho de la ruta lejana
         const VISIBLE_SEGMENTS = 20;  // Segmentos visibles
         const PERSPECTIVE_FACTOR = 0.8;
 
@@ -124,7 +124,8 @@
                     distance: distance,
                     curve: 0,
                     width: width,
-                    height: 10 + (1 - distance) * 50
+                    height: 10 + (1 - distance) * 50,
+                    baseWidth: width // Guardamos el ancho base para reciclaje
                 });
             }
         }
@@ -145,9 +146,9 @@
                 // Desplazamiento horizontal por curva
                 const xOffset = roadCurve * (1 - seg.distance) * canvas.width * 0.4;
                 
-                // Tamaño del segmento con perspectiva más pronunciada
+                // Tamaño del segmento con perspectiva
                 const segmentHeight = seg.height * (1 - seg.distance);
-                const segmentWidth = canvas.width * seg.width * (1 - Math.pow(seg.distance, 1.5));
+                const segmentWidth = canvas.width * seg.baseWidth * (1 - seg.distance);
                 
                 // Color constante sin fade
                 ctx.fillStyle = 'rgba(255, 255, 255, 1)';
@@ -174,7 +175,7 @@
                 if (nextSeg) {
                     const nextYPos = canvas.height * 0.65 * (1 - nextSeg.distance);
                     const nextXOffset = roadCurve * (1 - nextSeg.distance) * canvas.width * 0.4;
-                    const nextWidth = canvas.width * nextSeg.width * (1 - Math.pow(nextSeg.distance, 1.5));
+                    const nextWidth = canvas.width * nextSeg.baseWidth * (1 - nextSeg.distance);
                     
                     const nextLeftPostX = canvas.width / 2 - nextWidth / 2 + nextXOffset - postWidth/2;
                     const nextRightPostX = canvas.width / 2 + nextWidth / 2 + nextXOffset + postWidth/2;
@@ -215,11 +216,12 @@
                 
                 // Reciclar segmentos que salen de vista
                 if (seg.distance <= 0) {
-                    seg.distance += 1;
+                    // Tomamos el último segmento como referencia
+                    const lastSeg = segments[segments.length - 1];
+                    seg.distance = lastSeg.distance + (1/VISIBLE_SEGMENTS);
                     seg.curve = targetCurve;
-                    // Recalcular ancho con perspectiva al reciclar
-                    const perspective = Math.pow(seg.distance, 2);
-                    seg.width = ROAD_WIDTH_FAR + (ROAD_WIDTH_BASE - ROAD_WIDTH_FAR) * (1 - perspective);
+                    // Mantenemos el mismo ancho base que tenía originalmente
+                    seg.baseWidth = ROAD_WIDTH_FAR + (ROAD_WIDTH_BASE - ROAD_WIDTH_FAR) * (1 - Math.pow(seg.distance, 2));
                 }
             });
             
