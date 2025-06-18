@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Night Driver Classic</title>
+    <title>Night Driver Smooth</title>
     <style>
         body {
             margin: 0;
@@ -81,8 +81,8 @@
         <div class="arrow-btn" id="rightBtn">→</div>
     </div>
     <div id="startScreen">
-        <h1>NIGHT DRIVER</h1>
-        <p>Usa ← y → para esquivar los bordes de la ruta.</p>
+        <h1>NIGHT DRIVER SMOOTH</h1>
+        <p>Desliza los dedos o usa los botones para esquivar las curvas.</p>
         <button id="startButton">START</button>
     </div>
 
@@ -108,87 +108,83 @@
         let gameRunning = false;
         let time = 0;
         let lives = 3;
-        let roadSegments = [];
         let playerPos = 0; // -1 (izq), 0 (centro), 1 (der)
-        let roadCurve = 0; // Variación de la curva de la ruta
-        let segmentCount = 20;
-        let gameLoopId;
+        let roadCurve = 0; // Curva actual de la ruta
+        let targetCurve = 0; // Curva objetivo (para interpolación)
+        let segments = []; // Segmentos de la ruta
+        const segmentCount = 50; // Más segmentos = mayor fluidez
+        let segmentSpeed = 0.005; // Velocidad reducida
 
         // Inicializar segmentos de la ruta
         function initRoad() {
-            roadSegments = [];
+            segments = [];
             for (let i = 0; i < segmentCount; i++) {
-                roadSegments.push({
-                    width: 0.3 + (i / segmentCount) * 0.7, // Ancho relativo (más angosto al fondo)
-                    distance: i / segmentCount, // Distancia relativa (0 = cerca, 1 = lejos)
-                    curve: 0 // Curva inicial
+                segments.push({
+                    distance: i / segmentCount, // 0 (cerca) a 1 (lejos)
+                    curve: 0,
+                    width: 0.3 + (i / segmentCount) * 0.7 // Ancho progresivo
                 });
             }
         }
 
-        // Dibujar la ruta y los segmentos
+        // Dibujar la ruta con efecto de perspectiva
         function drawRoad() {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            for (let i = 0; i < roadSegments.length; i++) {
-                const seg = roadSegments[i];
-                const segWidth = canvas.width * seg.width;
-                const segHeight = 10;
-                const yPos = canvas.height * (1 - seg.distance) - 50;
+            for (let i = 0; i < segments.length; i++) {
+                const seg = segments[i];
+                const yPos = canvas.height * (1 - seg.distance); // Posición vertical
+                const alpha = 1 - seg.distance * 0.8; // Transparencia (más oscuro al fondo)
 
-                // Color del segmento (más brillante cerca del jugador)
-                const alpha = 1 - seg.distance * 0.8;
-                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-
-                // Posición horizontal con curva
+                // Calcular desplazamiento horizontal por curva
                 const xOffset = roadCurve * seg.distance * canvas.width * 0.4;
 
                 // Dibujar bordes izquierdo y derecho
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
                 ctx.fillRect(
-                    canvas.width / 2 - segWidth / 2 + xOffset - 20,
+                    canvas.width / 2 - (canvas.width * seg.width) / 2 + xOffset - 15,
                     yPos,
                     10,
-                    segHeight
+                    5
                 );
                 ctx.fillRect(
-                    canvas.width / 2 + segWidth / 2 + xOffset + 10,
+                    canvas.width / 2 + (canvas.width * seg.width) / 2 + xOffset + 5,
                     yPos,
                     10,
-                    segHeight
+                    5
                 );
             }
         }
 
         // Actualizar lógica del juego
         function updateGame() {
-            // Mover segmentos (simular avance)
-            roadSegments.forEach(seg => {
-                seg.distance -= 0.01;
-                if (seg.distance < 0) {
+            // Mover segmentos (avance continuo)
+            segments.forEach(seg => {
+                seg.distance -= segmentSpeed;
+                if (seg.distance <= 0) {
                     seg.distance = 1;
-                    seg.curve = Math.random() * 2 - 1; // Nueva curva aleatoria
+                    seg.curve = Math.random() * 2 - 1; // Nueva curva aleatoria al "reutilizar" el segmento
                 }
             });
 
-            // Aplicar curva gradualmente
-            roadCurve += (roadSegments[0].curve - roadCurve) * 0.05;
+            // Interpolar la curva para suavizar cambios
+            roadCurve += (targetCurve - roadCurve) * 0.02;
+            targetCurve = segments[0].curve; // La curva objetivo es la del segmento más cercano
 
-            // Detectar colisión con los bordes
-            const frontSeg = roadSegments[0];
-            const hitLeft = playerPos === -1 && roadCurve < -0.3;
-            const hitRight = playerPos === 1 && roadCurve > 0.3;
-
-            if (hitLeft || hitRight) {
+            // Detectar colisión (solo en curvas pronunciadas)
+            const collisionThreshold = 0.4;
+            if (
+                (playerPos === -1 && roadCurve < -collisionThreshold) ||
+                (playerPos === 1 && roadCurve > collisionThreshold)
+            ) {
                 lives--;
                 livesElement.textContent = lives;
-                if (lives <= 0) {
-                    gameOver();
-                }
+                if (lives <= 0) gameOver();
             }
 
             // Actualizar tiempo
-            time += 0.1;
+            time += segmentSpeed * 20;
             timeElement.textContent = time.toFixed(1);
         }
 
@@ -200,6 +196,7 @@
         }
 
         // Bucle principal
+        let gameLoopId;
         function runGame() {
             drawRoad();
             updateGame();
