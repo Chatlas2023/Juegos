@@ -120,7 +120,7 @@
                 segments.push({
                     distance: distance,
                     curve: 0,
-                    width: 0.4 + (1 - distance) * 1.2, // Ancho progresivo
+                    width: ROAD_WIDTH, // Ancho constante
                     height: 10 + (1 - distance) * 50  // Altura progresiva
                 });
             }
@@ -143,11 +143,10 @@
                 
                 // Tamaño del segmento (base + ajuste por distancia)
                 const segmentHeight = seg.height * (1 - seg.distance);
-                const segmentWidth = canvas.width * seg.width * (1 - seg.distance);
+                const segmentWidth = canvas.width * seg.width;
                 
-                // Transparencia (más opaco cerca)
-                const alpha = 0.1 + (1 - seg.distance) * 0.9;
-                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                // Color constante sin fade
+                ctx.fillStyle = 'rgba(255, 255, 255, 1)';
                 
                 // Bordes izquierdo/derecho
                 ctx.fillRect(
@@ -168,10 +167,10 @@
                     const nextSeg = segments[i + 1];
                     const nextYPos = canvas.height * 0.65 * (1 - nextSeg.distance);
                     const nextXOffset = roadCurve * (1 - nextSeg.distance) * canvas.width * 0.4;
-                    const nextWidth = canvas.width * nextSeg.width * (1 - nextSeg.distance);
+                    const nextWidth = canvas.width * nextSeg.width;
                     
                     ctx.beginPath();
-                    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.6})`;
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
                     ctx.lineWidth = 1.5;
                     
                     // Línea izquierda
@@ -210,10 +209,6 @@
                     
                     // Mantener continuidad en la curva
                     seg.curve = targetCurve;
-                    
-                    // Ajustar posición para evitar saltos
-                    const lastSeg = segments[segments.length - 1];
-                    seg.width = lastSeg.width * 0.98; // Estrechamiento progresivo
                 }
             });
             
