@@ -1,104 +1,277 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Night Driver Mobile</title>
-  <style>
-    body {
-      margin: 0;
-      background: black;
-      overflow: hidden;
-      font-family: sans-serif;
-    }
-
-    canvas {
-      display: block;
-      touch-action: none;
-    }
-
-    #score {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      color: white;
-      font-size: 1.5em;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Night Driver - Accurate Emulation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            touch-action: none;
+            font-family: 'Courier New', monospace;
+            color: white;
+        }
+        #gameCanvas {
+            display: block;
+            background: #000;
+        }
+        #ui {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 20px;
+        }
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+        }
+        .arrow-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            font-size: 30px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        #startButton {
+            padding: 15px 30px;
+            background: #FF0;
+            color: #000;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-  <div id="score">Score: 0</div>
-  <canvas id="game"></canvas>
-  <script>
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
+    <div id="ui">
+        <div>TIME: <span id="time">0</span>s</div>
+        <div>LIVES: <span id="lives">3</span></div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="controls">
+        <div class="arrow-btn" id="leftBtn">←</div>
+        <div class="arrow-btn" id="rightBtn">→</div>
+    </div>
+    <div id="startScreen">
+        <h1>NIGHT DRIVER</h1>
+        <p>Use arrows to stay on the road</p>
+        <button id="startButton">START</button>
+    </div>
 
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    canvas.width = width;
-    canvas.height = height;
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const timeElement = document.getElementById('time');
+        const livesElement = document.getElementById('lives');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const startScreen = document.getElementById('startScreen');
+        const startButton = document.getElementById('startButton');
 
-    let carX = width / 2;
-    const carY = height - 100;
-    const carWidth = 40;
-    const carHeight = 70;
+        // Configuración basada en el código original
+        const ROAD_WIDTH = 0.4;  // % del ancho de pantalla (como en ZLOW=2)
+        const SEGMENT_HEIGHT = 10; // px (similar a PICTR en el original)
+        const PERSPECTIVE_FACTOR = 0.8; // Ajuste de perspectiva (como en ORVH)
 
-    let obstacles = [];
-    let score = 0;
-    let lastObstacleTime = 0;
+        // Variables del juego (basadas en direcciones de memoria originales)
+        let gameRunning = false;
+        let time = 0;
+        let lives = 3;
+        let playerPos = 0; // -1 (izq), 0 (centro), 1 (der) - como STEER
+        let roadCurve = 0; // Curva actual (como CRVL/CRVH)
+        let targetCurve = 0; // Curva objetivo (interpolación)
+        let segments = []; // Segmentos de la ruta (como ZCNTRL/ZXAX/ZYAX)
+        const segmentCount = 50; // Similar a TRMAX
+        let segmentSpeed = 0.003; // Velocidad (como VELL/VELH)
 
-    function drawCar(x) {
-      ctx.fillStyle = "white";
-      ctx.fillRect(x - carWidth / 2, carY, carWidth, carHeight);
-    }
-
-    function drawObstacle(ob) {
-      ctx.fillStyle = "red";
-      ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
-    }
-
-    function createObstacle() {
-      const x = Math.random() * (width - 60);
-      obstacles.push({ x: x, y: -60, w: 60, h: 20 });
-    }
-
-    function update() {
-      ctx.clearRect(0, 0, width, height);
-
-      drawCar(carX);
-
-      const now = Date.now();
-      if (now - lastObstacleTime > 1000) {
-        createObstacle();
-        lastObstacleTime = now;
-        score++;
-        document.getElementById("score").innerText = "Score: " + score;
-      }
-
-      for (let i = 0; i < obstacles.length; i++) {
-        const ob = obstacles[i];
-        ob.y += 5;
-        drawObstacle(ob);
-
-        if (
-          ob.y + ob.h > carY &&
-          ob.y < carY + carHeight &&
-          ob.x < carX + carWidth / 2 &&
-          ob.x + ob.w > carX - carWidth / 2
-        ) {
-          alert("Game Over! Final Score: " + score);
-          document.location.reload();
+        // Inicializar segmentos (como en INTZRO)
+        function initRoad() {
+            segments = [];
+            for (let i = 0; i < segmentCount; i++) {
+                const distance = (i / segmentCount) ** 1.5; // No lineal como en el original
+                segments.push({
+                    distance: distance,
+                    curve: 0,
+                    width: 0.5 + (1 - distance) * 2, // Ancho progresivo (como en ZXAX)
+                    height: 15 + (1 - distance) * 60 // Altura (como ZYAX)
+                });
+            }
         }
-      }
 
-      requestAnimationFrame(update);
-    }
+        // Dibujar ruta con perspectiva (como en el renderizado original)
+        function drawRoad() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    canvas.addEventListener("touchmove", (e) => {
-      carX = e.touches[0].clientX;
-    });
+            // Dibujar de lejano a cercano (como en el orden de render original)
+            for (let i = segments.length - 1; i >= 0; i--) {
+                const seg = segments[i];
+                
+                // Posición vertical (similar a PYA)
+                const yPos = canvas.height * 0.7 * (1 - Math.sqrt(seg.distance));
+                
+                // Desplazamiento horizontal por curva (como STC)
+                const xOffset = roadCurve * (1 - seg.distance) * canvas.width * 0.5;
+                
+                // Tamaño del segmento (basado en distancia)
+                const segmentHeight = seg.height * (1 - seg.distance);
+                const segmentWidth = canvas.width * seg.width * (1 - seg.distance);
+                
+                // Efecto de parpadeo (como los LEDs originales)
+                const flicker = Math.random() > 0.9 ? 0.8 : 1.0;
+                const alpha = (0.2 + (1 - seg.distance) * 0.8) * flicker;
+                
+                // Bordes izquierdo/derecho (como en XAXIS/YAXIS original)
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                
+                // Borde izquierdo (ajustado como en el código original)
+                ctx.fillRect(
+                    canvas.width / 2 - segmentWidth / 2 + xOffset - 15,
+                    yPos,
+                    12, // Ancho fijo como en el arcade
+                    segmentHeight
+                );
+                
+                // Borde derecho
+                ctx.fillRect(
+                    canvas.width / 2 + segmentWidth / 2 + xOffset + 3,
+                    yPos,
+                    12,
+                    segmentHeight
+                );
+                
+                // Líneas de conexión (para efecto 3D)
+                if (i < segments.length - 1) {
+                    const nextSeg = segments[i + 1];
+                    const nextYPos = canvas.height * 0.7 * (1 - Math.sqrt(nextSeg.distance));
+                    const nextXOffset = roadCurve * (1 - nextSeg.distance) * canvas.width * 0.5;
+                    const nextSegmentWidth = canvas.width * nextSeg.width * (1 - nextSeg.distance);
+                    
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
+                    ctx.lineWidth = 2;
+                    
+                    // Línea izquierda
+                    ctx.moveTo(canvas.width / 2 - segmentWidth / 2 + xOffset - 9, yPos);
+                    ctx.lineTo(canvas.width / 2 - nextSegmentWidth / 2 + nextXOffset - 9, nextYPos);
+                    ctx.stroke();
+                    
+                    // Línea derecha
+                    ctx.moveTo(canvas.width / 2 + segmentWidth / 2 + xOffset + 9, yPos);
+                    ctx.lineTo(canvas.width / 2 + nextSegmentWidth / 2 + nextXOffset + 9, nextYPos);
+                    ctx.stroke();
+                }
+            }
+        }
 
-    update();
-  </script>
+        // Actualizar juego (como el bucle principal original)
+        function updateGame() {
+            // Mover segmentos (como en MO:)
+            segments.forEach(seg => {
+                seg.distance -= segmentSpeed;
+                if (seg.distance <= 0) {
+                    seg.distance = 1;
+                    // Nueva curva aleatoria (como en TRKADL/TRKADH)
+                    seg.curve = Math.sin(time * 0.01) * 0.8; // Curvas suaves
+                    targetCurve = seg.curve;
+                }
+            });
+
+            // Interpolar curva (similar a STC+CRV)
+            roadCurve += (targetCurve - roadCurve) * 0.02;
+
+            // Detectar colisión (como en CRLOK/CRROK)
+            const collisionThreshold = 0.5;
+            if (
+                (playerPos === -1 && roadCurve < -collisionThreshold) ||
+                (playerPos === 1 && roadCurve > collisionThreshold)
+            ) {
+                lives--;
+                livesElement.textContent = lives;
+                if (lives <= 0) gameOver();
+            }
+
+            // Actualizar tiempo (como en FRMCL/FRMCH)
+            time += segmentSpeed * 30;
+            timeElement.textContent = time.toFixed(1);
+        }
+
+        // Game Over (como en GO:)
+        function gameOver() {
+            gameRunning = false;
+            cancelAnimationFrame(gameLoopId);
+            startScreen.style.display = 'flex';
+            startButton.textContent = 'RESTART';
+        }
+
+        // Bucle principal (como en MAIN:)
+        let gameLoopId;
+        function runGame() {
+            drawRoad();
+            updateGame();
+            gameLoopId = requestAnimationFrame(runGame);
+        }
+
+        // Controles (como en STRNG)
+        leftBtn.addEventListener('touchstart', () => playerPos = -1);
+        leftBtn.addEventListener('touchend', () => playerPos = 0);
+        rightBtn.addEventListener('touchstart', () => playerPos = 1);
+        rightBtn.addEventListener('touchend', () => playerPos = 0);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') playerPos = -1;
+            if (e.key === 'ArrowRight') playerPos = 1;
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') playerPos = 0;
+        });
+
+        // Iniciar juego (como en GAME:)
+        startButton.addEventListener('click', () => {
+            initRoad();
+            time = 0;
+            lives = 3;
+            livesElement.textContent = lives;
+            startScreen.style.display = 'none';
+            gameRunning = true;
+            runGame();
+        });
+
+        // Ajustar canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+    </script>
 </body>
 </html>
