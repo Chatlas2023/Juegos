@@ -166,7 +166,7 @@
     </style>
 </head>
 <body>
-    <div class="version">v1.1</div>
+    <div class="version">v1.2</div>
     <h1>Snake Móvil</h1>
     <div id="score">Puntuación: 0</div>
     <div id="high-score">Máxima puntuación: 0</div>
@@ -188,7 +188,7 @@
     </div>
 
     <script>
-        // Configuración del juego - v1.1
+        // Configuración del juego - v1.2
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d');
         const gameOverDiv = document.getElementById('game-over');
@@ -226,7 +226,8 @@
         let nextDirection = {x: 1, y: 0};
         let food = generateFood();
         let score = 0;
-        let gameSpeed = 150;
+        let originalSpeed = 150; // Velocidad original de referencia
+        let gameSpeed = originalSpeed; // Velocidad actual del juego
         let gameInterval;
         let gameRunning = true;
         
@@ -301,12 +302,12 @@
                 scoreDisplay.textContent = `Puntuación: ${score}`;
                 food = generateFood();
                 
-                // Aumentar velocidad cada 5 puntos
-                if (score % 5 === 0 && gameSpeed > 70) {
-                    gameSpeed -= 10;
-                    clearInterval(gameInterval);
-                    gameInterval = setInterval(gameLoop, gameSpeed);
-                }
+                // Calcular nueva velocidad basada en la longitud de la serpiente
+                const lengthFactor = snake.length * 0.1; // 10% por segmento
+                gameSpeed = Math.max(originalSpeed * (1 - lengthFactor), 70); // No menos de 70ms
+                
+                clearInterval(gameInterval);
+                gameInterval = setInterval(gameLoop, gameSpeed);
             } else {
                 snake.pop();
             }
@@ -361,7 +362,7 @@
             food = generateFood();
             score = 0;
             scoreDisplay.textContent = `Puntuación: ${score}`;
-            gameSpeed = 150;
+            gameSpeed = originalSpeed; // Resetear a velocidad original
             gameOverDiv.style.display = 'none';
             gameRunning = true;
             
