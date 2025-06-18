@@ -73,7 +73,7 @@
 <body>
     <div id="ui">
         <div>TIME: <span id="time">0</span>s</div>
-        <div>Ver 1.2 VIDAS: <span id="lives">3</span></div>
+        <div>Ver 1.5 VIDAS: <span id="lives">3</span></div>
     </div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
@@ -98,9 +98,9 @@
 
         // Configuración optimizada
         const ROAD_WIDTH_BASE = 0.6;  // Ancho base de la ruta (cerca)
-        const ROAD_WIDTH_FAR = 0.2;   // Ancho de la ruta lejana
+        const ROAD_WIDTH_FAR = 0.1;   // Ancho de la ruta lejana (más estrecho para mejor perspectiva)
         const VISIBLE_SEGMENTS = 20;  // Segmentos visibles
-        const PERSPECTIVE_FACTOR = 0.7;
+        const PERSPECTIVE_FACTOR = 0.8;
 
         // Variables del juego
         let gameRunning = false;
@@ -117,18 +117,19 @@
             segments = [];
             for (let i = 0; i < VISIBLE_SEGMENTS; i++) {
                 const distance = i / VISIBLE_SEGMENTS;
-                // Interpolación lineal del ancho según distancia
-                const width = ROAD_WIDTH_FAR + (ROAD_WIDTH_BASE - ROAD_WIDTH_FAR) * (1 - distance);
+                // Interpolación no lineal para mejor perspectiva
+                const perspective = Math.pow(distance, 2);
+                const width = ROAD_WIDTH_FAR + (ROAD_WIDTH_BASE - ROAD_WIDTH_FAR) * (1 - perspective);
                 segments.push({
                     distance: distance,
                     curve: 0,
-                    width: width,  // Ancho varía con la distancia
-                    height: 10 + (1 - distance) * 50  // Altura progresiva
+                    width: width,
+                    height: 10 + (1 - distance) * 50
                 });
             }
         }
 
-        // Dibujar ruta continua
+        // Dibujar ruta continua con mejor perspectiva
         function drawRoad() {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -136,6 +137,7 @@
             // Dibujar de lejano a cercano
             for (let i = segments.length - 1; i >= 0; i--) {
                 const seg = segments[i];
+                const nextSeg = i < segments.length - 1 ? segments[i + 1] : null;
                 
                 // Posición vertical (efecto de profundidad)
                 const yPos = canvas.height * 0.65 * (1 - seg.distance);
@@ -143,55 +145,61 @@
                 // Desplazamiento horizontal por curva
                 const xOffset = roadCurve * (1 - seg.distance) * canvas.width * 0.4;
                 
-                // Tamaño del segmento (perspectiva)
+                // Tamaño del segmento con perspectiva más pronunciada
                 const segmentHeight = seg.height * (1 - seg.distance);
-                const segmentWidth = canvas.width * seg.width * (1 - seg.distance * 0.3); // Perspectiva suave
+                const segmentWidth = canvas.width * seg.width * (1 - Math.pow(seg.distance, 1.5));
                 
                 // Color constante sin fade
                 ctx.fillStyle = 'rgba(255, 255, 255, 1)';
                 
-                // Bordes izquierdo/derecho
+                // Bordes izquierdo/derecho con perspectiva mejorada
+                const postWidth = 10;
+                const leftPostX = canvas.width / 2 - segmentWidth / 2 + xOffset - postWidth/2;
+                const rightPostX = canvas.width / 2 + segmentWidth / 2 + xOffset + postWidth/2;
+                
                 ctx.fillRect(
-                    canvas.width / 2 - segmentWidth / 2 + xOffset - 12,
+                    leftPostX,
                     yPos,
-                    10,
+                    postWidth,
                     segmentHeight
                 );
                 ctx.fillRect(
-                    canvas.width / 2 + segmentWidth / 2 + xOffset + 2,
+                    rightPostX,
                     yPos,
-                    10,
+                    postWidth,
                     segmentHeight
                 );
 
-                // Conectar segmentos
-                if (i < segments.length - 1) {
-                    const nextSeg = segments[i + 1];
+                // Conectar segmentos con líneas convergentes
+                if (nextSeg) {
                     const nextYPos = canvas.height * 0.65 * (1 - nextSeg.distance);
                     const nextXOffset = roadCurve * (1 - nextSeg.distance) * canvas.width * 0.4;
-                    const nextWidth = canvas.width * nextSeg.width * (1 - nextSeg.distance * 0.3);
+                    const nextWidth = canvas.width * nextSeg.width * (1 - Math.pow(nextSeg.distance, 1.5));
+                    
+                    const nextLeftPostX = canvas.width / 2 - nextWidth / 2 + nextXOffset - postWidth/2;
+                    const nextRightPostX = canvas.width / 2 + nextWidth / 2 + nextXOffset + postWidth/2;
                     
                     ctx.beginPath();
                     ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
                     ctx.lineWidth = 1.5;
                     
-                    // Línea izquierda
+                    // Línea izquierda convergente
                     ctx.moveTo(
-                        canvas.width / 2 - segmentWidth / 2 + xOffset - 7,
+                        leftPostX + postWidth/2,
                         yPos + segmentHeight / 2
                     );
                     ctx.lineTo(
-                        canvas.width / 2 - nextWidth / 2 + nextXOffset - 7,
+                        nextLeftPostX + postWidth/2,
                         nextYPos + nextSeg.height * (1 - nextSeg.distance) / 2
                     );
                     
-                    // Línea derecha
+                    // Línea derecha convergente
                     ctx.moveTo(
-                        canvas.width / 2 + segmentWidth / 2 + xOffset + 7,
+                        rightPostX + postWidth/2,
                         yPos + segmentHeight / 2
                     );
                     ctx.lineTo(
-                        canvas.width / 2 + nextWidth / 2 + nextXOffset + 7,
+                        nextRightPostX + postWidth/2,
                         nextYPos + nextSeg.height * (1 - nextSeg.distance) / 2
                     );
                     ctx.stroke();
@@ -207,10 +215,11 @@
                 
                 // Reciclar segmentos que salen de vista
                 if (seg.distance <= 0) {
-                    seg.distance += 1; // Reiniciar suavemente
+                    seg.distance += 1;
                     seg.curve = targetCurve;
-                    // Mantener la relación de ancho original al reciclar
-                    seg.width = ROAD_WIDTH_FAR + (ROAD_WIDTH_BASE - ROAD_WIDTH_FAR) * (1 - seg.distance);
+                    // Recalcular ancho con perspectiva al reciclar
+                    const perspective = Math.pow(seg.distance, 2);
+                    seg.width = ROAD_WIDTH_FAR + (ROAD_WIDTH_BASE - ROAD_WIDTH_FAR) * (1 - perspective);
                 }
             });
             
