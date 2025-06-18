@@ -106,10 +106,16 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            cursor: pointer;
         }
 
         .guess-slot.filled {
             border: none;
+            cursor: grab;
+        }
+
+        .guess-slot.filled:active {
+            cursor: grabbing;
         }
 
         .guess-slot.highlight {
@@ -259,6 +265,7 @@
         let currentRow = null;
         let gameOver = false;
         let draggedColor = null;
+        let draggedElement = null; // Puede ser un color de la paleta o un slot lleno
         let draggingClone = null;
         let activeTouch = null;
 
@@ -370,15 +377,24 @@
         // --- Manejo de eventos para PC ---
         
         function handleDragStart(e) {
-            draggedColor = e.target.dataset.color;
+            // Determinar si estamos arrastrando desde la paleta o desde un slot
+            if (e.target.classList.contains('color-option')) {
+                draggedColor = e.target.dataset.color;
+                draggedElement = e.target;
+            } else if (e.target.classList.contains('filled')) {
+                draggedColor = e.target.dataset.color;
+                draggedElement = e.target;
+            }
+            
             e.target.classList.add('dragging');
-            e.dataTransfer.setData('text/plain', e.target.dataset.color);
+            e.dataTransfer.setData('text/plain', draggedColor);
             e.dataTransfer.effectAllowed = 'copy';
         }
         
         function handleDragEnd(e) {
             e.target.classList.remove('dragging');
             draggedColor = null;
+            draggedElement = null;
         }
         
         function handleDragOver(e) {
@@ -406,7 +422,10 @@
             // Solo permitir colocar en la fila actual
             if (e.target.closest('.guess-row') !== currentRow) return;
             
-            // Limpiar el slot primero (si ya hay un color)
+            // No hacemos nada si el slot de destino ya está lleno
+            if (e.target.classList.contains('filled')) return;
+            
+            // Limpiar el slot destino primero (si ya hay un color)
             e.target.className = 'guess-slot';
             e.target.style.backgroundColor = '';
             e.target.dataset.color = '';
@@ -417,6 +436,11 @@
                 e.target.style.backgroundColor = color.value;
                 e.target.classList.add('filled');
                 e.target.dataset.color = draggedColor;
+                e.target.draggable = true;
+                
+                // Configurar eventos de arrastre para el nuevo slot lleno
+                e.target.addEventListener('dragstart', handleDragStart);
+                e.target.addEventListener('dragend', handleDragEnd);
             }
         }
 
@@ -431,22 +455,68 @@
             const touch = e.touches[0];
             activeTouch = touch.identifier;
             
-            const touchedColorElement = e.target;
-            draggedColor = touchedColorElement.dataset.color;
+            draggedElement = e.target;
+            draggedColor = draggedElement.dataset.color;
             
             // Crear un clon visual para arrastrar
-            draggingClone = touchedColorElement.cloneNode(true);
+            draggingClone = draggedElement.cloneNode(true);
             draggingClone.classList.add('color-option-clone');
-            draggingClone.style.backgroundColor = touchedColorElement.style.backgroundColor;
+            draggingClone.style.backgroundColor = draggedElement.style.backgroundColor;
             document.body.appendChild(draggingClone);
             
             // Posicionar el clon
             updateClonePosition(touch);
             
-            touchedColorElement.classList.add('dragging');
+            draggedElement.classList.add('dragging');
+        }
+
+        function handleTouchStartSlot(e) {
+            if (gameOver) return;
+            
+            const slot = e.target;
+            
+            // Si el slot está lleno, iniciar arrastre desde él
+            if (slot.classList.contains('filled')) {
+                // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
+                e.preventDefault(); 
+
+                const touch = e.touches[0];
+                activeTouch = touch.identifier;
+                
+                draggedElement = slot;
+                draggedColor = slot.dataset.color;
+                
+                // Crear un clon visual para arrastrar
+                draggingClone = document.createElement('div');
+                draggingClone.className = 'color-option-clone';
+                draggingClone.style.backgroundColor = slot.style.backgroundColor;
+                document.body.appendChild(draggingClone);
+                
+                // Posicionar el clon
+                updateClonePosition(touch);
+                
+                slot.classList.add('dragging');
+            }
         }
 
         function handleTouchMoveColor(e) {
+            if (!draggingClone) return;
+            
+            // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
+            e.preventDefault(); 
+
+            // Encontrar el touch correcto (puede haber múltiples)
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === activeTouch) {
+                    updateClonePosition(touch);
+                    highlightSlotUnderTouch(touch);
+                    break;
+                }
+            }
+        }
+
+        function handleTouchMoveSlot(e) {
             if (!draggingClone) return;
             
             // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
@@ -482,28 +552,23 @@
             }
         }
 
-        function handleTouchStartSlot(e) {
-            // Permitir cambiar colores en los slots tocándolos
-            if (gameOver || e.target.closest('.guess-row') !== currentRow) return;
-            
-            // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
-            e.preventDefault(); 
-
-            const slot = e.target;
-            if (slot.classList.contains('filled')) {
-                // Eliminar el color existente
-                slot.className = 'guess-slot';
-                slot.style.backgroundColor = '';
-                slot.dataset.color = '';
-            }
-        }
-
-        function handleTouchMoveSlot(e) {
-            // No hacer nada durante el movimiento en el slot, ya que el manejo está en handleTouchMoveColor
-        }
-
         function handleTouchEndSlot(e) {
-            // No hacer nada al soltar en el slot (el manejo está en handleTouchEndColor)
+            if (!draggingClone) return;
+            
+            // Encontrar el touch correcto
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === activeTouch) {
+                    // Verificar si se soltó sobre un slot
+                    const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+                    if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
+                        placeColorInSlot(elementUnderTouch);
+                    }
+                    
+                    cleanupAfterTouch();
+                    break;
+                }
+            }
         }
 
         function handleTouchCancel(e) {
@@ -535,7 +600,10 @@
         function placeColorInSlot(slot) {
             if (gameOver || !draggedColor || slot.closest('.guess-row') !== currentRow) return;
             
-            // Limpiar el slot primero (si ya hay un color)
+            // No hacemos nada si el slot de destino ya está lleno
+            if (slot.classList.contains('filled')) return;
+            
+            // Limpiar el slot destino primero (si ya hay un color)
             slot.className = 'guess-slot';
             slot.style.backgroundColor = '';
             slot.dataset.color = '';
@@ -546,6 +614,12 @@
                 slot.style.backgroundColor = color.value;
                 slot.classList.add('filled');
                 slot.dataset.color = draggedColor;
+                
+                // Configurar eventos táctiles para el nuevo slot lleno
+                slot.addEventListener('touchstart', handleTouchStartSlot);
+                slot.addEventListener('touchmove', handleTouchMoveSlot);
+                slot.addEventListener('touchend', handleTouchEndSlot);
+                slot.addEventListener('touchcancel', handleTouchCancel);
             }
         }
 
@@ -560,12 +634,13 @@
                 slot.classList.remove('highlight');
             });
             
-            // Remover clase dragging de todos los colores
-            document.querySelectorAll('.color-option.dragging').forEach(el => {
+            // Remover clase dragging de todos los elementos
+            document.querySelectorAll('.dragging').forEach(el => {
                 el.classList.remove('dragging');
             });
             
             draggedColor = null;
+            draggedElement = null;
             activeTouch = null;
         }
 
