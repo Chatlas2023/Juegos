@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Snake Móvil v1.3</title>
+    <title>Snake Móvil v1.4</title>
     <style>
         body {
             margin: 0;
@@ -304,7 +304,7 @@
                 
                 // Calcular nueva velocidad basada en la longitud de la serpiente
                 const lengthFactor = snake.length * 0.1; // 10% por segmento
-                gameSpeed = Math.max(originalSpeed * (1 - lengthFactor), 70); // No menos de 70ms
+                gameSpeed = Math.max(originalSpeed * (1 + lengthFactor), 300); // No menos de 70ms
                 
                 clearInterval(gameInterval);
                 gameInterval = setInterval(gameLoop, gameSpeed);
