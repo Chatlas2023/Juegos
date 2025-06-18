@@ -73,7 +73,7 @@
 <body>
     <div id="ui">
         <div>TIME: <span id="time">0</span>s</div>
-        <div>Ver 1.3 VIDAS: <span id="lives">3</span></div>
+        <div>Ver 1.2 VIDAS: <span id="lives">3</span></div>
     </div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
@@ -97,9 +97,10 @@
         const startButton = document.getElementById('startButton');
 
         // Configuración optimizada
-        const ROAD_WIDTH = 0.5;  // Ancho base de la ruta
-        const VISIBLE_SEGMENTS = 20; // Solo 20 segmentos visibles
-        const PERSPECTIVE_FACTOR = 0.7; // Ajuste de perspectiva
+        const ROAD_WIDTH_BASE = 0.6;  // Ancho base de la ruta (cerca)
+        const ROAD_WIDTH_FAR = 0.2;   // Ancho de la ruta lejana
+        const VISIBLE_SEGMENTS = 20;  // Segmentos visibles
+        const PERSPECTIVE_FACTOR = 0.7;
 
         // Variables del juego
         let gameRunning = false;
@@ -115,12 +116,13 @@
         function initRoad() {
             segments = [];
             for (let i = 0; i < VISIBLE_SEGMENTS; i++) {
-                // Distribución no lineal para mejor perspectiva
                 const distance = i / VISIBLE_SEGMENTS;
+                // Interpolación lineal del ancho según distancia
+                const width = ROAD_WIDTH_FAR + (ROAD_WIDTH_BASE - ROAD_WIDTH_FAR) * (1 - distance);
                 segments.push({
                     distance: distance,
                     curve: 0,
-                    width: ROAD_WIDTH, // Ancho constante
+                    width: width,  // Ancho varía con la distancia
                     height: 10 + (1 - distance) * 50  // Altura progresiva
                 });
             }
@@ -141,9 +143,9 @@
                 // Desplazamiento horizontal por curva
                 const xOffset = roadCurve * (1 - seg.distance) * canvas.width * 0.4;
                 
-                // Tamaño del segmento (base + ajuste por distancia)
+                // Tamaño del segmento (perspectiva)
                 const segmentHeight = seg.height * (1 - seg.distance);
-                const segmentWidth = canvas.width * seg.width;
+                const segmentWidth = canvas.width * seg.width * (1 - seg.distance * 0.3); // Perspectiva suave
                 
                 // Color constante sin fade
                 ctx.fillStyle = 'rgba(255, 255, 255, 1)';
@@ -162,12 +164,12 @@
                     segmentHeight
                 );
 
-                // Conectar segmentos (para fluidez)
+                // Conectar segmentos
                 if (i < segments.length - 1) {
                     const nextSeg = segments[i + 1];
                     const nextYPos = canvas.height * 0.65 * (1 - nextSeg.distance);
                     const nextXOffset = roadCurve * (1 - nextSeg.distance) * canvas.width * 0.4;
-                    const nextWidth = canvas.width * nextSeg.width;
+                    const nextWidth = canvas.width * nextSeg.width * (1 - nextSeg.distance * 0.3);
                     
                     ctx.beginPath();
                     ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
@@ -206,13 +208,13 @@
                 // Reciclar segmentos que salen de vista
                 if (seg.distance <= 0) {
                     seg.distance += 1; // Reiniciar suavemente
-                    
-                    // Mantener continuidad en la curva
                     seg.curve = targetCurve;
+                    // Mantener la relación de ancho original al reciclar
+                    seg.width = ROAD_WIDTH_FAR + (ROAD_WIDTH_BASE - ROAD_WIDTH_FAR) * (1 - seg.distance);
                 }
             });
             
-            // Ordenar por distancia (para reciclaje correcto)
+            // Ordenar por distancia
             segments.sort((a, b) => a.distance - b.distance);
             
             // Generar nueva curva suave
