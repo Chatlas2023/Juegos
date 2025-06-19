@@ -73,7 +73,7 @@
 <body>
     <div id="ui">
         <div>TIEMPO: <span id="time">0</span>s</div>
-        <div>Ver 1.10 VIDAS: <span id="lives">3</span></div>
+        <div>Ver 2.0 VIDAS: <span id="lives">3</span></div>
     </div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
@@ -97,12 +97,11 @@
         const startButton = document.getElementById('startButton');
 
         // Configuración optimizada
-        const ROAD_WIDTH_BASE = 0.6;  // Ancho base de la ruta (cerca)
-        const ROAD_WIDTH_FAR = 0.1;   // Ancho de la ruta lejana
-        const VISIBLE_SEGMENTS = 20;  // Segmentos visibles
-        const PERSPECTIVE_FACTOR = 0.8;
-        const POST_COUNT = 7; // Número de postes a cada lado
-        const POST_SPACING = 1/7; // Espacio uniforme entre postes
+        const ROAD_WIDTH_NEAR = 0.6;  // Ancho de la ruta cerca
+        const ROAD_WIDTH_FAR = 0.1;   // Ancho de la ruta lejos
+        const POST_COUNT = 7;         // Número de postes a cada lado
+        const POST_SPACING = 1/7;     // Espacio uniforme entre postes
+        const BASE_SPEED = 0.004;     // Velocidad base del juego
 
         // Variables del juego
         let gameRunning = false;
@@ -112,9 +111,9 @@
         let roadCurve = 0;
         let targetCurve = 0;
         let segments = [];
-        let segmentSpeed = 0.004;
+        let segmentSpeed = BASE_SPEED;
 
-        // Inicializar ruta continua con perspectiva consistente
+        // Inicializar ruta con perspectiva correcta
         function initRoad() {
             segments = [];
             
@@ -128,22 +127,25 @@
             segments.sort((a, b) => a.distance - b.distance);
         }
 
-        // Función para crear un segmento con propiedades consistentes
+        // Función para crear un segmento con perspectiva correcta
         function createSegment(distance) {
-            const perspective = Math.pow(distance, 2);
-            const width = ROAD_WIDTH_FAR + (ROAD_WIDTH_BASE - ROAD_WIDTH_FAR) * (1 - perspective);
+            // La perspectiva ahora es inversa: 1 para cerca, 0 para lejos
+            const perspective = 1 - Math.pow(1 - distance, 2);
+            
+            // La carretera es más ancha cuanto más cerca está
+            const width = ROAD_WIDTH_FAR + (ROAD_WIDTH_NEAR - ROAD_WIDTH_FAR) * perspective;
             
             return {
                 distance: distance,
                 curve: 0,
                 width: width,
-                height: 10 + (1 - distance) * 50,
+                height: 10 + perspective * 50, // Postes más altos cuanto más cerca
                 baseWidth: width,
                 perspective: perspective
             };
         }
 
-        // Dibujar ruta continua con perspectiva consistente
+        // Dibujar ruta con perspectiva correcta
         function drawRoad() {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -153,15 +155,17 @@
                 const seg = segments[i];
                 const nextSeg = i < segments.length - 1 ? segments[i + 1] : null;
                 
-                // Calcular posición y tamaño basado en la perspectiva
+                // Calcular posición y tamaño basado en la perspectiva CORRECTA
                 const yPos = canvas.height * 0.65 * (1 - seg.distance);
-                const xOffset = roadCurve * (1 - seg.distance) * canvas.width * 0.4;
-                const segmentHeight = seg.height * seg.distance; // Ajustado para crecimiento consistente
-                const segmentWidth = canvas.width * seg.width * seg.distance;
+                const xOffset = roadCurve * seg.perspective * canvas.width * 0.4;
                 
-                // Dibujar postes
+                // Los elementos son más grandes cuanto más cerca están (perspective cerca de 1)
+                const segmentHeight = seg.height * seg.perspective;
+                const segmentWidth = canvas.width * seg.width * seg.perspective;
+                
+                // Dibujar postes (más grandes cuanto más cerca)
                 ctx.fillStyle = '#FFF';
-                const postWidth = 10 * seg.distance; // Postes más pequeños cuanto más lejos
+                const postWidth = 5 + 10 * seg.perspective; // Postes más grandes cuanto más cerca
                 const leftPostX = canvas.width/2 - segmentWidth/2 + xOffset - postWidth/2;
                 const rightPostX = canvas.width/2 + segmentWidth/2 + xOffset + postWidth/2;
                 
@@ -171,9 +175,9 @@
                 // Conectar con el siguiente poste
                 if (nextSeg) {
                     const nextYPos = canvas.height * 0.65 * (1 - nextSeg.distance);
-                    const nextXOffset = roadCurve * (1 - nextSeg.distance) * canvas.width * 0.4;
-                    const nextWidth = canvas.width * nextSeg.width * nextSeg.distance;
-                    const nextPostWidth = 10 * nextSeg.distance;
+                    const nextXOffset = roadCurve * nextSeg.perspective * canvas.width * 0.4;
+                    const nextWidth = canvas.width * nextSeg.width * nextSeg.perspective;
+                    const nextPostWidth = 5 + 10 * nextSeg.perspective;
                     
                     ctx.beginPath();
                     ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
@@ -183,21 +187,21 @@
                     ctx.moveTo(leftPostX + postWidth/2, yPos + segmentHeight/2);
                     ctx.lineTo(
                         canvas.width/2 - nextWidth/2 + nextXOffset - nextPostWidth/2 + nextPostWidth/2,
-                        nextYPos + nextSeg.height * nextSeg.distance/2
+                        nextYPos + nextSeg.height * nextSeg.perspective/2
                     );
                     
                     // Línea derecha
                     ctx.moveTo(rightPostX + postWidth/2, yPos + segmentHeight/2);
                     ctx.lineTo(
                         canvas.width/2 + nextWidth/2 + nextXOffset + nextPostWidth/2 + nextPostWidth/2,
-                        nextYPos + nextSeg.height * nextSeg.distance/2
+                        nextYPos + nextSeg.height * nextSeg.perspective/2
                     );
                     ctx.stroke();
                 }
             }
         }
 
-        // Actualizar ruta de forma continua con transición suave
+        // Actualizar ruta con transición suave
         function updateRoad() {
             // Mover todos los segmentos
             segments.forEach(seg => {
@@ -215,11 +219,11 @@
                 recycledSeg.curve = targetCurve;
                 
                 // Actualizar propiedades basadas en la nueva distancia
-                const perspective = Math.pow(newDistance, 2);
-                recycledSeg.width = ROAD_WIDTH_FAR + (ROAD_WIDTH_BASE - ROAD_WIDTH_FAR) * (1 - perspective);
+                const perspective = 1 - Math.pow(1 - newDistance, 2);
+                recycledSeg.width = ROAD_WIDTH_FAR + (ROAD_WIDTH_NEAR - ROAD_WIDTH_FAR) * perspective;
                 recycledSeg.baseWidth = recycledSeg.width;
                 recycledSeg.perspective = perspective;
-                recycledSeg.height = 10 + (1 - newDistance) * 50;
+                recycledSeg.height = 10 + perspective * 50;
                 
                 segments.push(recycledSeg);
             }
@@ -245,6 +249,9 @@
             
             time += segmentSpeed * 25;
             timeElement.textContent = time.toFixed(1);
+            
+            // Aumentar dificultad progresivamente
+            segmentSpeed = BASE_SPEED * (1 + time * 0.01);
         }
 
         function gameOver() {
