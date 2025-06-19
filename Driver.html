@@ -128,8 +128,8 @@
             
             // El ancho se expande desde el centro
             const widthFactor = progress * progress; // Cuadrático para mejor efecto
-            const leftPos = -0.5 * widthFactor;
-            const rightPos = 0.5 * widthFactor;
+            const leftPos = -1.0 * widthFactor;  // Duplicado (de -0.5 a -1.0)
+            const rightPos = 1.0 * widthFactor;  // Duplicado (de 0.5 a 1.0)
             
             // La altura aumenta con la distancia
             const height = 5 + progress * 50;
