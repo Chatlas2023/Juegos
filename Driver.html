@@ -73,7 +73,7 @@
 <body>
     <div id="ui">
         <div>TIEMPO: <span id="time">0</span>s</div>
-        <div>Ver 2.2 VIDAS: <span id="lives">3</span></div>
+        <div>Ver 2.3 VIDAS: <span id="lives">3</span></div>
     </div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
@@ -97,10 +97,11 @@
         const startButton = document.getElementById('startButton');
 
         // Configuración optimizada
-        const POST_COUNT = 12; // Más postes para mejor continuidad
-        const POST_SPACING = 0.025; // Espacio entre filas reducido
+        const POST_COUNT = 7; // 7 postes como en la versión original
+        const POST_SPACING = 0.15; // Espacio aumentado más del doble
         const MAX_DISTANCE = 1.0; // Distancia máxima normalizada
         const INITIAL_DISTANCE = 0.0; // Siempre comienza en el borde superior
+        const SEPARATION_FACTOR = 2.5; // Factor de separación aumentado
 
         // Variables del juego
         let gameRunning = false;
@@ -125,10 +126,10 @@
         function createSegment(distance) {
             const progress = distance / MAX_DISTANCE;
             
-            // Aumentamos la separación entre postes (de 0.5 a 1.5)
-            const widthFactor = progress * progress * 1.5; // Más separación
-            const leftPos = -widthFactor; // Más a la izquierda
-            const rightPos = widthFactor; // Más a la derecha
+            // Separación aumentada más del doble
+            const widthFactor = progress * progress * SEPARATION_FACTOR;
+            const leftPos = -widthFactor;
+            const rightPos = widthFactor;
             
             // Altura aumenta con la distancia
             const height = 5 + progress * 50;
@@ -203,7 +204,7 @@
                 seg.progress = seg.distance / MAX_DISTANCE;
                 
                 // Actualizar propiedades con la nueva distancia
-                const widthFactor = seg.progress * seg.progress * 1.5;
+                const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
                 seg.leftPos = -widthFactor;
                 seg.rightPos = widthFactor;
                 seg.height = 5 + seg.progress * 50;
@@ -219,7 +220,7 @@
                 recycledSeg.progress = newDistance / MAX_DISTANCE;
                 
                 // Reiniciar completamente para que emerjan desde arriba
-                const widthFactor = recycledSeg.progress * recycledSeg.progress * 1.5;
+                const widthFactor = recycledSeg.progress * recycledSeg.progress * SEPARATION_FACTOR;
                 recycledSeg.leftPos = -widthFactor;
                 recycledSeg.rightPos = widthFactor;
                 recycledSeg.height = 5 + recycledSeg.progress * 50;
