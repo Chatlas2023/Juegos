@@ -73,7 +73,7 @@
 <body>
     <div id="ui">
         <div>TIEMPO: <span id="time">0</span>s</div>
-        <div>Ver 2.5 VIDAS: <span id="lives">3</span></div>
+        <div>Ver 2.4 VIDAS: <span id="lives">3</span></div>
     </div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
@@ -97,8 +97,8 @@
         const startButton = document.getElementById('startButton');
 
         // Configuración optimizada
-        const POST_COUNT = 14;
-        const POST_SPACING = 0.08; // Ajustado para mostrar 7 postes
+        const POST_COUNT = 7;
+        const POST_SPACING = 0.12; // Ajustado para mostrar 7 postes
         const MAX_DISTANCE = 1.0;
         const INITIAL_DISTANCE = 0.0;
         const SEPARATION_FACTOR = 1.5; // Factor de separación ajustado
@@ -112,79 +112,85 @@
         let segmentSpeed = 0.002;
 
         // Inicializar ruta
-function initRoad() {
-    segments = [];
-    for (let i = 0; i < POST_COUNT / 2; i++) { // 7 iteraciones para 7 pares
-        const distance = INITIAL_DISTANCE + i * POST_SPACING;
-        segments.push(createSegment(distance, -1)); // Poste izquierdo
-        segments.push(createSegment(distance, 1));  // Poste derecho
-    }
-}
+        function initRoad() {
+            segments = [];
+            
+            for (let i = 0; i < POST_COUNT; i++) {
+                const distance = INITIAL_DISTANCE + i * POST_SPACING;
+                segments.push(createSegment(distance));
+            }
+        }
 
-function createSegment(distance, side) {
-    const progress = distance / MAX_DISTANCE;
-    const widthFactor = progress * progress * SEPARATION_FACTOR;
-    const pos = side * widthFactor; // side = -1 para izquierda, 1 para derecha
-    const height = 5 + progress * 50;
-
-    return {
-        distance: distance,
-        pos: pos,
-        height: height,
-        progress: progress,
-        side: side
-    };
-}
+        function createSegment(distance) {
+            const progress = distance / MAX_DISTANCE;
+            
+            const widthFactor = progress * progress * SEPARATION_FACTOR;
+            const leftPos = -widthFactor;
+            const rightPos = widthFactor;
+            
+            const height = 5 + progress * 50;
+            
+            return {
+                distance: distance,
+                leftPos: leftPos,
+                rightPos: rightPos,
+                height: height,
+                progress: progress
+            };
+        }
 
         // Dibujar ruta (sin líneas conectando postes)
-function drawRoad() {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+        function drawRoad() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    for (let i = 0; i < segments.length; i++) {
-        const seg = segments[i];
-        const yPos = canvas.height * seg.progress;
-        const xPos = canvas.width * (0.5 + seg.pos);
-        const postWidth = 5 + seg.progress * 10;
-        const postHeight = seg.height;
-
-        if (yPos >= 0 && yPos <= canvas.height) {
-            ctx.fillStyle = '#FFF';
-            ctx.fillRect(xPos - postWidth / 2, yPos, postWidth, postHeight);
+            for (let i = 0; i < segments.length; i++) {
+                const seg = segments[i];
+                
+                const yPos = canvas.height * seg.progress;
+                const leftX = canvas.width * (0.5 + seg.leftPos);
+                const rightX = canvas.width * (0.5 + seg.rightPos);
+                
+                const postWidth = 5 + seg.progress * 10;
+                const postHeight = seg.height;
+                
+                if (yPos >= 0 && yPos <= canvas.height) {
+                    ctx.fillStyle = '#FFF';
+                    // Poste izquierdo
+                    ctx.fillRect(leftX - postWidth/2, yPos, postWidth, postHeight);
+                    // Poste derecho
+                    ctx.fillRect(rightX - postWidth/2, yPos, postWidth, postHeight);
+                }
+            }
         }
-    }
-}
 
-function updateRoad() {
-    segments.forEach(seg => {
-        seg.distance += segmentSpeed;
-        seg.progress = seg.distance / MAX_DISTANCE;
-        const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
-        seg.pos = seg.side * widthFactor;
-        seg.height = 5 + seg.progress * 50;
-    });
+        function updateRoad() {
+            segments.forEach(seg => {
+                seg.distance += segmentSpeed;
+                seg.progress = seg.distance / MAX_DISTANCE;
+                
+                const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
+                seg.leftPos = -widthFactor;
+                seg.rightPos = widthFactor;
+                seg.height = 5 + seg.progress * 50;
+            });
 
-    while (segments.length > 0 && segments[0].distance >= MAX_DISTANCE) {
-        const lastSeg = segments[segments.length - 2]; // Referencia al último par
-        const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
-
-        // Reciclar poste izquierdo
-        const leftSeg = segments.shift();
-        leftSeg.distance = newDistance;
-        leftSeg.progress = newDistance / MAX_DISTANCE;
-        leftSeg.pos = -leftSeg.progress * leftSeg.progress * SEPARATION_FACTOR;
-        leftSeg.height = 5 + leftSeg.progress * 50;
-        segments.push(leftSeg);
-
-        // Reciclar poste derecho
-        const rightSeg = segments.shift();
-        rightSeg.distance = newDistance;
-        rightSeg.progress = newDistance / MAX_DISTANCE;
-        rightSeg.pos = rightSeg.progress * rightSeg.progress * SEPARATION_FACTOR;
-        rightSeg.height = 5 + rightSeg.progress * 50;
-        segments.push(rightSeg);
-    }
-}
+            if (segments[0].distance >= MAX_DISTANCE) {
+                const lastSeg = segments[segments.length - 1];
+                const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
+                
+                const recycledSeg = segments.shift();
+                recycledSeg.distance = newDistance;
+                recycledSeg.progress = newDistance / MAX_DISTANCE;
+                
+                const widthFactor = recycledSeg.progress * recycledSeg.progress * SEPARATION_FACTOR;
+                recycledSeg.leftPos = -widthFactor;
+                recycledSeg.rightPos = widthFactor;
+                recycledSeg.height = 5 + recycledSeg.progress * 50;
+                
+                segments.push(recycledSeg);
+            }
+        }
 
         function updateGame() {
             updateRoad();
