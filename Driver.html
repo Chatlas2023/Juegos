@@ -73,7 +73,7 @@
 <body>
     <div id="ui">
         <div>TIEMPO: <span id="time">0</span>s</div>
-        <div>Ver 2.1 VIDAS: <span id="lives">3</span></div>
+        <div>Ver 2.2 VIDAS: <span id="lives">3</span></div>
     </div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
@@ -97,10 +97,10 @@
         const startButton = document.getElementById('startButton');
 
         // Configuración optimizada
-        const POST_COUNT = 10; // Más postes para mejor continuidad
-        const POST_SPACING = 0.03; // Espacio entre filas de postes (reducido)
+        const POST_COUNT = 12; // Más postes para mejor continuidad
+        const POST_SPACING = 0.025; // Espacio entre filas reducido
         const MAX_DISTANCE = 1.0; // Distancia máxima normalizada
-        const INITIAL_DISTANCE = 0.0; // Comienza exactamente en el borde superior
+        const INITIAL_DISTANCE = 0.0; // Siempre comienza en el borde superior
 
         // Variables del juego
         let gameRunning = false;
@@ -108,30 +108,29 @@
         let lives = 3;
         let playerPos = 0;
         let segments = [];
-        let segmentSpeed = 0.002; // Reducido a 50% de la velocidad original
+        let segmentSpeed = 0.002; // Velocidad reducida
 
         // Inicializar ruta
         function initRoad() {
             segments = [];
             
-            // Crear segmentos iniciales comenzando desde 0 (borde superior)
+            // Crear segmentos comenzando desde el borde superior
             for (let i = 0; i < POST_COUNT; i++) {
                 const distance = INITIAL_DISTANCE + i * POST_SPACING;
                 segments.push(createSegment(distance));
             }
         }
 
-        // Función para crear un segmento
+        // Función para crear un segmento con mayor separación
         function createSegment(distance) {
-            // La posición vertical (0 = arriba, 1 = abajo)
             const progress = distance / MAX_DISTANCE;
             
-            // El ancho se expande desde el centro
-            const widthFactor = progress * progress; // Cuadrático para mejor efecto
-            const leftPos = -1.0 * widthFactor;  // Duplicado (de -0.5 a -1.0)
-            const rightPos = 1.0 * widthFactor;  // Duplicado (de 0.5 a 1.0)
+            // Aumentamos la separación entre postes (de 0.5 a 1.5)
+            const widthFactor = progress * progress * 1.5; // Más separación
+            const leftPos = -widthFactor; // Más a la izquierda
+            const rightPos = widthFactor; // Más a la derecha
             
-            // La altura aumenta con la distancia
+            // Altura aumenta con la distancia
             const height = 5 + progress * 50;
             
             return {
@@ -152,25 +151,25 @@
             for (let i = 0; i < segments.length; i++) {
                 const seg = segments[i];
                 
-                // Calcular posición vertical
+                // Posición vertical (siempre comienza en 0 = arriba)
                 const yPos = canvas.height * seg.progress;
                 
-                // Calcular posición horizontal
+                // Posición horizontal con mayor separación
                 const leftX = canvas.width * (0.5 + seg.leftPos);
                 const rightX = canvas.width * (0.5 + seg.rightPos);
                 
-                // Tamaño del poste basado en la distancia
+                // Tamaño del poste
                 const postWidth = 5 + seg.progress * 10;
                 const postHeight = seg.height;
                 
-                // Dibujar postes solo si están dentro de la pantalla
+                // Dibujar solo si está visible
                 if (yPos >= 0 && yPos <= canvas.height) {
                     ctx.fillStyle = '#FFF';
                     ctx.fillRect(leftX - postWidth/2, yPos, postWidth, postHeight);
                     ctx.fillRect(rightX - postWidth/2, yPos, postWidth, postHeight);
                 }
                 
-                // Conectar con líneas (solo si ambos segmentos son visibles)
+                // Conectar con líneas
                 if (i > 0) {
                     const prevSeg = segments[i-1];
                     const prevYPos = canvas.height * prevSeg.progress;
@@ -196,54 +195,42 @@
             }
         }
 
-        // Actualizar ruta
+        // Actualizar ruta manteniendo el origen en la parte superior
         function updateRoad() {
-            // Mover todos los segmentos (aumentar distancia = bajar)
+            // Mover todos los segmentos hacia abajo
             segments.forEach(seg => {
                 seg.distance += segmentSpeed;
                 seg.progress = seg.distance / MAX_DISTANCE;
                 
-                // Actualizar propiedades basadas en la nueva distancia
-                const widthFactor = seg.progress * seg.progress;
-                seg.leftPos = -0.5 * widthFactor;
-                seg.rightPos = 0.5 * widthFactor;
+                // Actualizar propiedades con la nueva distancia
+                const widthFactor = seg.progress * seg.progress * 1.5;
+                seg.leftPos = -widthFactor;
+                seg.rightPos = widthFactor;
                 seg.height = 5 + seg.progress * 50;
             });
 
-            // Reciclar segmentos que salen de vista (cuando distance > MAX_DISTANCE)
+            // Reciclar segmentos que salen de vista
             if (segments[0].distance >= MAX_DISTANCE) {
                 const lastSeg = segments[segments.length - 1];
-                const newDistance = lastSeg.distance - POST_SPACING;
+                const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
                 
-                // Reutilizar el segmento pero reiniciarlo completamente
                 const recycledSeg = segments.shift();
-                recycledSeg.distance = newDistance < INITIAL_DISTANCE ? INITIAL_DISTANCE : newDistance;
-                recycledSeg.progress = recycledSeg.distance / MAX_DISTANCE;
+                recycledSeg.distance = newDistance;
+                recycledSeg.progress = newDistance / MAX_DISTANCE;
                 
-                // Reiniciar propiedades para que emerjan desde el centro
-                const widthFactor = recycledSeg.progress * recycledSeg.progress;
-                recycledSeg.leftPos = -0.5 * widthFactor;
-                recycledSeg.rightPos = 0.5 * widthFactor;
+                // Reiniciar completamente para que emerjan desde arriba
+                const widthFactor = recycledSeg.progress * recycledSeg.progress * 1.5;
+                recycledSeg.leftPos = -widthFactor;
+                recycledSeg.rightPos = widthFactor;
                 recycledSeg.height = 5 + recycledSeg.progress * 50;
                 
                 segments.push(recycledSeg);
             }
         }
 
-        // Lógica del juego
+        // Lógica del juego simplificada
         function updateGame() {
             updateRoad();
-            
-            // Detectar colisión (simplificado)
-            if (
-                (playerPos === -1 && segments[0].leftPos < -0.4) ||
-                (playerPos === 1 && segments[0].rightPos > 0.4)
-            ) {
-                lives--;
-                livesElement.textContent = lives;
-                if (lives <= 0) gameOver();
-            }
-            
             time += segmentSpeed * 25;
             timeElement.textContent = time.toFixed(1);
         }
