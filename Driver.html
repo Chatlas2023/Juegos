@@ -73,7 +73,7 @@
 <body>
     <div id="ui">
         <div>TIEMPO: <span id="time">0</span>s</div>
-        <div>Ver 1.9 VIDAS: <span id="lives">3</span></div>
+        <div>Ver 2.0 VIDAS: <span id="lives">3</span></div>
     </div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
@@ -97,8 +97,8 @@
         const startButton = document.getElementById('startButton');
 
         // Configuración optimizada
-        const ROAD_WIDTH_BASE = 0.8;  // Ancho base de la ruta (cerca, abajo)
-        const ROAD_WIDTH_FAR = 0.1;   // Ancho de la ruta lejana (arriba)
+        const ROAD_WIDTH_BASE = 1.0;  // Ancho de la ruta en la base (100% de la pantalla)
+        const ROAD_WIDTH_FAR = 0.02;  // Ancho de la ruta en la distancia (muy estrecho)
         const POST_COUNT = 7;         // Número de postes a cada lado
         const POST_SPACING = 1/7;     // Espacio uniforme entre postes
         const PERSPECTIVE_FACTOR = 0.8;
@@ -118,7 +118,7 @@
             segments = [];
             // Crear segmentos de lejos (distance = 1) a cerca (distance = 0)
             for (let i = 0; i < POST_COUNT; i++) {
-                const distance = 1 - (i * POST_SPACING); // 1 (lejos) a 0 (cerca)
+                const distance = 1 - (i * POST_SPACING); // 1 (top) a 0 (bottom)
                 segments.push(createSegment(distance));
             }
             // Ordenar de lejos a cerca para dibujar correctamente
@@ -134,7 +134,7 @@
                 distance: distance,
                 curve: 0,
                 width: width,
-                height: 20 + perspective * 60, // Altura crece cerca
+                height: 10 + perspective * 80, // Postes más altos cerca
                 baseWidth: width,
                 perspective: perspective
             };
@@ -145,51 +145,52 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Dibujar de lejos (arriba) a cerca (abajo)
+            // Dibujar de lejos (top) a cerca (bottom)
             for (let i = 0; i < segments.length; i++) {
                 const seg = segments[i];
                 const nextSeg = i < segments.length - 1 ? segments[i + 1] : null;
 
                 // Calcular posición y tamaño basado en la perspectiva
                 const perspective = 1 - seg.distance;
-                const yPos = canvas.height * (1 - perspective); // 0 (arriba) a canvas.height (abajo)
+                // Mapear yPos: distance=1 -> y=0 (top), distance=0 -> y=canvas.height (bottom)
+                const yPos = canvas.height * seg.distance;
                 const xOffset = roadCurve * perspective * canvas.width * 0.4;
                 const segmentHeight = seg.height * perspective;
-                const segmentWidth = canvas.width * seg.width * perspective;
+                const segmentWidth = canvas.width * seg.width;
 
                 // Dibujar postes
                 ctx.fillStyle = '#FFF';
-                const postWidth = 15 * perspective; // Postes más grandes cerca
+                const postWidth = 8 * perspective; // Postes más anchos cerca
                 const leftPostX = canvas.width/2 - segmentWidth/2 + xOffset - postWidth/2;
                 const rightPostX = canvas.width/2 + segmentWidth/2 + xOffset - postWidth/2;
 
-                ctx.fillRect(leftPostX, yPos - segmentHeight/2, postWidth, segmentHeight);
-                ctx.fillRect(rightPostX, yPos - segmentHeight/2, postWidth, segmentHeight);
+                ctx.fillRect(leftPostX, yPos, postWidth, segmentHeight);
+                ctx.fillRect(rightPostX, yPos, postWidth, segmentHeight);
 
                 // Conectar con el siguiente poste
                 if (nextSeg) {
                     const nextPerspective = 1 - nextSeg.distance;
-                    const nextYPos = canvas.height * (1 - nextPerspective);
+                    const nextYPos = canvas.height * nextSeg.distance;
                     const nextXOffset = roadCurve * nextPerspective * canvas.width * 0.4;
-                    const nextWidth = canvas.width * nextSeg.width * nextPerspective;
-                    const nextPostWidth = 15 * nextPerspective;
+                    const nextWidth = canvas.width * nextSeg.width;
+                    const nextPostWidth = 8 * nextPerspective;
 
                     ctx.beginPath();
                     ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
                     ctx.lineWidth = 1.5;
 
                     // Línea izquierda
-                    ctx.moveTo(leftPostX + postWidth/2, yPos);
+                    ctx.moveTo(leftPostX + postWidth/2, yPos + segmentHeight/2);
                     ctx.lineTo(
                         canvas.width/2 - nextWidth/2 + nextXOffset - nextPostWidth/2 + nextPostWidth/2,
-                        nextYPos
+                        nextYPos + (nextSeg.height * nextPerspective)/2
                     );
 
                     // Línea derecha
-                    ctx.moveTo(rightPostX + postWidth/2, yPos);
+                    ctx.moveTo(rightPostX + postWidth/2, yPos + segmentHeight/2);
                     ctx.lineTo(
                         canvas.width/2 + nextWidth/2 + nextXOffset - nextPostWidth/2 + nextPostWidth/2,
-                        nextYPos
+                        nextYPos + (nextSeg.height * nextPerspective)/2
                     );
                     ctx.stroke();
                 }
@@ -203,7 +204,7 @@
                 seg.distance -= segmentSpeed;
             });
 
-            // Reciclar segmentos que llegan al jugador (distance < 0)
+            // Reciclar segmentos que llegan al jugador (distance <= 0)
             if (segments[0].distance <= 0) {
                 const firstSeg = segments.shift();
                 // Reutilizar el segmento colocándolo al fondo (distance = 1)
@@ -215,7 +216,7 @@
                 firstSeg.width = ROAD_WIDTH_FAR + (ROAD_WIDTH_BASE - ROAD_WIDTH_FAR) * perspective;
                 firstSeg.baseWidth = firstSeg.width;
                 firstSeg.perspective = perspective;
-                firstSeg.height = 20 + perspective * 60;
+                firstSeg.height = 10 + perspective * 80;
 
                 segments.push(firstSeg);
                 segments.sort((a, b) => b.distance - a.distance);
