@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Night Driver - Accurate Emulation</title>
+    <title>Night Driver - Ruta Continua</title>
     <style>
         body {
             margin: 0;
@@ -72,8 +72,8 @@
 </head>
 <body>
     <div id="ui">
-        <div>TIME: <span id="time">0</span>s</div>
-        <div>LIVES: <span id="lives">3</span></div>
+        <div>TIEMPO: <span id="time">0</span>s</div>
+        <div>Ver 2.4 VIDAS: <span id="lives">3</span></div>
     </div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
@@ -82,8 +82,8 @@
     </div>
     <div id="startScreen">
         <h1>NIGHT DRIVER</h1>
-        <p>Use arrows to stay on the road</p>
-        <button id="startButton">START</button>
+        <p>Use las flechas</p>
+        <button id="startButton">COMENZAR</button>
     </div>
 
     <script>
@@ -96,143 +96,114 @@
         const startScreen = document.getElementById('startScreen');
         const startButton = document.getElementById('startButton');
 
-        // Configuración basada en el código original
-        const ROAD_WIDTH = 0.4;  // % del ancho de pantalla (como en ZLOW=2)
-        const SEGMENT_HEIGHT = 10; // px (similar a PICTR en el original)
-        const PERSPECTIVE_FACTOR = 0.8; // Ajuste de perspectiva (como en ORVH)
+        // Configuración optimizada
+        const POST_COUNT = 7;
+        const POST_SPACING = 0.12; // Ajustado para mostrar 7 postes
+        const MAX_DISTANCE = 1.0;
+        const INITIAL_DISTANCE = 0.0;
+        const SEPARATION_FACTOR = 1.5; // Factor de separación ajustado
 
-        // Variables del juego (basadas en direcciones de memoria originales)
+        // Variables del juego
         let gameRunning = false;
         let time = 0;
         let lives = 3;
-        let playerPos = 0; // -1 (izq), 0 (centro), 1 (der) - como STEER
-        let roadCurve = 0; // Curva actual (como CRVL/CRVH)
-        let targetCurve = 0; // Curva objetivo (interpolación)
-        let segments = []; // Segmentos de la ruta (como ZCNTRL/ZXAX/ZYAX)
-        const segmentCount = 50; // Similar a TRMAX
-        let segmentSpeed = 0.003; // Velocidad (como VELL/VELH)
+        let playerPos = 0;
+        let segments = [];
+        let segmentSpeed = 0.002;
 
-        // Inicializar segmentos (como en INTZRO)
+        // Inicializar ruta
         function initRoad() {
             segments = [];
-            for (let i = 0; i < segmentCount; i++) {
-                const distance = (i / segmentCount) ** 1.5; // No lineal como en el original
-                segments.push({
-                    distance: distance,
-                    curve: 0,
-                    width: 0.5 + (1 - distance) * 2, // Ancho progresivo (como en ZXAX)
-                    height: 15 + (1 - distance) * 60 // Altura (como ZYAX)
-                });
+            
+            for (let i = 0; i < POST_COUNT; i++) {
+                const distance = INITIAL_DISTANCE + i * POST_SPACING;
+                segments.push(createSegment(distance));
             }
         }
 
-        // Dibujar ruta con perspectiva (como en el renderizado original)
+        function createSegment(distance) {
+            const progress = distance / MAX_DISTANCE;
+            
+            const widthFactor = progress * progress * SEPARATION_FACTOR;
+            const leftPos = -widthFactor;
+            const rightPos = widthFactor;
+            
+            const height = 5 + progress * 50;
+            
+            return {
+                distance: distance,
+                leftPos: leftPos,
+                rightPos: rightPos,
+                height: height,
+                progress: progress
+            };
+        }
+
+        // Dibujar ruta (sin líneas conectando postes)
         function drawRoad() {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Dibujar de lejano a cercano (como en el orden de render original)
-            for (let i = segments.length - 1; i >= 0; i--) {
+            for (let i = 0; i < segments.length; i++) {
                 const seg = segments[i];
                 
-                // Posición vertical (similar a PYA)
-                const yPos = canvas.height * 0.7 * (1 - Math.sqrt(seg.distance));
+                const yPos = canvas.height * seg.progress;
+                const leftX = canvas.width * (0.5 + seg.leftPos);
+                const rightX = canvas.width * (0.5 + seg.rightPos);
                 
-                // Desplazamiento horizontal por curva (como STC)
-                const xOffset = roadCurve * (1 - seg.distance) * canvas.width * 0.5;
+                const postWidth = 5 + seg.progress * 10;
+                const postHeight = seg.height;
                 
-                // Tamaño del segmento (basado en distancia)
-                const segmentHeight = seg.height * (1 - seg.distance);
-                const segmentWidth = canvas.width * seg.width * (1 - seg.distance);
-                
-                // Efecto de parpadeo (como los LEDs originales)
-                const flicker = Math.random() > 0.9 ? 0.8 : 1.0;
-                const alpha = (0.2 + (1 - seg.distance) * 0.8) * flicker;
-                
-                // Bordes izquierdo/derecho (como en XAXIS/YAXIS original)
-                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-                
-                // Borde izquierdo (ajustado como en el código original)
-                ctx.fillRect(
-                    canvas.width / 2 - segmentWidth / 2 + xOffset - 15,
-                    yPos,
-                    12, // Ancho fijo como en el arcade
-                    segmentHeight
-                );
-                
-                // Borde derecho
-                ctx.fillRect(
-                    canvas.width / 2 + segmentWidth / 2 + xOffset + 3,
-                    yPos,
-                    12,
-                    segmentHeight
-                );
-                
-                // Líneas de conexión (para efecto 3D)
-                if (i < segments.length - 1) {
-                    const nextSeg = segments[i + 1];
-                    const nextYPos = canvas.height * 0.7 * (1 - Math.sqrt(nextSeg.distance));
-                    const nextXOffset = roadCurve * (1 - nextSeg.distance) * canvas.width * 0.5;
-                    const nextSegmentWidth = canvas.width * nextSeg.width * (1 - nextSeg.distance);
-                    
-                    ctx.beginPath();
-                    ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.5})`;
-                    ctx.lineWidth = 2;
-                    
-                    // Línea izquierda
-                    ctx.moveTo(canvas.width / 2 - segmentWidth / 2 + xOffset - 9, yPos);
-                    ctx.lineTo(canvas.width / 2 - nextSegmentWidth / 2 + nextXOffset - 9, nextYPos);
-                    ctx.stroke();
-                    
-                    // Línea derecha
-                    ctx.moveTo(canvas.width / 2 + segmentWidth / 2 + xOffset + 9, yPos);
-                    ctx.lineTo(canvas.width / 2 + nextSegmentWidth / 2 + nextXOffset + 9, nextYPos);
-                    ctx.stroke();
+                if (yPos >= 0 && yPos <= canvas.height) {
+                    ctx.fillStyle = '#FFF';
+                    // Poste izquierdo
+                    ctx.fillRect(leftX - postWidth/2, yPos, postWidth, postHeight);
+                    // Poste derecho
+                    ctx.fillRect(rightX - postWidth/2, yPos, postWidth, postHeight);
                 }
             }
         }
 
-        // Actualizar juego (como el bucle principal original)
-        function updateGame() {
-            // Mover segmentos (como en MO:)
+        function updateRoad() {
             segments.forEach(seg => {
-                seg.distance -= segmentSpeed;
-                if (seg.distance <= 0) {
-                    seg.distance = 1;
-                    // Nueva curva aleatoria (como en TRKADL/TRKADH)
-                    seg.curve = Math.sin(time * 0.01) * 0.8; // Curvas suaves
-                    targetCurve = seg.curve;
-                }
+                seg.distance += segmentSpeed;
+                seg.progress = seg.distance / MAX_DISTANCE;
+                
+                const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
+                seg.leftPos = -widthFactor;
+                seg.rightPos = widthFactor;
+                seg.height = 5 + seg.progress * 50;
             });
 
-            // Interpolar curva (similar a STC+CRV)
-            roadCurve += (targetCurve - roadCurve) * 0.02;
-
-            // Detectar colisión (como en CRLOK/CRROK)
-            const collisionThreshold = 0.5;
-            if (
-                (playerPos === -1 && roadCurve < -collisionThreshold) ||
-                (playerPos === 1 && roadCurve > collisionThreshold)
-            ) {
-                lives--;
-                livesElement.textContent = lives;
-                if (lives <= 0) gameOver();
+            if (segments[0].distance >= MAX_DISTANCE) {
+                const lastSeg = segments[segments.length - 1];
+                const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
+                
+                const recycledSeg = segments.shift();
+                recycledSeg.distance = newDistance;
+                recycledSeg.progress = newDistance / MAX_DISTANCE;
+                
+                const widthFactor = recycledSeg.progress * recycledSeg.progress * SEPARATION_FACTOR;
+                recycledSeg.leftPos = -widthFactor;
+                recycledSeg.rightPos = widthFactor;
+                recycledSeg.height = 5 + recycledSeg.progress * 50;
+                
+                segments.push(recycledSeg);
             }
+        }
 
-            // Actualizar tiempo (como en FRMCL/FRMCH)
-            time += segmentSpeed * 30;
+        function updateGame() {
+            updateRoad();
+            time += segmentSpeed * 25;
             timeElement.textContent = time.toFixed(1);
         }
 
-        // Game Over (como en GO:)
         function gameOver() {
             gameRunning = false;
             cancelAnimationFrame(gameLoopId);
             startScreen.style.display = 'flex';
-            startButton.textContent = 'RESTART';
         }
 
-        // Bucle principal (como en MAIN:)
         let gameLoopId;
         function runGame() {
             drawRoad();
@@ -240,7 +211,7 @@
             gameLoopId = requestAnimationFrame(runGame);
         }
 
-        // Controles (como en STRNG)
+        // Controles
         leftBtn.addEventListener('touchstart', () => playerPos = -1);
         leftBtn.addEventListener('touchend', () => playerPos = 0);
         rightBtn.addEventListener('touchstart', () => playerPos = 1);
@@ -254,7 +225,6 @@
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') playerPos = 0;
         });
 
-        // Iniciar juego (como en GAME:)
         startButton.addEventListener('click', () => {
             initRoad();
             time = 0;
@@ -265,7 +235,6 @@
             runGame();
         });
 
-        // Ajustar canvas
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
