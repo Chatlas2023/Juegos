@@ -73,7 +73,7 @@
 <body>
     <div id="ui">
         <div>TIEMPO: <span id="time">0</span>s</div>
-        <div>Ver 2.0 VIDAS: <span id="lives">3</span></div>
+        <div>Ver 2.1 VIDAS: <span id="lives">3</span></div>
     </div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
@@ -97,9 +97,10 @@
         const startButton = document.getElementById('startButton');
 
         // Configuración optimizada
-        const POST_COUNT = 7; // Número de postes a cada lado
-        const POST_SPACING = 0.05; // Espacio entre filas de postes
+        const POST_COUNT = 10; // Más postes para mejor continuidad
+        const POST_SPACING = 0.03; // Espacio entre filas de postes (reducido)
         const MAX_DISTANCE = 1.0; // Distancia máxima normalizada
+        const INITIAL_DISTANCE = 0.0; // Comienza exactamente en el borde superior
 
         // Variables del juego
         let gameRunning = false;
@@ -107,15 +108,15 @@
         let lives = 3;
         let playerPos = 0;
         let segments = [];
-        let segmentSpeed = 0.004;
+        let segmentSpeed = 0.002; // Reducido a 50% de la velocidad original
 
         // Inicializar ruta
         function initRoad() {
             segments = [];
             
-            // Crear segmentos iniciales
+            // Crear segmentos iniciales comenzando desde 0 (borde superior)
             for (let i = 0; i < POST_COUNT; i++) {
-                const distance = i * POST_SPACING;
+                const distance = INITIAL_DISTANCE + i * POST_SPACING;
                 segments.push(createSegment(distance));
             }
         }
@@ -162,30 +163,35 @@
                 const postWidth = 5 + seg.progress * 10;
                 const postHeight = seg.height;
                 
-                // Dibujar postes
-                ctx.fillStyle = '#FFF';
-                ctx.fillRect(leftX - postWidth/2, yPos, postWidth, postHeight);
-                ctx.fillRect(rightX - postWidth/2, yPos, postWidth, postHeight);
+                // Dibujar postes solo si están dentro de la pantalla
+                if (yPos >= 0 && yPos <= canvas.height) {
+                    ctx.fillStyle = '#FFF';
+                    ctx.fillRect(leftX - postWidth/2, yPos, postWidth, postHeight);
+                    ctx.fillRect(rightX - postWidth/2, yPos, postWidth, postHeight);
+                }
                 
-                // Conectar con líneas
+                // Conectar con líneas (solo si ambos segmentos son visibles)
                 if (i > 0) {
                     const prevSeg = segments[i-1];
                     const prevYPos = canvas.height * prevSeg.progress;
-                    const prevLeftX = canvas.width * (0.5 + prevSeg.leftPos);
-                    const prevRightX = canvas.width * (0.5 + prevSeg.rightPos);
                     
-                    ctx.beginPath();
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-                    ctx.lineWidth = 1.5;
-                    
-                    // Línea izquierda
-                    ctx.moveTo(leftX, yPos);
-                    ctx.lineTo(prevLeftX, prevYPos);
-                    
-                    // Línea derecha
-                    ctx.moveTo(rightX, yPos);
-                    ctx.lineTo(prevRightX, prevYPos);
-                    ctx.stroke();
+                    if (prevYPos >= 0 && yPos >= 0) {
+                        const prevLeftX = canvas.width * (0.5 + prevSeg.leftPos);
+                        const prevRightX = canvas.width * (0.5 + prevSeg.rightPos);
+                        
+                        ctx.beginPath();
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                        ctx.lineWidth = 1.5;
+                        
+                        // Línea izquierda
+                        ctx.moveTo(leftX, yPos);
+                        ctx.lineTo(prevLeftX, prevYPos);
+                        
+                        // Línea derecha
+                        ctx.moveTo(rightX, yPos);
+                        ctx.lineTo(prevRightX, prevYPos);
+                        ctx.stroke();
+                    }
                 }
             }
         }
@@ -204,17 +210,17 @@
                 seg.height = 5 + seg.progress * 50;
             });
 
-            // Reciclar segmentos que salen de vista
+            // Reciclar segmentos que salen de vista (cuando distance > MAX_DISTANCE)
             if (segments[0].distance >= MAX_DISTANCE) {
                 const lastSeg = segments[segments.length - 1];
                 const newDistance = lastSeg.distance - POST_SPACING;
                 
-                // Reutilizar el segmento
+                // Reutilizar el segmento pero reiniciarlo completamente
                 const recycledSeg = segments.shift();
-                recycledSeg.distance = newDistance;
-                recycledSeg.progress = newDistance / MAX_DISTANCE;
+                recycledSeg.distance = newDistance < INITIAL_DISTANCE ? INITIAL_DISTANCE : newDistance;
+                recycledSeg.progress = recycledSeg.distance / MAX_DISTANCE;
                 
-                // Reiniciar propiedades
+                // Reiniciar propiedades para que emerjan desde el centro
                 const widthFactor = recycledSeg.progress * recycledSeg.progress;
                 recycledSeg.leftPos = -0.5 * widthFactor;
                 recycledSeg.rightPos = 0.5 * widthFactor;
