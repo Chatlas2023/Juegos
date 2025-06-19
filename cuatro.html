@@ -15,7 +15,6 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            /* Evitar pull-to-refresh en móviles */
             overscroll-behavior-y: contain;
         }
 
@@ -38,8 +37,8 @@
             gap: 20px;
             position: absolute;
             right: 20px;
-            top: 150px; /* Bajamos 3cm (30px) desde la parte superior */
-            width: 70px; /* Ancho ajustado al contenido */
+            top: 150px;
+            width: 70px;
         }
 
         .color-palette {
@@ -49,7 +48,7 @@
             background-color: rgba(52, 73, 94, 0.7);
             border-radius: 10px;
             padding: 10px;
-            width: 70px; /* Ancho fijo para contener solo los colores */
+            width: 70px;
         }
 
         .color-option {
@@ -186,7 +185,7 @@
             background-color: #9b59b6;
             color: white;
             border: none;
-            padding: 12px 10px; /* Ajuste de padding para el nuevo ancho */
+            padding: 12px 10px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
@@ -245,7 +244,7 @@
 <body>
     <div class="game-wrapper">
         <div class="game-container">
-            <div class="message" id="message">Arrastra colores a los espacios vacíos</div>
+            <div class="message" id="message">Arrastra colores a los espacios vacíos o tócalos para llenar en orden</div>
             <div id="win-message" class="win-message hidden">¡Ganaste!</div>
             <div id="secret-code-container" class="hidden">
                 <div class="secret-code">
@@ -253,8 +252,7 @@
                 </div>
             </div>
             
-            <div class="game-board" id="game-board">
-                </div>
+            <div class="game-board" id="game-board"></div>
         </div>
         
         <div class="right-panel">
@@ -262,8 +260,7 @@
                 <button id="check-btn">Ir</button>
                 <button id="new-game-btn" class="hidden">Nuevo Juego</button>
             </div>
-            <div class="color-palette" id="color-palette">
-                </div>
+            <div class="color-palette" id="color-palette"></div>
         </div>
     </div>
 
@@ -296,9 +293,10 @@
         let currentRow = null;
         let gameOver = false;
         let draggedColor = null;
-        let draggedElement = null; // Puede ser un color de la paleta o un slot lleno
+        let draggedElement = null;
         let draggingClone = null;
         let activeTouch = null;
+        let isDragging = false; // Bandera para distinguir entre clic y arrastre
 
         // Inicializar el juego
         function initGame() {
@@ -313,7 +311,7 @@
             gameBoard.innerHTML = '';
             currentAttempt = 0;
             gameOver = false;
-            messageEl.textContent = 'Arrastra colores a los espacios vacíos';
+            messageEl.textContent = 'Arrastra colores a los espacios vacíos o tócalos para llenar en orden';
             winMessageEl.classList.add('hidden');
             secretCodeContainer.classList.add('hidden');
             checkBtn.classList.remove('hidden');
@@ -391,6 +389,9 @@
                 colorEl.addEventListener('touchend', handleTouchEndColor);
                 colorEl.addEventListener('touchcancel', handleTouchCancel);
 
+                // Evento de clic para llenar el próximo slot vacío
+                colorEl.addEventListener('click', handleColorClick);
+
                 colorPalette.appendChild(colorEl);
             });
         }
@@ -398,12 +399,10 @@
         // Mostrar el código secreto
         function showSecretCode() {
             const secretCodeElement = secretCodeContainer.querySelector('.secret-code');
-            // Limpiar slots anteriores
             while (secretCodeElement.children.length > 1) {
                 secretCodeElement.removeChild(secretCodeElement.lastChild);
             }
             
-            // Agregar los slots del código secreto
             secretCode.forEach(colorId => {
                 const color = COLORS.find(c => c.id === colorId);
                 const slot = document.createElement('div');
@@ -416,9 +415,8 @@
         }
         
         // --- Manejo de eventos para PC ---
-        
+
         function handleDragStart(e) {
-            // Determinar si estamos arrastrando desde la paleta o desde un slot
             if (e.target.classList.contains('color-option')) {
                 draggedColor = e.target.dataset.color;
                 draggedElement = e.target;
@@ -460,18 +458,14 @@
             
             if (gameOver || !draggedColor) return;
             
-            // Solo permitir colocar en la fila actual
             if (e.target.closest('.guess-row') !== currentRow) return;
             
-            // No hacemos nada si el slot de destino ya está lleno
             if (e.target.classList.contains('filled')) return;
             
-            // Limpiar el slot destino primero (si ya hay un color)
             e.target.className = 'guess-slot';
             e.target.style.backgroundColor = '';
             e.target.dataset.color = '';
             
-            // Llenar con el color arrastrado
             const color = COLORS.find(c => c.id === draggedColor);
             if (color) {
                 e.target.style.backgroundColor = color.value;
@@ -479,7 +473,6 @@
                 e.target.dataset.color = draggedColor;
                 e.target.draggable = true;
                 
-                // Configurar eventos de arrastre para el nuevo slot lleno
                 e.target.addEventListener('dragstart', handleDragStart);
                 e.target.addEventListener('dragend', handleDragEnd);
             }
@@ -490,22 +483,20 @@
         function handleTouchStartColor(e) {
             if (gameOver) return;
             
-            // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
             e.preventDefault(); 
-
+            
+            isDragging = false;
             const touch = e.touches[0];
             activeTouch = touch.identifier;
             
             draggedElement = e.target;
             draggedColor = draggedElement.dataset.color;
             
-            // Crear un clon visual para arrastrar
             draggingClone = draggedElement.cloneNode(true);
             draggingClone.classList.add('color-option-clone');
             draggingClone.style.backgroundColor = draggedElement.style.backgroundColor;
             document.body.appendChild(draggingClone);
             
-            // Posicionar el clon
             updateClonePosition(touch);
             
             draggedElement.classList.add('dragging');
@@ -516,24 +507,21 @@
             
             const slot = e.target;
             
-            // Si el slot está lleno, iniciar arrastre desde él
             if (slot.classList.contains('filled')) {
-                // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
                 e.preventDefault(); 
-
+                
+                isDragging = false;
                 const touch = e.touches[0];
                 activeTouch = touch.identifier;
                 
                 draggedElement = slot;
                 draggedColor = slot.dataset.color;
                 
-                // Crear un clon visual para arrastrar
                 draggingClone = document.createElement('div');
                 draggingClone.className = 'color-option-clone';
                 draggingClone.style.backgroundColor = slot.style.backgroundColor;
                 document.body.appendChild(draggingClone);
                 
-                // Posicionar el clon
                 updateClonePosition(touch);
                 
                 slot.classList.add('dragging');
@@ -543,10 +531,10 @@
         function handleTouchMoveColor(e) {
             if (!draggingClone) return;
             
-            // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
             e.preventDefault(); 
-
-            // Encontrar el touch correcto (puede haber múltiples)
+            
+            isDragging = true;
+            
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
                 if (touch.identifier === activeTouch) {
@@ -560,10 +548,10 @@
         function handleTouchMoveSlot(e) {
             if (!draggingClone) return;
             
-            // Prevenir el comportamiento predeterminado del navegador (pull-to-refresh)
             e.preventDefault(); 
-
-            // Encontrar el touch correcto (puede haber múltiples)
+            
+            isDragging = true;
+            
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
                 if (touch.identifier === activeTouch) {
@@ -577,14 +565,17 @@
         function handleTouchEndColor(e) {
             if (!draggingClone) return;
             
-            // Encontrar el touch correcto
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
                 if (touch.identifier === activeTouch) {
-                    // Verificar si se soltó sobre un slot
-                    const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
-                    if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
-                        placeColorInSlot(elementUnderTouch);
+                    if (isDragging) {
+                        const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+                        if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
+                            placeColorInSlot(elementUnderTouch);
+                        }
+                    } else {
+                        // Si no hubo arrastre, tratamos como clic
+                        placeColorInNextEmptySlot(draggedColor);
                     }
                     
                     cleanupAfterTouch();
@@ -596,14 +587,14 @@
         function handleTouchEndSlot(e) {
             if (!draggingClone) return;
             
-            // Encontrar el touch correcto
             for (let i = 0; i < e.changedTouches.length; i++) {
                 const touch = e.changedTouches[i];
                 if (touch.identifier === activeTouch) {
-                    // Verificar si se soltó sobre un slot
-                    const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
-                    if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
-                        placeColorInSlot(elementUnderTouch);
+                    if (isDragging) {
+                        const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+                        if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
+                            placeColorInSlot(elementUnderTouch);
+                        }
                     }
                     
                     cleanupAfterTouch();
@@ -623,14 +614,12 @@
         }
 
         function highlightSlotUnderTouch(touch) {
-            // Remover highlight de todos los slots primero
             document.querySelectorAll('.guess-slot').forEach(slot => {
                 slot.classList.remove('highlight');
             });
             
             const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
             if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
-                // Solo resaltar si es un slot vacío en la fila actual
                 if (!elementUnderTouch.classList.contains('filled') && 
                     elementUnderTouch.closest('.guess-row') === currentRow) {
                     elementUnderTouch.classList.add('highlight');
@@ -641,22 +630,18 @@
         function placeColorInSlot(slot) {
             if (gameOver || !draggedColor || slot.closest('.guess-row') !== currentRow) return;
             
-            // No hacemos nada si el slot de destino ya está lleno
             if (slot.classList.contains('filled')) return;
             
-            // Limpiar el slot destino primero (si ya hay un color)
             slot.className = 'guess-slot';
             slot.style.backgroundColor = '';
             slot.dataset.color = '';
             
-            // Llenar con el color arrastrado
             const color = COLORS.find(c => c.id === draggedColor);
             if (color) {
                 slot.style.backgroundColor = color.value;
                 slot.classList.add('filled');
                 slot.dataset.color = draggedColor;
                 
-                // Configurar eventos táctiles para el nuevo slot lleno
                 slot.addEventListener('touchstart', handleTouchStartSlot);
                 slot.addEventListener('touchmove', handleTouchMoveSlot);
                 slot.addEventListener('touchend', handleTouchEndSlot);
@@ -670,12 +655,10 @@
                 draggingClone = null;
             }
             
-            // Remover highlight de todos los slots
             document.querySelectorAll('.guess-slot').forEach(slot => {
                 slot.classList.remove('highlight');
             });
             
-            // Remover clase dragging de todos los elementos
             document.querySelectorAll('.dragging').forEach(el => {
                 el.classList.remove('dragging');
             });
@@ -683,13 +666,61 @@
             draggedColor = null;
             draggedElement = null;
             activeTouch = null;
+            isDragging = false;
+        }
+
+        // Nueva función para manejar el clic en un color
+        function handleColorClick(e) {
+            if (gameOver) return;
+            
+            const colorId = e.target.dataset.color;
+            placeColorInNextEmptySlot(colorId);
+        }
+
+        // Nueva función para colocar un color en el próximo slot vacío
+        function placeColorInNextEmptySlot(colorId) {
+            if (gameOver || !colorId) return;
+            
+            const slots = currentRow.querySelectorAll('.guess-slot');
+            let placed = false;
+            
+            // Buscar el primer slot vacío en la fila actual
+            for (let i = 0; i < slots.length; i++) {
+                if (!slots[i].classList.contains('filled')) {
+                    const color = COLORS.find(c => c.id === colorId);
+                    if (color) {
+                        slots[i].style.backgroundColor = color.value;
+                        slots[i].classList.add('filled');
+                        slots[i].dataset.color = colorId;
+                        
+                        // Configurar eventos táctiles para el nuevo slot lleno
+                        slots[i].addEventListener('touchstart', handleTouchStartSlot);
+                        slots[i].addEventListener('touchmove', handleTouchMoveSlot);
+                        slots[i].addEventListener('touchend', handleTouchEndSlot);
+                        slots[i].addEventListener('touchcancel', handleTouchCancel);
+                        
+                        // Configurar eventos de arrastre para PC
+                        slots[i].draggable = true;
+                        slots[i].addEventListener('dragstart', handleDragStart);
+                        slots[i].addEventListener('dragend', handleDragEnd);
+                        
+                        placed = true;
+                    }
+                    break;
+                }
+            }
+            
+            if (!placed) {
+                messageEl.textContent = 'Todos los espacios están llenos. Haz clic en "Ir" o arrastra para cambiar colores.';
+            } else {
+                messageEl.textContent = 'Arrastra colores a los espacios vacíos o tócalos para llenar en orden';
+            }
         }
 
         // Comprobar el intento actual
         function checkAttempt() {
             if (gameOver) return;
             
-            // Obtener los colores del intento actual
             const slots = currentRow.querySelectorAll('.guess-slot.filled');
             if (slots.length < CODE_LENGTH) {
                 messageEl.textContent = 'Debes completar todos los espacios';
@@ -698,43 +729,31 @@
             
             const attempt = Array.from(slots).map(slot => slot.dataset.color);
             
-            // Calcular feedback
             const feedback = calculateFeedback(attempt, secretCode);
             
-            // Mostrar feedback
             const feedbackEl = currentRow.querySelector('.feedback');
             const feedbackRows = feedbackEl.querySelectorAll('.feedback-row');
             
-            // Limpiar feedback anterior
             feedbackRows.forEach(row => row.innerHTML = '');
             
-            // Mostrar puntos exactos (verde)
             for (let i = 0; i < feedback.exact; i++) {
                 const dot = document.createElement('div');
                 dot.className = 'feedback-dot exact';
-                // Colocar en la primera o segunda fila según corresponda
                 feedbackRows[i < 2 ? 0 : 1].appendChild(dot);
             }
             
-            // Mostrar puntos parciales (amarillo)
             for (let i = 0; i < feedback.partial; i++) {
                 const dot = document.createElement('div');
                 dot.className = 'feedback-dot partial';
-                // Colocar después de los exactos
-                const totalDots = feedback.exact + feedback.partial;
                 feedbackRows[(feedback.exact + i) < 2 ? 0 : 1].appendChild(dot);
             }
             
-            // Mostrar puntos incorrectos (x roja)
             for (let i = 0; i < feedback.wrong; i++) {
                 const dot = document.createElement('div');
                 dot.className = 'feedback-dot wrong';
-                // Colocar después de los otros
-                const totalDots = feedback.exact + feedback.partial + feedback.wrong;
                 feedbackRows[(feedback.exact + feedback.partial + i) < 2 ? 0 : 1].appendChild(dot);
             }
             
-            // Verificar si ganó
             if (feedback.exact === CODE_LENGTH) {
                 gameOver = true;
                 messageEl.textContent = '';
@@ -744,7 +763,6 @@
                 return;
             }
             
-            // Pasar al siguiente intento
             currentAttempt++;
             
             if (currentAttempt >= MAX_ATTEMPTS) {
@@ -756,10 +774,9 @@
                 return;
             }
             
-            // Preparar siguiente fila
             currentRow = gameBoard.children[currentAttempt];
             currentRow.style.opacity = '1';
-            messageEl.textContent = `Intento ${currentAttempt + 1} de ${MAX_ATTEMPTS}. Arrastra colores.`;
+            messageEl.textContent = `Intento ${currentAttempt + 1} de ${MAX_ATTEMPTS}. Arrastra colores o tócalos.`;
         }
         
         // Calcular feedback (bien, regular y mal)
@@ -770,7 +787,6 @@
             const attemptCopy = [...attempt];
             const secretCopy = [...secret];
             
-            // Contar exactos
             for (let i = 0; i < secretCopy.length; i++) {
                 if (attemptCopy[i] === secretCopy[i]) {
                     exact++;
@@ -779,7 +795,6 @@
                 }
             }
             
-            // Contar parciales
             for (let i = 0; i < secretCopy.length; i++) {
                 if (secretCopy[i] === null) continue;
                 
@@ -790,7 +805,6 @@
                 }
             }
             
-            // Contar incorrectos (colores que no están en el código secreto)
             const wrong = attemptCopy.filter(color => color !== null).length;
             
             return { exact, partial, wrong };
@@ -799,13 +813,13 @@
         // Event listeners
         checkBtn.addEventListener('click', checkAttempt);
         newGameBtn.addEventListener('click', initGame);
-                // Prevenir el comportamiento de pull-to-refresh
+        
         document.addEventListener('touchmove', function(e) {
             if (e.touches[0].clientY < 50) {
                 e.preventDefault();
             }
         }, { passive: false });
-        // Iniciar el juego al cargar
+        
         window.addEventListener('DOMContentLoaded', initGame);
     </script>
 </body>
