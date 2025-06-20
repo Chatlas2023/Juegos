@@ -73,7 +73,7 @@
 <body>
     <div id="ui">
         <div>TIEMPO: <span id="time">0</span>s</div>
-        <div>Ver 2.6 VIDAS: <span id="lives">3</span></div>
+        <div>Ver 2.7 VIDAS: <span id="lives">3</span></div>
     </div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
@@ -145,7 +145,7 @@ function drawRoad() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // 1cm en píxeles (aproximadamente 37.8px para pantallas de 96dpi)
-    const offsetY = 38; // Redondeamos a 38px por simplicidad
+    const offsetY = 45; // Redondeamos a 38px por simplicidad
 
     for (let i = 0; i < segments.length; i++) {
         const seg = segments[i];
