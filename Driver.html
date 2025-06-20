@@ -117,7 +117,7 @@
     <p>Para jugar Night Driver, por favor coloque su teléfono en posición horizontal</p>
 </div>
 <div id="ui">
-    <div id="left-ui">Ver 2.24 VIDAS: <span id="lives">3</span></div>
+    <div id="left-ui">Ver 2.23 VIDAS: <span id="lives">3</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -148,6 +148,10 @@
         const MAX_DISTANCE = 1.4;
         const INITIAL_DISTANCE = 0.0;
         const SEPARATION_FACTOR = 1.5;
+        const BASE_VELOCITY = 0.002;
+        const MAX_VELOCITY = 0.008;
+        const SPEED_INCREASE = 0.00001;
+        const PLAYER_WIDTH = 0.05;
 
         // Track data
         const TRACKS = [
@@ -189,8 +193,7 @@
         let playerPos = 0;
         let steer = 0;
         let segments = [];
-        let velocity = 0.002;
-        let segmentSpeed = velocity;
+        let velocity = BASE_VELOCITY;
         let originX = 0;
         let trackIndex = 0;
         let currentTrack = TRACKS[trackIndex];
@@ -206,7 +209,6 @@
         // Verificar orientación
         function checkOrientation() {
             if (window.innerHeight > window.innerWidth) {
-                // Vertical
                 orientationWarning.style.display = 'flex';
                 if (!gameRunning) {
                     startScreen.style.display = 'none';
@@ -216,7 +218,6 @@
                 }
                 return false;
             } else {
-                // Horizontal
                 orientationWarning.style.display = 'none';
                 if (!gameRunning) {
                     startScreen.style.display = 'flex';
@@ -237,7 +238,8 @@
                 const distance = INITIAL_DISTANCE + i * POST_SPACING;
                 segments.push(createSegment(distance));
             }
-            collisionCooldown = 60;
+            collisionCooldown = 30;
+            velocity = BASE_VELOCITY;
         }
 
         function createSegment(distance) {
@@ -280,10 +282,13 @@
 
             // Draw player position
             ctx.fillStyle = 'red';
-            ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 5, canvas.height - 20, 10, 10);
+            ctx.fillRect(canvas.width * (0.5 + playerPos) - 5, canvas.height - 20, 10, 20);
         }
 
         function updateRoad() {
+            // Aumentar velocidad progresivamente
+            velocity = Math.min(BASE_VELOCITY + (time * SPEED_INCREASE), MAX_VELOCITY);
+
             // Update steering
             const STEER_SPEED = 0.001;
             steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
@@ -309,7 +314,7 @@
 
             // Update segments
             segments.forEach(seg => {
-                seg.distance += segmentSpeed;
+                seg.distance += velocity;
                 seg.progress = seg.distance / MAX_DISTANCE;
                 const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
                 seg.leftPos = originX - widthFactor;
@@ -335,18 +340,27 @@
 
             // Check for collision with cooldown
             if (collisionCooldown <= 0) {
-                const playerX = playerPos * 0.1;
-                const closestSeg = segments[0];
-                if (closestSeg.progress < 0.15) {
-                    const margin = 0.03;
-                    if (playerX < closestSeg.leftPos + margin || playerX > closestSeg.rightPos - margin) {
+                const playerX = playerPos;
+                const closestSeg = segments.find(seg => seg.progress < 0.3);
+                
+                if (closestSeg) {
+                    const margin = 0.02;
+                    const leftBound = closestSeg.leftPos + margin;
+                    const rightBound = closestSeg.rightPos - margin;
+                    
+                    if (playerX < leftBound || playerX > rightBound) {
                         lives--;
                         livesElement.textContent = lives;
                         if (lives <= 0) {
                             gameOver();
                         } else {
+                            // Efecto visual de choque
+                            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            
                             playerPos = 0;
-                            collisionCooldown = 45;
+                            collisionCooldown = 30;
+                            velocity = Math.max(BASE_VELOCITY, velocity * 0.7);
                         }
                     }
                 }
@@ -368,7 +382,6 @@
 
             updateRoad();
             
-            // Actualizar tiempo en segundos
             time = (timestamp - gameStartTime) / 1000;
             timeElement.textContent = time.toFixed(1);
 
@@ -439,7 +452,6 @@
             }
         }
         
-        // Evento para verificar cambios de orientación
         window.addEventListener('resize', () => {
             checkOrientation();
             resizeCanvas();
@@ -448,8 +460,6 @@
         // Initialize
         checkOrientation();
         resizeCanvas();
-        
-        // Draw initial black screen
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     </script>
