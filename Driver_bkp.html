@@ -68,13 +68,31 @@
             cursor: pointer;
             border-radius: 5px;
         }
+        #ui {
+    position: absolute;
+    top: 10px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-sizing: border-box;
+    font-size: 20px;
+}
+
+#left-ui {
+    text-align: left;
+}
+
+#right-ui {
+    text-align: right;
+}
     </style>
 </head>
 <body>
-    <div id="ui">
-        <div>TIEMPO: <span id="time">0</span>s</div>
-        <div>Ver 2.4 VIDAS: <span id="lives">3</span></div>
-    </div>
+<div id="ui">
+    <div id="left-ui">Ver 2.16 VIDAS: <span id="lives">3</span></div>
+    <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
+</div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
         <div class="arrow-btn" id="leftBtn">←</div>
@@ -128,7 +146,8 @@
             const leftPos = -widthFactor;
             const rightPos = widthFactor;
             
-            const height = 5 + progress * 50;
+            const height = (5 + progress * 50) * 0.5; // 50% del tamaño original (25% más pequeño)
+
             
             return {
                 distance: distance,
@@ -140,29 +159,32 @@
         }
 
         // Dibujar ruta (sin líneas conectando postes)
-        function drawRoad() {
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+function drawRoad() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            for (let i = 0; i < segments.length; i++) {
-                const seg = segments[i];
-                
-                const yPos = canvas.height * seg.progress;
-                const leftX = canvas.width * (0.5 + seg.leftPos);
-                const rightX = canvas.width * (0.5 + seg.rightPos);
-                
-                const postWidth = 5 + seg.progress * 10;
-                const postHeight = seg.height;
-                
-                if (yPos >= 0 && yPos <= canvas.height) {
-                    ctx.fillStyle = '#FFF';
-                    // Poste izquierdo
-                    ctx.fillRect(leftX - postWidth/2, yPos, postWidth, postHeight);
-                    // Poste derecho
-                    ctx.fillRect(rightX - postWidth/2, yPos, postWidth, postHeight);
-                }
-            }
+    // 1cm en píxeles (aproximadamente 37.8px para pantallas de 96dpi)
+    const offsetY = 45; // Redondeamos a 38px por simplicidad
+
+    for (let i = 0; i < segments.length; i++) {
+        const seg = segments[i];
+        
+        const yPos = (canvas.height * seg.progress) + (offsetY * 1.25);
+        const leftX = canvas.width * (0.5 + seg.leftPos);
+        const rightX = canvas.width * (0.5 + seg.rightPos);
+        
+        const postWidth = 5 + seg.progress * 10;
+        const postHeight = seg.height;
+        
+        if (yPos >= 0 && yPos <= canvas.height) {
+            ctx.fillStyle = '#FFF';
+            // Poste izquierdo
+            ctx.fillRect(leftX - postWidth/2, yPos, postWidth, postHeight);
+            // Poste derecho
+            ctx.fillRect(rightX - postWidth/2, yPos, postWidth, postHeight);
         }
+    }
+}
 
         function updateRoad() {
             segments.forEach(seg => {
