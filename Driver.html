@@ -110,10 +110,7 @@
         const POST_SPACING = 0.1;
         const MAX_DISTANCE = 1.4;
         const INITIAL_DISTANCE = 0.0;
-        const SEPARATION_FACTOR = 0.3; // Reduced to make road narrower
-        const PYMIN = 0.1; // Horizon distance
-        const PRSPC = 0.05; // Separation between pylon pairs
-        const KP = 0.5; // Velocity adjustment constant (from VELK = VEL * KP)
+        const SEPARATION_FACTOR = 1.5; // Factor de separación ajustado del segundo código
 
         // Track data (simplified from original TKADT, NOTRK, EPTRK, PROTRK)
         const TRACKS = [
@@ -181,11 +178,10 @@
 
         function createSegment(distance) {
             const progress = distance / MAX_DISTANCE;
-            const pya = progress - PYMIN; // Adjusted y-position (PYA)
-            const widthFactor = pya > 0 ? pya * pya * SEPARATION_FACTOR : 0;
-            const leftPos = originX - widthFactor - PRSPC;
-            const rightPos = originX + widthFactor + PRSPC;
-            const height = 5 + progress * 50;
+            const widthFactor = progress * progress * SEPARATION_FACTOR;
+            const leftPos = originX - widthFactor;
+            const rightPos = originX + widthFactor;
+            const height = (5 + progress * 50) * 0.5; // Altura más pequeña como en el segundo código
             const width = 5 + progress * 20;
             return {
                 distance: distance,
@@ -193,8 +189,7 @@
                 rightPos: rightPos,
                 height: height,
                 width: width,
-                progress: progress,
-                pya: pya
+                progress: progress
             };
         }
 
@@ -203,7 +198,7 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            const offsetY = 45; // 1cm offset in pixels
+            const offsetY = 45;
             for (let i = 0; i < segments.length; i++) {
                 const seg = segments[i];
                 const yPos = (canvas.height * seg.progress) + (offsetY * 1.25);
@@ -224,75 +219,73 @@
             ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 5, canvas.height - 20, 10, 10);
         }
 
-function updateRoad() {
-    // Update steering
-    const STEER_SPEED = 0.005;
-    steer = Math.max(-0.1, Math.min(0.1, steer - playerPos * STEER_SPEED)); // Inverted playerPos
+        function updateRoad() {
+            // Update steering - menos sensible que antes
+            const STEER_SPEED = 0.001; // Reducido para hacerlo menos sensible
+            steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED)); // Inverted playerPos
 
-    // Compute steering constant (STC = STEER * VEL)
-    const stc = steer * velocity * 100;
+            // Compute steering constant (STC = STEER * VEL)
+            const stc = steer * velocity * 50; // Reducido el factor de multiplicación
 
-    // Compute turning coefficient (CRV = CS * VEL)
-    const crv = cs * velocity * 100;
+            // Compute turning coefficient (CRV = CS * VEL)
+            const crv = cs * velocity * 50; // Reducido el factor de multiplicación
 
-    // Update origin (OR = OR + STC + CRV)
-    originX += (stc + crv);
+            // Update origin (OR = OR + STC + CRV)
+            originX += (stc + crv);
 
-    // Limit origin to prevent extreme shifts
-    originX = Math.max(-0.5, Math.min(0.5, originX));
+            // Limit origin to prevent extreme shifts
+            originX = Math.max(-0.5, Math.min(0.5, originX));
 
-    // Update turn distance
-    turnDistance += velocity;
-    if (turnDistance >= dist) {
-        turnDistance = 0;
-        trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
-        cs = currentTrack[trackSegmentIndex].cs;
-        dist = currentTrack[trackSegmentIndex].dist;
-    }
+            // Update turn distance
+            turnDistance += velocity;
+            if (turnDistance >= dist) {
+                turnDistance = 0;
+                trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
+                cs = currentTrack[trackSegmentIndex].cs;
+                dist = currentTrack[trackSegmentIndex].dist;
+            }
 
-    // Update segments
-    segments.forEach(seg => {
-        seg.distance += segmentSpeed;
-        seg.progress = seg.distance / MAX_DISTANCE;
-        seg.pya = seg.progress - PYMIN;
-        const widthFactor = seg.pya > 0 ? seg.pya * seg.pya * SEPARATION_FACTOR : 0;
-        seg.leftPos = originX - widthFactor - PRSPC;
-        seg.rightPos = originX + widthFactor + PRSPC;
-        seg.height = 5 + seg.progress * 50;
-        seg.width = 5 + seg.progress * 20;
-    });
+            // Update segments
+            segments.forEach(seg => {
+                seg.distance += segmentSpeed;
+                seg.progress = seg.distance / MAX_DISTANCE;
+                const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
+                seg.leftPos = originX - widthFactor;
+                seg.rightPos = originX + widthFactor;
+                seg.height = (5 + seg.progress * 50) * 0.5; // Mantenemos altura del segundo código
+                seg.width = 5 + seg.progress * 20;
+            });
 
-    // Recycle segments
-    if (segments[0].distance >= MAX_DISTANCE) {
-        const lastSeg = segments[segments.length - 1];
-        const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
-        const recycledSeg = segments.shift();
-        recycledSeg.distance = newDistance;
-        recycledSeg.progress = newDistance / MAX_DISTANCE;
-        recycledSeg.pya = recycledSeg.progress - PYMIN;
-        const widthFactor = recycledSeg.pya > 0 ? recycledSeg.pya * recycledSeg.pya * SEPARATION_FACTOR : 0;
-        recycledSeg.leftPos = originX - widthFactor - PRSPC;
-        recycledSeg.rightPos = originX + widthFactor + PRSPC;
-        recycledSeg.height = 5 + recycledSeg.progress * 50;
-        recycledSeg.width = 5 + recycledSeg.progress * 20;
-        segments.push(recycledSeg);
-    }
+            // Recycle segments
+            if (segments[0].distance >= MAX_DISTANCE) {
+                const lastSeg = segments[segments.length - 1];
+                const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
+                const recycledSeg = segments.shift();
+                recycledSeg.distance = newDistance;
+                recycledSeg.progress = newDistance / MAX_DISTANCE;
+                const widthFactor = recycledSeg.progress * recycledSeg.progress * SEPARATION_FACTOR;
+                recycledSeg.leftPos = originX - widthFactor;
+                recycledSeg.rightPos = originX + widthFactor;
+                recycledSeg.height = (5 + recycledSeg.progress * 50) * 0.5;
+                recycledSeg.width = 5 + recycledSeg.progress * 20;
+                segments.push(recycledSeg);
+            }
 
-    // Check for collision
-    const playerX = playerPos * 0.1; // Player's relative x-position
-    const closestSeg = segments[0]; // Check collision with closest pylon pair
-    if (closestSeg.progress < 0.2) { // Only check close segments
-        if (playerX < closestSeg.leftPos + 0.02 || playerX > closestSeg.rightPos - 0.02) {
-            lives--;
-            livesElement.textContent = lives;
-            if (lives <= 0) {
-                gameOver();
-            } else {
-                initRoad(); // Reset road on crash
+            // Check for collision
+            const playerX = playerPos * 0.1; // Player's relative x-position
+            const closestSeg = segments[0]; // Check collision with closest pylon pair
+            if (closestSeg.progress < 0.2) { // Only check close segments
+                if (playerX < closestSeg.leftPos + 0.02 || playerX > closestSeg.rightPos - 0.02) {
+                    lives--;
+                    livesElement.textContent = lives;
+                    if (lives <= 0) {
+                        gameOver();
+                    } else {
+                        initRoad(); // Reset road on crash
+                    }
+                }
             }
         }
-    }
-}
 
         function updateGame() {
             updateRoad();
@@ -315,15 +308,15 @@ function updateRoad() {
             }
         }
 
-        // Controles
-        leftBtn.addEventListener('touchstart', () => playerPos = -1);
+        // Controles menos sensibles
+        leftBtn.addEventListener('touchstart', () => playerPos = -0.5); // Reducido el valor
         leftBtn.addEventListener('touchend', () => playerPos = 0);
-        rightBtn.addEventListener('touchstart', () => playerPos = 1);
+        rightBtn.addEventListener('touchstart', () => playerPos = 0.5); // Reducido el valor
         rightBtn.addEventListener('touchend', () => playerPos = 0);
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') playerPos = -1;
-            if (e.key === 'ArrowRight') playerPos = 1;
+            if (e.key === 'ArrowLeft') playerPos = -0.5; // Reducido el valor
+            if (e.key === 'ArrowRight') playerPos = 0.5; // Reducido el valor
         });
         document.addEventListener('keyup', (e) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') playerPos = 0;
