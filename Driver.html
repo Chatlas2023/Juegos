@@ -81,7 +81,7 @@
 </head>
 <body>
 <div id="ui">
-    <div id="left-ui">Ver 2.20 VIDAS: <span id="lives">3</span></div>
+    <div id="left-ui">Ver 2.21 VIDAS: <span id="lives">3</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -177,7 +177,7 @@
                 const distance = INITIAL_DISTANCE + i * POST_SPACING;
                 segments.push(createSegment(distance));
             }
-            collisionCooldown = 0;
+            collisionCooldown = 60; // Mayor cooldown inicial
         }
 
         function createSegment(distance) {
@@ -277,8 +277,11 @@
             if (collisionCooldown <= 0) {
                 const playerX = playerPos * 0.1;
                 const closestSeg = segments[0];
-                if (closestSeg.progress < 0.2) {
-                    if (playerX < closestSeg.leftPos + 0.02 || playerX > closestSeg.rightPos - 0.02) {
+                // Solo verificar colisión cuando los postes están cerca del jugador
+                if (closestSeg.progress < 0.15) {
+                    // Ajustamos los márgenes de colisión
+                    const margin = 0.03;
+                    if (playerX < closestSeg.leftPos + margin || playerX > closestSeg.rightPos - margin) {
                         lives--;
                         livesElement.textContent = lives;
                         if (lives <= 0) {
@@ -286,7 +289,7 @@
                         } else {
                             // Reset player position after collision
                             playerPos = 0;
-                            collisionCooldown = 30; // Cooldown frames
+                            collisionCooldown = 45; // Cooldown frames aumentado
                         }
                     }
                 }
