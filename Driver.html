@@ -117,7 +117,7 @@
     <p>Para jugar Night Driver, por favor coloque su teléfono en posición horizontal</p>
 </div>
 <div id="ui">
-    <div id="left-ui">Ver 2.234 VIDAS: <span id="lives">3</span></div>
+    <div id="left-ui">Ver 2.234 VIDAS: <span id="lives">10</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -189,7 +189,7 @@
         // Variables del juego
         let gameRunning = false;
         let time = 0;
-        let lives = 3;
+        let lives = 10;
         let playerPos = 0;
         let steer = 0;
         let segments = [];
@@ -411,7 +411,7 @@
             
             initRoad();
             time = 0;
-            lives = 3;
+            lives = 10;
             steer = 0;
             playerPos = 0;
             livesElement.textContent = lives;
