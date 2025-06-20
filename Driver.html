@@ -17,6 +17,10 @@
         #gameCanvas {
             display: block;
             background: #000;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
         }
         #ui {
             position: absolute;
@@ -27,6 +31,7 @@
             padding: 0 20px;
             box-sizing: border-box;
             font-size: 20px;
+            z-index: 2;
         }
         #left-ui {
             text-align: left;
@@ -42,6 +47,7 @@
             justify-content: space-between;
             padding: 0 20px;
             box-sizing: border-box;
+            z-index: 2;
         }
         .arrow-btn {
             background: rgba(255, 255, 255, 0.2);
@@ -73,7 +79,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10;
+            z-index: 3;
         }
         #startButton {
             padding: 15px 30px;
@@ -95,7 +101,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 20;
+            z-index: 4;
             text-align: center;
             padding: 20px;
         }
@@ -107,7 +113,7 @@
 </head>
 <body>
 <div id="orientationWarning">
-    <h2>Gire su dispositivo a modo horizontal</h2>
+    <h2>Gire su dispositivo</h2>
     <p>Para jugar Night Driver, por favor coloque su teléfono en posición horizontal</p>
 </div>
 <div id="ui">
