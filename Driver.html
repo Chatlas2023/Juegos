@@ -351,14 +351,17 @@ function updateRoad() {
     // Check for collision with cooldown
     if (collisionCooldown <= 0) {
         const playerX = playerPos;
-        const closestSeg = segments.find(seg => seg.progress > 0.1 && seg.progress < 0.3);
+        // Buscamos segmentos más cercanos al jugador (entre 0.05 y 0.25 de progreso)
+        const closestSeg = segments.find(seg => seg.progress > 0.05 && seg.progress < 0.25);
         
         if (closestSeg) {
-            const margin = 0.02;
+            // Aumentamos el margen para hacerlo menos sensible
+            const margin = 0.05;  // Aumentado de 0.02 a 0.05
             const leftBound = closestSeg.leftPos + margin;
             const rightBound = closestSeg.rightPos - margin;
             
-            if (playerX < leftBound || playerX > rightBound) {
+            // Solo colisión si el auto está claramente fuera de los límites
+            if (playerX <= leftBound || playerX >= rightBound) {
                 lives--;
                 livesElement.textContent = lives;
                 if (lives <= 0) {
@@ -377,7 +380,7 @@ function updateRoad() {
     } else {
         collisionCooldown--;
     }
-} // ← Esta llave faltaba
+}
 
         function updateGame(timestamp) {
             if (!gameRunning) return;
