@@ -90,7 +90,7 @@
 </head>
 <body>
 <div id="ui">
-    <div id="left-ui">Ver 2.14 VIDAS: <span id="lives">3</span></div>
+    <div id="left-ui">Ver 2.15 VIDAS: <span id="lives">3</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -146,7 +146,7 @@
             const leftPos = -widthFactor;
             const rightPos = widthFactor;
             
-            const height = (5 + progress * 50) * 0.75; // 75% del tamaño original (25% más pequeño)
+            const height = (5 + progress * 50) * 0.5; // 50% del tamaño original (25% más pequeño)
 
             
             return {
