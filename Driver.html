@@ -117,7 +117,7 @@
     <p>Para jugar Night Driver, por favor coloque su teléfono en posición horizontal</p>
 </div>
 <div id="ui">
-    <div id="left-ui">Ver 2.9 VIDAS: <span id="lives">10</span></div>
+    <div id="left-ui">Ver 2.222 VIDAS: <span id="lives">10</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -147,7 +147,7 @@
         const POST_SPACING = 0.1;
         const MAX_DISTANCE = 1.4;
         const INITIAL_DISTANCE = 0.0;
-        const SEPARATION_FACTOR = 1.5;
+        const SEPARATION_FACTOR = 0.3; // Reducido para mejor visualización
         const BASE_VELOCITY = 0.002;
         const MAX_VELOCITY = 0.008;
         const SPEED_INCREASE = 0.00001;
@@ -163,26 +163,6 @@
                 { cs: 0.01, dist: 0.4 },
                 { cs: -0.01, dist: 0.4 },
                 { cs: 0, dist: 0.5 }
-            ],
-            // Expert Track: sharper curves
-            [
-                { cs: 0, dist: 0.4 },
-                { cs: 0.03, dist: 0.2 },
-                { cs: -0.03, dist: 0.2 },
-                { cs: 0.02, dist: 0.3 },
-                { cs: -0.02, dist: 0.3 },
-                { cs: 0.015, dist: 0.2 },
-                { cs: -0.015, dist: 0.2 }
-            ],
-            // Pro Track: very sharp curves
-            [
-                { cs: 0, dist: 0.3 },
-                { cs: 0.04, dist: 0.15 },
-                { cs: -0.04, dist: 0.15 },
-                { cs: 0.03, dist: 0.2 },
-                { cs: -0.03, dist: 0.2 },
-                { cs: 0.02, dist: 0.25 },
-                { cs: -0.02, dist: 0.25 }
             ]
         ];
 
@@ -245,11 +225,11 @@
 
         function createSegment(distance) {
             const progress = distance / MAX_DISTANCE;
-            const widthFactor = SEPARATION_FACTOR; // Constante en lugar de progresivo
+            const widthFactor = SEPARATION_FACTOR;
             const leftPos = originX - widthFactor;
             const rightPos = originX + widthFactor;
-            const height = (5 + progress * 50) * 0.5;
-            const width = 5 + progress * 20;
+            const height = 20 + progress * 30; // Altura más consistente
+            const width = 5 + progress * 5; // Ancho más consistente
             return {
                 distance: distance,
                 leftPos: leftPos,
@@ -268,7 +248,7 @@
             const offsetY = 45;
             for (let i = 0; i < segments.length; i++) {
                 const seg = segments[i];
-                const yPos = (canvas.height * seg.progress) + (offsetY * 1.25);
+                const yPos = (canvas.height * seg.progress) + offsetY;
                 const leftX = canvas.width * (0.5 + seg.leftPos);
                 const rightX = canvas.width * (0.5 + seg.rightPos);
                 const postWidth = seg.width;
@@ -276,43 +256,39 @@
 
                 if (yPos >= 0 && yPos <= canvas.height) {
                     ctx.fillStyle = '#FFF';
-                    ctx.fillRect(leftX - postWidth / 2, yPos, postWidth, postHeight);
-                    ctx.fillRect(rightX - postWidth / 2, yPos, postWidth, postHeight);
+                    // Poste izquierdo
+                    ctx.fillRect(leftX - postWidth/2, yPos, postWidth, postHeight);
+                    // Poste derecho
+                    ctx.fillRect(rightX - postWidth/2, yPos, postWidth, postHeight);
                     
-                    // Dibujar línea entre postes para mejor visualización
+                    // Dibujar líneas entre postes para mejor visualización
                     if (i > 0) {
                         const prevSeg = segments[i-1];
-                        const prevYPos = (canvas.height * prevSeg.progress) + (offsetY * 1.25);
+                        const prevYPos = (canvas.height * prevSeg.progress) + offsetY;
                         const prevLeftX = canvas.width * (0.5 + prevSeg.leftPos);
                         const prevRightX = canvas.width * (0.5 + prevSeg.rightPos);
                         
                         ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
                         ctx.lineWidth = 2;
+                        
+                        // Línea izquierda
                         ctx.beginPath();
-                        ctx.moveTo(prevLeftX, prevYPos + prevSeg.height);
-                        ctx.lineTo(leftX, yPos + postHeight);
+                        ctx.moveTo(prevLeftX, prevYPos + prevSeg.height/2);
+                        ctx.lineTo(leftX, yPos + postHeight/2);
                         ctx.stroke();
                         
+                        // Línea derecha
                         ctx.beginPath();
-                        ctx.moveTo(prevRightX, prevYPos + prevSeg.height);
-                        ctx.lineTo(rightX, yPos + postHeight);
+                        ctx.moveTo(prevRightX, prevYPos + prevSeg.height/2);
+                        ctx.lineTo(rightX, yPos + postHeight/2);
                         ctx.stroke();
                     }
                 }
             }
 
-            // Dibujar auto
-            if (carImage.complete) {
-                const carWidth = 100;
-                const carHeight = 60;
-                const carX = canvas.width * (0.5 + playerPos) - carWidth/2;
-                const carY = canvas.height - carHeight - 10;
-                ctx.drawImage(carImage, carX, carY, carWidth, carHeight);
-            } else {
-                // Dibujo temporal si la imagen no está cargada
-                ctx.fillStyle = 'red';
-                ctx.fillRect(canvas.width * (0.5 + playerPos) - 25, canvas.height - 60, 50, 40);
-            }
+            // Dibujar auto (simplificado sin imagen)
+            ctx.fillStyle = 'red';
+            ctx.fillRect(canvas.width * (0.5 + playerPos) - 25, canvas.height - 60, 50, 40);
         }
 
         function updateRoad() {
@@ -346,12 +322,11 @@
             segments.forEach(seg => {
                 seg.distance += velocity;
                 seg.progress = seg.distance / MAX_DISTANCE;
-                // Mantenemos la separación constante en lugar de progresiva
-                const widthFactor = SEPARATION_FACTOR;
-                seg.leftPos = originX - widthFactor;
-                seg.rightPos = originX + widthFactor;
-                seg.height = (5 + seg.progress * 50) * 0.5;
-                seg.width = 5 + seg.progress * 20;
+                // Separación constante
+                seg.leftPos = originX - SEPARATION_FACTOR;
+                seg.rightPos = originX + SEPARATION_FACTOR;
+                seg.height = 20 + seg.progress * 30;
+                seg.width = 5 + seg.progress * 5;
             });
 
             // Recycle segments
@@ -361,37 +336,31 @@
                 const recycledSeg = segments.shift();
                 recycledSeg.distance = newDistance;
                 recycledSeg.progress = newDistance / MAX_DISTANCE;
-                const widthFactor = SEPARATION_FACTOR;
-                recycledSeg.leftPos = originX - widthFactor;
-                recycledSeg.rightPos = originX + widthFactor;
-                recycledSeg.height = (5 + recycledSeg.progress * 50) * 0.5;
-                recycledSeg.width = 5 + recycledSeg.progress * 20;
+                recycledSeg.leftPos = originX - SEPARATION_FACTOR;
+                recycledSeg.rightPos = originX + SEPARATION_FACTOR;
+                recycledSeg.height = 20 + recycledSeg.progress * 30;
+                recycledSeg.width = 5 + recycledSeg.progress * 5;
                 segments.push(recycledSeg);
             }
 
-            // Check for collision with cooldown
+            // Check for collision
             if (collisionCooldown <= 0) {
                 const playerX = playerPos;
-                // Buscamos segmentos más cercanos al jugador (entre 0.05 y 0.25 de progreso)
                 const closestSeg = segments.find(seg => seg.progress > 0.05 && seg.progress < 0.25);
                 
                 if (closestSeg) {
-                    // Aumentamos el margen para hacerlo menos sensible
-                    const margin = 0.05;  // Aumentado de 0.02 a 0.05
+                    const margin = 0.05;
                     const leftBound = closestSeg.leftPos + margin;
                     const rightBound = closestSeg.rightPos - margin;
                     
-                    // Solo colisión si el auto está claramente fuera de los límites
                     if (playerX <= leftBound || playerX >= rightBound) {
                         lives--;
                         livesElement.textContent = lives;
                         if (lives <= 0) {
                             gameOver();
                         } else {
-                            // Efecto visual de choque
                             ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
                             ctx.fillRect(0, 0, canvas.width, canvas.height);
-                            
                             playerPos = 0;
                             collisionCooldown = 30;
                             velocity = Math.max(BASE_VELOCITY, velocity * 0.7);
@@ -436,9 +405,6 @@
             if (!checkOrientation()) {
                 return;
             }
-            
-            // Cargar imagen del auto
-            carImage.src = 'car.png'; // Asegúrate de tener este archivo en tu proyecto
             
             if (gameLoopId) {
                 cancelAnimationFrame(gameLoopId);
