@@ -68,13 +68,31 @@
             cursor: pointer;
             border-radius: 5px;
         }
+        #ui {
+    position: absolute;
+    top: 10px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-sizing: border-box;
+    font-size: 20px;
+}
+
+#left-ui {
+    text-align: left;
+}
+
+#right-ui {
+    text-align: right;
+}
     </style>
 </head>
 <body>
-    <div id="ui">
-        <div>TIEMPO: <span id="time">0</span>s</div>
-        <div>Ver 2.7 VIDAS: <span id="lives">3</span></div>
-    </div>
+<div id="ui">
+    <div id="left-ui">Ver 2.8 VIDAS: <span id="lives">3</span></div>
+    <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
+</div>
     <canvas id="gameCanvas"></canvas>
     <div id="controls">
         <div class="arrow-btn" id="leftBtn">←</div>
