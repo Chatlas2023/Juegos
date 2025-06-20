@@ -81,7 +81,7 @@
 </head>
 <body>
 <div id="ui">
-    <div id="left-ui">Ver 2.19 VIDAS: <span id="lives">3</span></div>
+    <div id="left-ui">Ver 2.20 VIDAS: <span id="lives">3</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -163,6 +163,7 @@
         let dist = currentTrack[trackSegmentIndex].dist;
         let lastTime = 0;
         let gameLoopId = null;
+        let collisionCooldown = 0;
 
         // Inicializar ruta
         function initRoad() {
@@ -176,6 +177,7 @@
                 const distance = INITIAL_DISTANCE + i * POST_SPACING;
                 segments.push(createSegment(distance));
             }
+            collisionCooldown = 0;
         }
 
         function createSegment(distance) {
@@ -271,19 +273,25 @@
                 segments.push(recycledSeg);
             }
 
-            // Check for collision
-            const playerX = playerPos * 0.1;
-            const closestSeg = segments[0];
-            if (closestSeg.progress < 0.2) {
-                if (playerX < closestSeg.leftPos + 0.02 || playerX > closestSeg.rightPos - 0.02) {
-                    lives--;
-                    livesElement.textContent = lives;
-                    if (lives <= 0) {
-                        gameOver();
-                    } else {
-                        initRoad();
+            // Check for collision with cooldown
+            if (collisionCooldown <= 0) {
+                const playerX = playerPos * 0.1;
+                const closestSeg = segments[0];
+                if (closestSeg.progress < 0.2) {
+                    if (playerX < closestSeg.leftPos + 0.02 || playerX > closestSeg.rightPos - 0.02) {
+                        lives--;
+                        livesElement.textContent = lives;
+                        if (lives <= 0) {
+                            gameOver();
+                        } else {
+                            // Reset player position after collision
+                            playerPos = 0;
+                            collisionCooldown = 30; // Cooldown frames
+                        }
                     }
                 }
+            } else {
+                collisionCooldown--;
             }
         }
 
