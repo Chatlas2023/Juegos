@@ -224,75 +224,75 @@
             ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 5, canvas.height - 20, 10, 10);
         }
 
-        function updateRoad() {
-            // Update steering
-            const STEER_SPEED = 0.005;
-            steer = Math.max(-0.1, Math.min(0.1, steer + playerPos * STEER_SPEED));
+function updateRoad() {
+    // Update steering
+    const STEER_SPEED = 0.005;
+    steer = Math.max(-0.1, Math.min(0.1, steer - playerPos * STEER_SPEED)); // Inverted playerPos
 
-            // Compute steering constant (STC = STEER * VEL)
-            const stc = steer * velocity * 100;
+    // Compute steering constant (STC = STEER * VEL)
+    const stc = steer * velocity * 100;
 
-            // Compute turning coefficient (CRV = CS * VEL)
-            const crv = cs * velocity * 100;
+    // Compute turning coefficient (CRV = CS * VEL)
+    const crv = cs * velocity * 100;
 
-            // Update origin (OR = OR + STC + CRV)
-            originX += (stc + crv);
+    // Update origin (OR = OR + STC + CRV)
+    originX += (stc + crv);
 
-            // Limit origin to prevent extreme shifts
-            originX = Math.max(-0.5, Math.min(0.5, originX));
+    // Limit origin to prevent extreme shifts
+    originX = Math.max(-0.5, Math.min(0.5, originX));
 
-            // Update turn distance
-            turnDistance += velocity;
-            if (turnDistance >= dist) {
-                turnDistance = 0;
-                trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
-                cs = currentTrack[trackSegmentIndex].cs;
-                dist = currentTrack[trackSegmentIndex].dist;
-            }
+    // Update turn distance
+    turnDistance += velocity;
+    if (turnDistance >= dist) {
+        turnDistance = 0;
+        trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
+        cs = currentTrack[trackSegmentIndex].cs;
+        dist = currentTrack[trackSegmentIndex].dist;
+    }
 
-            // Update segments
-            segments.forEach(seg => {
-                seg.distance += segmentSpeed;
-                seg.progress = seg.distance / MAX_DISTANCE;
-                seg.pya = seg.progress - PYMIN;
-                const widthFactor = seg.pya > 0 ? seg.pya * seg.pya * SEPARATION_FACTOR : 0;
-                seg.leftPos = originX - widthFactor - PRSPC;
-                seg.rightPos = originX + widthFactor + PRSPC;
-                seg.height = 5 + seg.progress * 50;
-                seg.width = 5 + seg.progress * 20;
-            });
+    // Update segments
+    segments.forEach(seg => {
+        seg.distance += segmentSpeed;
+        seg.progress = seg.distance / MAX_DISTANCE;
+        seg.pya = seg.progress - PYMIN;
+        const widthFactor = seg.pya > 0 ? seg.pya * seg.pya * SEPARATION_FACTOR : 0;
+        seg.leftPos = originX - widthFactor - PRSPC;
+        seg.rightPos = originX + widthFactor + PRSPC;
+        seg.height = 5 + seg.progress * 50;
+        seg.width = 5 + seg.progress * 20;
+    });
 
-            // Recycle segments
-            if (segments[0].distance >= MAX_DISTANCE) {
-                const lastSeg = segments[segments.length - 1];
-                const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
-                const recycledSeg = segments.shift();
-                recycledSeg.distance = newDistance;
-                recycledSeg.progress = newDistance / MAX_DISTANCE;
-                recycledSeg.pya = recycledSeg.progress - PYMIN;
-                const widthFactor = recycledSeg.pya > 0 ? recycledSeg.pya * recycledSeg.pya * SEPARATION_FACTOR : 0;
-                recycledSeg.leftPos = originX - widthFactor - PRSPC;
-                recycledSeg.rightPos = originX + widthFactor + PRSPC;
-                recycledSeg.height = 5 + recycledSeg.progress * 50;
-                recycledSeg.width = 5 + recycledSeg.progress * 20;
-                segments.push(recycledSeg);
-            }
+    // Recycle segments
+    if (segments[0].distance >= MAX_DISTANCE) {
+        const lastSeg = segments[segments.length - 1];
+        const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
+        const recycledSeg = segments.shift();
+        recycledSeg.distance = newDistance;
+        recycledSeg.progress = newDistance / MAX_DISTANCE;
+        recycledSeg.pya = recycledSeg.progress - PYMIN;
+        const widthFactor = recycledSeg.pya > 0 ? recycledSeg.pya * recycledSeg.pya * SEPARATION_FACTOR : 0;
+        recycledSeg.leftPos = originX - widthFactor - PRSPC;
+        recycledSeg.rightPos = originX + widthFactor + PRSPC;
+        recycledSeg.height = 5 + recycledSeg.progress * 50;
+        recycledSeg.width = 5 + recycledSeg.progress * 20;
+        segments.push(recycledSeg);
+    }
 
-            // Check for collision
-            const playerX = playerPos * 0.1; // Player's relative x-position
-            const closestSeg = segments[0]; // Check collision with closest pylon pair
-            if (closestSeg.progress < 0.2) { // Only check close segments
-                if (playerX < closestSeg.leftPos + 0.02 || playerX > closestSeg.rightPos - 0.02) {
-                    lives--;
-                    livesElement.textContent = lives;
-                    if (lives <= 0) {
-                        gameOver();
-                    } else {
-                        initRoad(); // Reset road on crash
-                    }
-                }
+    // Check for collision
+    const playerX = playerPos * 0.1; // Player's relative x-position
+    const closestSeg = segments[0]; // Check collision with closest pylon pair
+    if (closestSeg.progress < 0.2) { // Only check close segments
+        if (playerX < closestSeg.leftPos + 0.02 || playerX > closestSeg.rightPos - 0.02) {
+            lives--;
+            livesElement.textContent = lives;
+            if (lives <= 0) {
+                gameOver();
+            } else {
+                initRoad(); // Reset road on crash
             }
         }
+    }
+}
 
         function updateGame() {
             updateRoad();
