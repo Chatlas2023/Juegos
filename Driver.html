@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Night Driver - Ruta con Curvas</title>
+    <title>Night Driver - Ruta Continua</title>
     <style>
         body {
             margin: 0;
@@ -100,7 +100,7 @@
     </div>
     <div id="startScreen">
         <h1>NIGHT DRIVER</h1>
-        <p>Use las flechas para mantenerse en el camino</p>
+        <p>Use las flechas</p>
         <button id="startButton">COMENZAR</button>
     </div>
 
@@ -116,25 +116,18 @@
 
         // Configuración optimizada
         const POST_COUNT = 14;
-        const POST_SPACING = 0.1;
+        const POST_SPACING = 0.1; // Ajustado para mostrar 7 postes
         const MAX_DISTANCE = 1.4;
         const INITIAL_DISTANCE = 0.0;
-        const SEPARATION_FACTOR = 1.5;
-        const ROAD_WIDTH = 0.6; // Ancho relativo del camino
+        const SEPARATION_FACTOR = 1.5; // Factor de separación ajustado
 
         // Variables del juego
         let gameRunning = false;
         let time = 0;
         let lives = 3;
         let playerPos = 0;
-        let playerX = 0; // Posición lateral del jugador (-1 a 1)
         let segments = [];
         let segmentSpeed = 0.002;
-        let roadCurve = 0; // Curvatura actual del camino (-1 a 1)
-        let nextCurve = 0; // Próxima curvatura a alcanzar
-        let curveChangeTimer = 0; // Temporizador para cambios de curva
-        let curveChangeInterval = 2000; // Intervalo para cambios de curva (ms)
-        let lastCurveChange = 0; // Último cambio de curva
 
         // Inicializar ruta
         function initRoad() {
@@ -144,124 +137,67 @@
                 const distance = INITIAL_DISTANCE + i * POST_SPACING;
                 segments.push(createSegment(distance));
             }
-            
-            // Inicializar curva
-            roadCurve = 0;
-            nextCurve = Math.random() * 2 - 1; // Valor entre -1 y 1
-            lastCurveChange = Date.now();
         }
 
         function createSegment(distance) {
             const progress = distance / MAX_DISTANCE;
             
+            const widthFactor = progress * progress * SEPARATION_FACTOR;
+            const leftPos = -widthFactor;
+            const rightPos = widthFactor;
+            
             // Aumentamos la altura y el ancho basado en el progreso
             const height = (5 + progress * 50) * 0.5;
-            const width = 5 + progress * 20;
+            const width = 5 + progress * 20; // Ancho base más aumento progresivo
             
             return {
                 distance: distance,
+                leftPos: leftPos,
+                rightPos: rightPos,
                 height: height,
                 width: width,
-                progress: progress,
-                curveOffset: 0 // Offset de curva para este segmento
+                progress: progress
             };
         }
 
-        // Dibujar ruta con curvas
+        // Dibujar ruta (sin líneas conectando postes)
         function drawRoad() {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            const offsetY = 45;
-            const playerCarWidth = 30;
-            const playerCarHeight = 50;
-            
-            // Dibujar postes
+            // 1cm en píxeles (aproximadamente 37.8px para pantallas de 96dpi)
+            const offsetY = 45; // Redondeamos a 38px por simplicidad
+
             for (let i = 0; i < segments.length; i++) {
                 const seg = segments[i];
                 
                 const yPos = (canvas.height * seg.progress) + (offsetY * 1.25);
-                const roadWidthAtSegment = ROAD_WIDTH * (1 - seg.progress * 0.3);
+                const leftX = canvas.width * (0.5 + seg.leftPos);
+                const rightX = canvas.width * (0.5 + seg.rightPos);
                 
-                // Posiciones izquierda y derecha con curvatura
-                const leftX = canvas.width * (0.5 + seg.curveOffset - roadWidthAtSegment/2);
-                const rightX = canvas.width * (0.5 + seg.curveOffset + roadWidthAtSegment/2);
+                const postWidth = seg.width; // Usamos el ancho calculado
+                const postHeight = seg.height;
                 
                 if (yPos >= 0 && yPos <= canvas.height) {
                     ctx.fillStyle = '#FFF';
                     // Poste izquierdo
-                    ctx.fillRect(leftX - seg.width/2, yPos, seg.width, seg.height);
+                    ctx.fillRect(leftX - postWidth/2, yPos, postWidth, postHeight);
                     // Poste derecho
-                    ctx.fillRect(rightX - seg.width/2, yPos, seg.width, seg.height);
-                    
-                    // Opcional: dibujar línea del camino
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(leftX, yPos);
-                    ctx.lineTo(leftX, yPos + seg.height);
-                    ctx.moveTo(rightX, yPos);
-                    ctx.lineTo(rightX, yPos + seg.height);
-                    ctx.stroke();
-                }
-            }
-            
-            // Dibujar coche del jugador
-            const playerY = canvas.height * 0.7;
-            const playerScreenX = canvas.width * (0.5 + playerX * 0.3); // Limitamos movimiento lateral
-            
-            ctx.fillStyle = '#FF0';
-            ctx.fillRect(playerScreenX - playerCarWidth/2, playerY, playerCarWidth, playerCarHeight);
-            
-            // Dibujar límites del camino en la posición del jugador
-            const playerProgress = 0.3; // Progreso aproximado donde está el jugador
-            const playerRoadWidth = ROAD_WIDTH * (1 - playerProgress * 0.3);
-            const playerCurveOffset = roadCurve * 0.3;
-            
-            const playerLeftBound = canvas.width * (0.5 + playerCurveOffset - playerRoadWidth/2);
-            const playerRightBound = canvas.width * (0.5 + playerCurveOffset + playerRoadWidth/2);
-            
-            // Detección de colisión con los límites del camino
-            if (playerScreenX - playerCarWidth/2 < playerLeftBound || 
-                playerScreenX + playerCarWidth/2 > playerRightBound) {
-                // El jugador está fuera del camino
-                lives--;
-                livesElement.textContent = lives;
-                
-                if (lives <= 0) {
-                    gameOver();
-                } else {
-                    // Resetear posición del jugador al centro
-                    playerX = 0;
+                    ctx.fillRect(rightX - postWidth/2, yPos, postWidth, postHeight);
                 }
             }
         }
 
         function updateRoad() {
-            // Actualizar curvatura del camino
-            const now = Date.now();
-            if (now - lastCurveChange > curveChangeInterval) {
-                lastCurveChange = now;
-                roadCurve = nextCurve;
-                nextCurve = Math.random() * 2 - 1;
-                
-                // Ajustar dificultad: curvas más pronunciadas con el tiempo
-                curveChangeInterval = Math.max(1000, 2000 - time * 10);
-            }
-            
-            // Suavizar transición entre curvas
-            const curveProgress = (now - lastCurveChange) / curveChangeInterval;
-            const currentCurve = roadCurve + (nextCurve - roadCurve) * Math.min(1, curveProgress * 3);
-            
             segments.forEach(seg => {
                 seg.distance += segmentSpeed;
                 seg.progress = seg.distance / MAX_DISTANCE;
                 
-                // Aplicar curvatura basada en la distancia (los postes más lejanos se curvan más)
-                seg.curveOffset = currentCurve * seg.progress * 0.5;
-                
+                const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
+                seg.leftPos = -widthFactor;
+                seg.rightPos = widthFactor;
                 seg.height = 5 + seg.progress * 50;
-                seg.width = 5 + seg.progress * 20;
+                seg.width = 5 + seg.progress * 20; // Actualizamos el ancho también
             });
 
             if (segments[0].distance >= MAX_DISTANCE) {
@@ -271,17 +207,14 @@
                 const recycledSeg = segments.shift();
                 recycledSeg.distance = newDistance;
                 recycledSeg.progress = newDistance / MAX_DISTANCE;
+                
+                const widthFactor = recycledSeg.progress * recycledSeg.progress * SEPARATION_FACTOR;
+                recycledSeg.leftPos = -widthFactor;
+                recycledSeg.rightPos = widthFactor;
                 recycledSeg.height = 5 + recycledSeg.progress * 50;
                 recycledSeg.width = 5 + recycledSeg.progress * 20;
-                recycledSeg.curveOffset = currentCurve * recycledSeg.progress * 0.5;
                 
                 segments.push(recycledSeg);
-            }
-            
-            // Actualizar posición del jugador
-            if (playerPos !== 0) {
-                playerX += playerPos * 0.02;
-                playerX = Math.max(-1, Math.min(1, playerX)); // Limitar movimiento
             }
         }
 
@@ -289,16 +222,12 @@
             updateRoad();
             time += segmentSpeed * 25;
             timeElement.textContent = time.toFixed(1);
-            
-            // Aumentar dificultad con el tiempo
-            segmentSpeed = 0.002 + Math.min(0.008, time * 0.0001);
         }
 
         function gameOver() {
             gameRunning = false;
             cancelAnimationFrame(gameLoopId);
             startScreen.style.display = 'flex';
-            startScreen.querySelector('p').textContent = `Puntuación: ${time.toFixed(1)}s`;
         }
 
         let gameLoopId;
@@ -326,7 +255,6 @@
             initRoad();
             time = 0;
             lives = 3;
-            playerX = 0;
             livesElement.textContent = lives;
             startScreen.style.display = 'none';
             gameRunning = true;
