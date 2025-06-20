@@ -339,35 +339,37 @@
             }
 
             // Check for collision with cooldown
-            if (collisionCooldown <= 0) {
-                const playerX = playerPos;
-                const closestSeg = segments.find(seg => seg.progress < 0.3);
-                
-                if (closestSeg) {
-                    const margin = 0.02;
-                    const leftBound = closestSeg.leftPos + margin;
-                    const rightBound = closestSeg.rightPos - margin;
+    if (collisionCooldown <= 0) {
+        const playerX = playerPos;
+        // Solo verificar colisiones con segmentos que estén lo suficientemente cerca
+        const closestSeg = segments.find(seg => seg.progress > 0.1 && seg.progress < 0.3);
+        
+        if (closestSeg) {
+            const margin = 0.02;
+            const leftBound = closestSeg.leftPos + margin;
+            const rightBound = closestSeg.rightPos - margin;
+            
+            // Solo detectar colisión si el jugador se está moviendo activamente
+            if ((playerPos !== 0) && (playerX < leftBound || playerX > rightBound)) {
+                lives--;
+                livesElement.textContent = lives;
+                if (lives <= 0) {
+                    gameOver();
+                } else {
+                    // Efecto visual de choque
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
                     
-                    if (playerX < leftBound || playerX > rightBound) {
-                        lives--;
-                        livesElement.textContent = lives;
-                        if (lives <= 0) {
-                            gameOver();
-                        } else {
-                            // Efecto visual de choque
-                            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-                            ctx.fillRect(0, 0, canvas.width, canvas.height);
-                            
-                            playerPos = 0;
-                            collisionCooldown = 30;
-                            velocity = Math.max(BASE_VELOCITY, velocity * 0.7);
-                        }
-                    }
+                    playerPos = 0;
+                    collisionCooldown = 30;
+                    velocity = Math.max(BASE_VELOCITY, velocity * 0.7);
                 }
-            } else {
-                collisionCooldown--;
             }
         }
+    } else {
+        collisionCooldown--;
+    }
+}
 
         function updateGame(timestamp) {
             if (!gameRunning) return;
