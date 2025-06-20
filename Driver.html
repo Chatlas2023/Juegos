@@ -39,8 +39,9 @@
             bottom: 20px;
             width: 100%;
             display: flex;
-            justify-content: center;
-            gap: 50px;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
         }
         .arrow-btn {
             background: rgba(255, 255, 255, 0.2);
@@ -54,6 +55,12 @@
             align-items: center;
             justify-content: center;
             user-select: none;
+        }
+        #leftBtn {
+            margin-left: 20px;
+        }
+        #rightBtn {
+            margin-right: 20px;
         }
         #startScreen {
             position: absolute;
@@ -104,7 +111,7 @@
     <p>Para jugar Night Driver, por favor coloque su teléfono en posición horizontal</p>
 </div>
 <div id="ui">
-    <div id="left-ui">Ver 2.22 VIDAS: <span id="lives">3</span></div>
+    <div id="left-ui">Ver 2.23 VIDAS: <span id="lives">3</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -188,6 +195,7 @@
         let lastTime = 0;
         let gameLoopId = null;
         let collisionCooldown = 0;
+        let gameStartTime = 0;
 
         // Verificar orientación
         function checkOrientation() {
@@ -195,6 +203,9 @@
                 // Vertical
                 orientationWarning.style.display = 'flex';
                 startScreen.style.display = 'none';
+                if (gameRunning) {
+                    gameOver();
+                }
                 return false;
             } else {
                 // Horizontal
@@ -336,12 +347,18 @@
         function updateGame(timestamp) {
             if (!gameRunning) return;
             
-            if (!lastTime) lastTime = timestamp;
+            if (!lastTime) {
+                lastTime = timestamp;
+                gameStartTime = timestamp;
+            }
+            
             const deltaTime = timestamp - lastTime;
             lastTime = timestamp;
 
             updateRoad();
-            time += segmentSpeed * 25;
+            
+            // Actualizar tiempo en segundos
+            time = (timestamp - gameStartTime) / 1000;
             timeElement.textContent = time.toFixed(1);
 
             drawRoad();
@@ -358,7 +375,9 @@
         }
 
         function startGame() {
-            if (!checkOrientation()) return;
+            if (!checkOrientation()) {
+                return;
+            }
             
             if (gameLoopId) {
                 cancelAnimationFrame(gameLoopId);
@@ -376,6 +395,7 @@
             
             gameRunning = true;
             lastTime = 0;
+            gameStartTime = 0;
             gameLoopId = requestAnimationFrame(updateGame);
             
             drawRoad();
