@@ -81,7 +81,7 @@
 </head>
 <body>
 <div id="ui">
-    <div id="left-ui">Ver 2.16 VIDAS: <span id="lives">3</span></div>
+    <div id="left-ui">Ver 2.17 VIDAS: <span id="lives">3</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -110,9 +110,9 @@
         const POST_SPACING = 0.1;
         const MAX_DISTANCE = 1.4;
         const INITIAL_DISTANCE = 0.0;
-        const SEPARATION_FACTOR = 1.5; // Factor de separación ajustado del segundo código
+        const SEPARATION_FACTOR = 1.5;
 
-        // Track data (simplified from original TKADT, NOTRK, EPTRK, PROTRK)
+        // Track data
         const TRACKS = [
             // Novice Track: gentle curves
             [
@@ -149,18 +149,20 @@
         let gameRunning = false;
         let time = 0;
         let lives = 3;
-        let playerPos = 0; // -1 (left), 0 (neutral), 1 (right)
-        let steer = 0; // Steering value (STEER)
+        let playerPos = 0;
+        let steer = 0;
         let segments = [];
-        let velocity = 0.002; // Base velocity (VELH, VELL)
+        let velocity = 0.002;
         let segmentSpeed = velocity;
-        let originX = 0; // Road origin (ORH, ORL, ORVH)
-        let trackIndex = 0; // Current track (0: Novice, 1: Expert, 2: Pro)
+        let originX = 0;
+        let trackIndex = 0;
         let currentTrack = TRACKS[trackIndex];
-        let trackSegmentIndex = 0; // TRNDX
-        let turnDistance = 0; // TURNL, TURNH
-        let cs = currentTrack[trackSegmentIndex].cs; // Coefficient of sharpness
-        let dist = currentTrack[trackSegmentIndex].dist; // Distance for current track segment
+        let trackSegmentIndex = 0;
+        let turnDistance = 0;
+        let cs = currentTrack[trackSegmentIndex].cs;
+        let dist = currentTrack[trackSegmentIndex].dist;
+        let lastTime = 0;
+        let gameLoopId = null;
 
         // Inicializar ruta
         function initRoad() {
@@ -181,7 +183,7 @@
             const widthFactor = progress * progress * SEPARATION_FACTOR;
             const leftPos = originX - widthFactor;
             const rightPos = originX + widthFactor;
-            const height = (5 + progress * 50) * 0.5; // Altura más pequeña como en el segundo código
+            const height = (5 + progress * 50) * 0.5;
             const width = 5 + progress * 20;
             return {
                 distance: distance,
@@ -214,26 +216,24 @@
                 }
             }
 
-            // Draw player position (for visualization, optional)
+            // Draw player position
             ctx.fillStyle = 'red';
             ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 5, canvas.height - 20, 10, 10);
         }
 
         function updateRoad() {
-            // Update steering - menos sensible que antes
-            const STEER_SPEED = 0.001; // Reducido para hacerlo menos sensible
-            steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED)); // Inverted playerPos
+            // Update steering
+            const STEER_SPEED = 0.001;
+            steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
 
-            // Compute steering constant (STC = STEER * VEL)
-            const stc = steer * velocity * 50; // Reducido el factor de multiplicación
+            // Compute steering constant
+            const stc = steer * velocity * 50;
 
-            // Compute turning coefficient (CRV = CS * VEL)
-            const crv = cs * velocity * 50; // Reducido el factor de multiplicación
+            // Compute turning coefficient
+            const crv = cs * velocity * 50;
 
-            // Update origin (OR = OR + STC + CRV)
+            // Update origin
             originX += (stc + crv);
-
-            // Limit origin to prevent extreme shifts
             originX = Math.max(-0.5, Math.min(0.5, originX));
 
             // Update turn distance
@@ -252,7 +252,7 @@
                 const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
                 seg.leftPos = originX - widthFactor;
                 seg.rightPos = originX + widthFactor;
-                seg.height = (5 + seg.progress * 50) * 0.5; // Mantenemos altura del segundo código
+                seg.height = (5 + seg.progress * 50) * 0.5;
                 seg.width = 5 + seg.progress * 20;
             });
 
@@ -272,70 +272,84 @@
             }
 
             // Check for collision
-            const playerX = playerPos * 0.1; // Player's relative x-position
-            const closestSeg = segments[0]; // Check collision with closest pylon pair
-            if (closestSeg.progress < 0.2) { // Only check close segments
+            const playerX = playerPos * 0.1;
+            const closestSeg = segments[0];
+            if (closestSeg.progress < 0.2) {
                 if (playerX < closestSeg.leftPos + 0.02 || playerX > closestSeg.rightPos - 0.02) {
                     lives--;
                     livesElement.textContent = lives;
                     if (lives <= 0) {
                         gameOver();
                     } else {
-                        initRoad(); // Reset road on crash
+                        initRoad();
                     }
                 }
             }
         }
 
-        function updateGame() {
+        function updateGame(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
             updateRoad();
             time += segmentSpeed * 25;
             timeElement.textContent = time.toFixed(1);
+
+            drawRoad();
+            if (gameRunning) {
+                gameLoopId = requestAnimationFrame(updateGame);
+            }
         }
 
         function gameOver() {
             gameRunning = false;
-            cancelAnimationFrame(gameLoopId);
+            if (gameLoopId) {
+                cancelAnimationFrame(gameLoopId);
+                gameLoopId = null;
+            }
             startScreen.style.display = 'flex';
         }
 
-        let gameLoopId;
-        function runGame() {
-            if (gameRunning) {
-                drawRoad();
-                updateGame();
-                gameLoopId = requestAnimationFrame(runGame);
+        function startGame() {
+            if (gameLoopId) {
+                cancelAnimationFrame(gameLoopId);
             }
+            initRoad();
+            time = 0;
+            lives = 3;
+            steer = 0;
+            playerPos = 0;
+            livesElement.textContent = lives;
+            timeElement.textContent = "0";
+            startScreen.style.display = 'none';
+            gameRunning = true;
+            lastTime = 0;
+            gameLoopId = requestAnimationFrame(updateGame);
         }
 
-        // Controles menos sensibles
-        leftBtn.addEventListener('touchstart', () => playerPos = -0.5); // Reducido el valor
+        // Controles
+        leftBtn.addEventListener('touchstart', () => playerPos = -0.5);
         leftBtn.addEventListener('touchend', () => playerPos = 0);
-        rightBtn.addEventListener('touchstart', () => playerPos = 0.5); // Reducido el valor
+        rightBtn.addEventListener('touchstart', () => playerPos = 0.5);
         rightBtn.addEventListener('touchend', () => playerPos = 0);
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') playerPos = -0.5; // Reducido el valor
-            if (e.key === 'ArrowRight') playerPos = 0.5; // Reducido el valor
+            if (e.key === 'ArrowLeft') playerPos = -0.5;
+            if (e.key === 'ArrowRight') playerPos = 0.5;
         });
         document.addEventListener('keyup', (e) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') playerPos = 0;
         });
 
-        startButton.addEventListener('click', () => {
-            initRoad();
-            time = 0;
-            lives = 3;
-            steer = 0;
-            livesElement.textContent = lives;
-            startScreen.style.display = 'none';
-            gameRunning = true;
-            runGame();
-        });
+        startButton.addEventListener('click', startGame);
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            if (gameRunning) {
+                drawRoad();
+            }
         }
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
