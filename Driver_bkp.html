@@ -17,21 +17,37 @@
         #gameCanvas {
             display: block;
             background: #000;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
         }
         #ui {
             position: absolute;
             top: 10px;
             width: 100%;
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
             font-size: 20px;
+            z-index: 2;
+        }
+        #left-ui {
+            text-align: left;
+        }
+        #right-ui {
+            text-align: right;
         }
         #controls {
             position: fixed;
             bottom: 20px;
             width: 100%;
             display: flex;
-            justify-content: center;
-            gap: 50px;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
+            z-index: 2;
         }
         .arrow-btn {
             background: rgba(255, 255, 255, 0.2);
@@ -46,6 +62,12 @@
             justify-content: center;
             user-select: none;
         }
+        #leftBtn {
+            margin-left: 20px;
+        }
+        #rightBtn {
+            margin-right: 20px;
+        }
         #startScreen {
             position: absolute;
             top: 0;
@@ -57,7 +79,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10;
+            z-index: 3;
         }
         #startButton {
             padding: 15px 30px;
@@ -68,29 +90,34 @@
             cursor: pointer;
             border-radius: 5px;
         }
-        #ui {
-    position: absolute;
-    top: 10px;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    padding: 0 20px;
-    box-sizing: border-box;
-    font-size: 20px;
-}
-
-#left-ui {
-    text-align: left;
-}
-
-#right-ui {
-    text-align: right;
-}
+        #orientationWarning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 4;
+            text-align: center;
+            padding: 20px;
+        }
+        #orientationWarning h2 {
+            color: #FF0;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
+<div id="orientationWarning">
+    <h2>Gire su dispositivo</h2>
+    <p>Para jugar Night Driver, por favor coloque su teléfono en posición horizontal</p>
+</div>
 <div id="ui">
-    <div id="left-ui">Ver 2.16 VIDAS: <span id="lives">3</span></div>
+    <div id="left-ui">Ver 2.24 VIDAS: <span id="lives">3</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -113,43 +140,113 @@
         const rightBtn = document.getElementById('rightBtn');
         const startScreen = document.getElementById('startScreen');
         const startButton = document.getElementById('startButton');
+        const orientationWarning = document.getElementById('orientationWarning');
 
         // Configuración optimizada
         const POST_COUNT = 14;
-        const POST_SPACING = 0.1; // Ajustado para mostrar 7 postes
+        const POST_SPACING = 0.1;
         const MAX_DISTANCE = 1.4;
         const INITIAL_DISTANCE = 0.0;
-        const SEPARATION_FACTOR = 1.5; // Factor de separación ajustado
+        const SEPARATION_FACTOR = 1.5;
+
+        // Track data
+        const TRACKS = [
+            // Novice Track: gentle curves
+            [
+                { cs: 0, dist: 0.5 },
+                { cs: 0.02, dist: 0.3 },
+                { cs: -0.02, dist: 0.3 },
+                { cs: 0.01, dist: 0.4 },
+                { cs: -0.01, dist: 0.4 },
+                { cs: 0, dist: 0.5 }
+            ],
+            // Expert Track: sharper curves
+            [
+                { cs: 0, dist: 0.4 },
+                { cs: 0.03, dist: 0.2 },
+                { cs: -0.03, dist: 0.2 },
+                { cs: 0.02, dist: 0.3 },
+                { cs: -0.02, dist: 0.3 },
+                { cs: 0.015, dist: 0.2 },
+                { cs: -0.015, dist: 0.2 }
+            ],
+            // Pro Track: very sharp curves
+            [
+                { cs: 0, dist: 0.3 },
+                { cs: 0.04, dist: 0.15 },
+                { cs: -0.04, dist: 0.15 },
+                { cs: 0.03, dist: 0.2 },
+                { cs: -0.03, dist: 0.2 },
+                { cs: 0.02, dist: 0.25 },
+                { cs: -0.02, dist: 0.25 }
+            ]
+        ];
 
         // Variables del juego
         let gameRunning = false;
         let time = 0;
         let lives = 3;
         let playerPos = 0;
+        let steer = 0;
         let segments = [];
-        let segmentSpeed = 0.002;
+        let velocity = 0.002;
+        let segmentSpeed = velocity;
+        let originX = 0;
+        let trackIndex = 0;
+        let currentTrack = TRACKS[trackIndex];
+        let trackSegmentIndex = 0;
+        let turnDistance = 0;
+        let cs = currentTrack[trackSegmentIndex].cs;
+        let dist = currentTrack[trackSegmentIndex].dist;
+        let lastTime = 0;
+        let gameLoopId = null;
+        let collisionCooldown = 0;
+        let gameStartTime = 0;
+
+        // Verificar orientación
+        function checkOrientation() {
+            if (window.innerHeight > window.innerWidth) {
+                // Vertical
+                orientationWarning.style.display = 'flex';
+                if (!gameRunning) {
+                    startScreen.style.display = 'none';
+                }
+                if (gameRunning) {
+                    gameOver();
+                }
+                return false;
+            } else {
+                // Horizontal
+                orientationWarning.style.display = 'none';
+                if (!gameRunning) {
+                    startScreen.style.display = 'flex';
+                }
+                return true;
+            }
+        }
 
         // Inicializar ruta
         function initRoad() {
             segments = [];
-            
+            originX = 0;
+            trackSegmentIndex = 0;
+            turnDistance = 0;
+            cs = currentTrack[trackSegmentIndex].cs;
+            dist = currentTrack[trackSegmentIndex].dist;
             for (let i = 0; i < POST_COUNT; i++) {
                 const distance = INITIAL_DISTANCE + i * POST_SPACING;
                 segments.push(createSegment(distance));
             }
+            collisionCooldown = 60;
         }
 
         function createSegment(distance) {
             const progress = distance / MAX_DISTANCE;
-            
             const widthFactor = progress * progress * SEPARATION_FACTOR;
-            const leftPos = -widthFactor;
-            const rightPos = widthFactor;
-            
-            // Aumentamos la altura y el ancho basado en el progreso
+            const leftPos = originX - widthFactor;
+            const rightPos = originX + widthFactor;
             const height = (5 + progress * 50) * 0.5;
-            const width = 5 + progress * 20; // Ancho base más aumento progresivo
-            
+            const width = 5 + progress * 20;
             return {
                 distance: distance,
                 leftPos: leftPos,
@@ -160,113 +257,201 @@
             };
         }
 
-        // Dibujar ruta (sin líneas conectando postes)
+        // Dibujar ruta
         function drawRoad() {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 1cm en píxeles (aproximadamente 37.8px para pantallas de 96dpi)
-            const offsetY = 45; // Redondeamos a 38px por simplicidad
-
+            const offsetY = 45;
             for (let i = 0; i < segments.length; i++) {
                 const seg = segments[i];
-                
                 const yPos = (canvas.height * seg.progress) + (offsetY * 1.25);
                 const leftX = canvas.width * (0.5 + seg.leftPos);
                 const rightX = canvas.width * (0.5 + seg.rightPos);
-                
-                const postWidth = seg.width; // Usamos el ancho calculado
+                const postWidth = seg.width;
                 const postHeight = seg.height;
-                
+
                 if (yPos >= 0 && yPos <= canvas.height) {
                     ctx.fillStyle = '#FFF';
-                    // Poste izquierdo
-                    ctx.fillRect(leftX - postWidth/2, yPos, postWidth, postHeight);
-                    // Poste derecho
-                    ctx.fillRect(rightX - postWidth/2, yPos, postWidth, postHeight);
+                    ctx.fillRect(leftX - postWidth / 2, yPos, postWidth, postHeight);
+                    ctx.fillRect(rightX - postWidth / 2, yPos, postWidth, postHeight);
                 }
             }
+
+            // Draw player position
+            ctx.fillStyle = 'red';
+            ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 5, canvas.height - 20, 10, 10);
         }
 
         function updateRoad() {
+            // Update steering
+            const STEER_SPEED = 0.001;
+            steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
+
+            // Compute steering constant
+            const stc = steer * velocity * 50;
+
+            // Compute turning coefficient
+            const crv = cs * velocity * 50;
+
+            // Update origin
+            originX += (stc + crv);
+            originX = Math.max(-0.5, Math.min(0.5, originX));
+
+            // Update turn distance
+            turnDistance += velocity;
+            if (turnDistance >= dist) {
+                turnDistance = 0;
+                trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
+                cs = currentTrack[trackSegmentIndex].cs;
+                dist = currentTrack[trackSegmentIndex].dist;
+            }
+
+            // Update segments
             segments.forEach(seg => {
                 seg.distance += segmentSpeed;
                 seg.progress = seg.distance / MAX_DISTANCE;
-                
                 const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
-                seg.leftPos = -widthFactor;
-                seg.rightPos = widthFactor;
-                seg.height = 5 + seg.progress * 50;
-                seg.width = 5 + seg.progress * 20; // Actualizamos el ancho también
+                seg.leftPos = originX - widthFactor;
+                seg.rightPos = originX + widthFactor;
+                seg.height = (5 + seg.progress * 50) * 0.5;
+                seg.width = 5 + seg.progress * 20;
             });
 
+            // Recycle segments
             if (segments[0].distance >= MAX_DISTANCE) {
                 const lastSeg = segments[segments.length - 1];
                 const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
-                
                 const recycledSeg = segments.shift();
                 recycledSeg.distance = newDistance;
                 recycledSeg.progress = newDistance / MAX_DISTANCE;
-                
                 const widthFactor = recycledSeg.progress * recycledSeg.progress * SEPARATION_FACTOR;
-                recycledSeg.leftPos = -widthFactor;
-                recycledSeg.rightPos = widthFactor;
-                recycledSeg.height = 5 + recycledSeg.progress * 50;
+                recycledSeg.leftPos = originX - widthFactor;
+                recycledSeg.rightPos = originX + widthFactor;
+                recycledSeg.height = (5 + recycledSeg.progress * 50) * 0.5;
                 recycledSeg.width = 5 + recycledSeg.progress * 20;
-                
                 segments.push(recycledSeg);
+            }
+
+            // Check for collision with cooldown
+            if (collisionCooldown <= 0) {
+                const playerX = playerPos * 0.1;
+                const closestSeg = segments[0];
+                if (closestSeg.progress < 0.15) {
+                    const margin = 0.03;
+                    if (playerX < closestSeg.leftPos + margin || playerX > closestSeg.rightPos - margin) {
+                        lives--;
+                        livesElement.textContent = lives;
+                        if (lives <= 0) {
+                            gameOver();
+                        } else {
+                            playerPos = 0;
+                            collisionCooldown = 45;
+                        }
+                    }
+                }
+            } else {
+                collisionCooldown--;
             }
         }
 
-        function updateGame() {
+        function updateGame(timestamp) {
+            if (!gameRunning) return;
+            
+            if (!lastTime) {
+                lastTime = timestamp;
+                gameStartTime = timestamp;
+            }
+            
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
             updateRoad();
-            time += segmentSpeed * 25;
+            
+            // Actualizar tiempo en segundos
+            time = (timestamp - gameStartTime) / 1000;
             timeElement.textContent = time.toFixed(1);
+
+            drawRoad();
+            gameLoopId = requestAnimationFrame(updateGame);
         }
 
         function gameOver() {
             gameRunning = false;
-            cancelAnimationFrame(gameLoopId);
+            if (gameLoopId) {
+                cancelAnimationFrame(gameLoopId);
+                gameLoopId = null;
+            }
             startScreen.style.display = 'flex';
         }
 
-        let gameLoopId;
-        function runGame() {
+        function startGame() {
+            if (!checkOrientation()) {
+                return;
+            }
+            
+            if (gameLoopId) {
+                cancelAnimationFrame(gameLoopId);
+            }
+            
+            initRoad();
+            time = 0;
+            lives = 3;
+            steer = 0;
+            playerPos = 0;
+            livesElement.textContent = lives;
+            timeElement.textContent = "0";
+            
+            startScreen.style.display = 'none';
+            
+            gameRunning = true;
+            lastTime = 0;
+            gameStartTime = 0;
+            gameLoopId = requestAnimationFrame(updateGame);
+            
             drawRoad();
-            updateGame();
-            gameLoopId = requestAnimationFrame(runGame);
         }
 
         // Controles
-        leftBtn.addEventListener('touchstart', () => playerPos = -1);
+        leftBtn.addEventListener('touchstart', () => playerPos = -0.5);
         leftBtn.addEventListener('touchend', () => playerPos = 0);
-        rightBtn.addEventListener('touchstart', () => playerPos = 1);
+        rightBtn.addEventListener('touchstart', () => playerPos = 0.5);
         rightBtn.addEventListener('touchend', () => playerPos = 0);
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') playerPos = -1;
-            if (e.key === 'ArrowRight') playerPos = 1;
+            if (e.key === 'ArrowLeft') playerPos = -0.5;
+            if (e.key === 'ArrowRight') playerPos = 0.5;
         });
         document.addEventListener('keyup', (e) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') playerPos = 0;
         });
 
-        startButton.addEventListener('click', () => {
-            initRoad();
-            time = 0;
-            lives = 3;
-            livesElement.textContent = lives;
-            startScreen.style.display = 'none';
-            gameRunning = true;
-            runGame();
-        });
+        startButton.addEventListener('click', startGame);
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            if (gameRunning) {
+                drawRoad();
+            } else {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
         }
+        
+        // Evento para verificar cambios de orientación
+        window.addEventListener('resize', () => {
+            checkOrientation();
+            resizeCanvas();
+        });
+        
+        // Initialize
+        checkOrientation();
         resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+        
+        // Draw initial black screen
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
     </script>
 </body>
 </html>
