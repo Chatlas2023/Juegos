@@ -1,413 +1,426 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simon Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Night Driver - Ruta Continua</title>
     <style>
-        /* ESTILOS GENERALES */
         body {
-            font-family: Arial, sans-serif;
-            background-color: #2c3e50;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
             margin: 0;
-            text-align: center;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            touch-action: none;
+            font-family: 'Courier New', monospace;
+            color: white;
         }
-
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        #gameCanvas {
+            display: block;
+            background: #000;
         }
-
-        h1 {
-            color: #f1c40f;
-            margin-bottom: 30px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        /* CONTENEDOR ROJO DE BOTONES */
-        .simon-buttons-container {
-            width: 300px;
-            height: 300px;
-            background-color: #ff0000;
-            border-radius: 25px;
-            padding: 20px;
-            box-sizing: border-box;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        /* BOTONES DE COLORES */
-        .simon-button {
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
-            transition: all 0.2s;
-        }
-
-        .simon-button.active {
-            opacity: 0.8;
-            transform: scale(0.95);
-            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.9);
-        }
-
-        #green {
-            background-color: #2ecc71;
-        }
-
-        #red {
-            background-color: #e74c3c;
-        }
-
-        #yellow {
-            background-color: #f1c40f;
-        }
-
-        #blue {
-            background-color: #3498db;
-        }
-
-        /* PUNTUACIÓN */
-        .score-container {
+        #ui {
+            position: absolute;
+            top: 10px;
+            width: 100%;
             display: flex;
             justify-content: space-between;
-            width: 90%;
-            max-width: 300px;
+            padding: 0 20px;
+            box-sizing: border-box;
+            font-size: 20px;
+        }
+        #left-ui {
+            text-align: left;
+        }
+        #right-ui {
+            text-align: right;
+        }
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+        }
+        .arrow-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            font-size: 30px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        #startButton {
+            padding: 15px 30px;
+            background: #FF0;
+            color: #000;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #orientationWarning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            text-align: center;
+            padding: 20px;
+        }
+        #orientationWarning h2 {
+            color: #FF0;
             margin-bottom: 20px;
-        }
-
-        .score-box {
-            background-color: #34495e;
-            padding: 10px;
-            border-radius: 10px;
-            width: 45%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .score-title {
-            font-size: 14px;
-            color: #bdc3c7;
-            margin-bottom: 5px;
-        }
-
-        .score-value {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        /* CONTROLES */
-        .controls {
-            margin-top: 20px;
-        }
-
-        .controls button {
-    background-color: #9b59b6;
-    color: white;
-    border: none;
-    padding: 12px 40px; /* Aumentar el padding para hacerlo más largo */
-    border-radius: 8px; /* Bordes más suaves */
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 16px; /* Tamaño de fuente un poco más grande */
-    width: 200px; /* Ancho fijo para hacerlo más largo */
-    transition: background 0.3s, transform 0.2s;
-        }
-
-        .controls button:hover {
-    background-color: #8e44ad;
-    transform: scale(1.05); /* Efecto sutil al pasar el mouse */
-        }
-
-        /* MENSAJES */
-        #message {
-            margin: 15px 0;
-            min-height: 24px;
-            font-weight: bold;
-            color: #f1c40f;
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 600px) {
-            .simon-buttons-container {
-                width: 280px;
-                height: 280px;
-                padding: 15px;
-                gap: 15px;
-            }
-        }
-
-        @media (max-width: 400px) {
-            .simon-buttons-container {
-                width: 260px;
-                height: 260px;
-                border-radius: 20px;
-            }
-            
-            h1 {
-                font-size: 24px;
-            }
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <h1>SIMON</h1>
-        
-        <!-- CONTENEDOR ROJO CON BOTONES -->
-        <div class="simon-buttons-container">
-            <button class="simon-button" id="green"></button>
-            <button class="simon-button" id="red"></button>
-            <button class="simon-button" id="yellow"></button>
-            <button class="simon-button" id="blue"></button>
-        </div>
-
-        <!-- MENSAJE -->
-        <div id="message">Presiona Iniciar para jugar</div>
-
-        <!-- PUNTUACIÓN -->
-        <div class="score-container">
-            <div class="score-box">
-                <div class="score-title">Ronda</div>
-                <div class="score-value" id="score">0</div>
-            </div>
-            <div class="score-box">
-                <div class="score-title">Mejor</div>
-                <div class="score-value" id="high-score">0</div>
-            </div>
-        </div>
-
-        <!-- CONTROLES -->
-<div class="controls">
-    <button id="control-btn">Iniciar</button>
+<div id="orientationWarning">
+    <h2>Gire su dispositivo a modo horizontal</h2>
+    <p>Para jugar Night Driver, por favor coloque su teléfono en posición horizontal</p>
 </div>
+<div id="ui">
+    <div id="left-ui">Ver 2.22 VIDAS: <span id="lives">3</span></div>
+    <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
+</div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="controls">
+        <div class="arrow-btn" id="leftBtn">←</div>
+        <div class="arrow-btn" id="rightBtn">→</div>
+    </div>
+    <div id="startScreen">
+        <h1>NIGHT DRIVER</h1>
+        <p>Use las flechas</p>
+        <button id="startButton">COMENZAR</button>
     </div>
 
     <script>
-const buttons = document.querySelectorAll('.simon-button');
-const controlBtn = document.getElementById('control-btn'); // Reemplazar startBtn y restartBtn
-const scoreDisplay = document.getElementById('score');
-const highScoreDisplay = document.getElementById('high-score');
-const messageDisplay = document.getElementById('message');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const timeElement = document.getElementById('time');
+        const livesElement = document.getElementById('lives');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const startScreen = document.getElementById('startScreen');
+        const startButton = document.getElementById('startButton');
+        const orientationWarning = document.getElementById('orientationWarning');
 
-// Variables del juego
-let sequence = [];
-let playerSequence = [];
-let score = 0;
-let highScore = localStorage.getItem('simonHighScore') || 0;
-let isGameActive = false;
-let isPlayerTurn = false;
-let audioContext;
-let gainNode;
-const tones = {
-    green: 587.33,   // Reemplaza 392 (G4 → D5)
-    red: 493.88,     // Reemplaza 329.63 (E4 → B4)
-    yellow: 392.00,  // Reemplaza 261.63 (C4 → G4)
-    blue: 293.66, 
-    error: 110
-};
+        // Configuración optimizada
+        const POST_COUNT = 14;
+        const POST_SPACING = 0.1;
+        const MAX_DISTANCE = 1.4;
+        const INITIAL_DISTANCE = 0.0;
+        const SEPARATION_FACTOR = 1.5;
 
-// Actualizar el récord al cargar la página
-highScoreDisplay.textContent = highScore;
+        // Track data
+        const TRACKS = [
+            // Novice Track: gentle curves
+            [
+                { cs: 0, dist: 0.5 },
+                { cs: 0.02, dist: 0.3 },
+                { cs: -0.02, dist: 0.3 },
+                { cs: 0.01, dist: 0.4 },
+                { cs: -0.01, dist: 0.4 },
+                { cs: 0, dist: 0.5 }
+            ],
+            // Expert Track: sharper curves
+            [
+                { cs: 0, dist: 0.4 },
+                { cs: 0.03, dist: 0.2 },
+                { cs: -0.03, dist: 0.2 },
+                { cs: 0.02, dist: 0.3 },
+                { cs: -0.02, dist: 0.3 },
+                { cs: 0.015, dist: 0.2 },
+                { cs: -0.015, dist: 0.2 }
+            ],
+            // Pro Track: very sharp curves
+            [
+                { cs: 0, dist: 0.3 },
+                { cs: 0.04, dist: 0.15 },
+                { cs: -0.04, dist: 0.15 },
+                { cs: 0.03, dist: 0.2 },
+                { cs: -0.03, dist: 0.2 },
+                { cs: 0.02, dist: 0.25 },
+                { cs: -0.02, dist: 0.25 }
+            ]
+        ];
 
-// Inicializar audio (solo una vez)
-function initAudio() {
-    try {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        gainNode = audioContext.createGain();
-        gainNode.connect(audioContext.destination);
-        gainNode.gain.value = 0.5; // Volumen moderado
-    } catch (e) {
-        console.error("Error inicializando audio:", e);
-    }
-}
+        // Variables del juego
+        let gameRunning = false;
+        let time = 0;
+        let lives = 3;
+        let playerPos = 0;
+        let steer = 0;
+        let segments = [];
+        let velocity = 0.002;
+        let segmentSpeed = velocity;
+        let originX = 0;
+        let trackIndex = 0;
+        let currentTrack = TRACKS[trackIndex];
+        let trackSegmentIndex = 0;
+        let turnDistance = 0;
+        let cs = currentTrack[trackSegmentIndex].cs;
+        let dist = currentTrack[trackSegmentIndex].dist;
+        let lastTime = 0;
+        let gameLoopId = null;
+        let collisionCooldown = 0;
 
-// Llamar a initAudio al primer clic del usuario
-document.body.addEventListener('click', () => {
-    if (!audioContext) {
-        initAudio();
-    }
-}, { once: true });
-
-// Resaltar un botón
-function highlightButton(color) {
-    const button = document.getElementById(color);
-    button.classList.add('active');
-    
-    if (!audioContext) initAudio(); // Asegurar que el audio esté inicializado
-    
-    try {
-        const oscillator = audioContext.createOscillator();
-        oscillator.type = 'sine';
-        oscillator.frequency.value = tones[color];
-        oscillator.connect(gainNode);
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.3); // Sonido corto
-    } catch (e) {
-        console.error("Error reproduciendo sonido:", e);
-    }
-    
-    setTimeout(() => {
-        button.classList.remove('active');
-    }, 300);
-}
-
-// Generar el siguiente paso en la secuencia
-function nextStep() {
-    isPlayerTurn = false;
-    messageDisplay.textContent = "Observa la secuencia...";
-    
-    const colors = ['green', 'red', 'yellow', 'blue'];
-    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-    sequence.push(randomColor);
-    
-    showSequence();
-}
-
-// Mostrar la secuencia al jugador
-function showSequence() {
-    let i = 0;
-    const interval = setInterval(() => {
-        highlightButton(sequence[i]);
-        i++;
-        
-        if (i >= sequence.length) {
-            clearInterval(interval);
-            isPlayerTurn = true;
-            isGameActive = true;
-            messageDisplay.textContent = "Tu turno! Repite la secuencia";
-            playerSequence = [];
+        // Verificar orientación
+        function checkOrientation() {
+            if (window.innerHeight > window.innerWidth) {
+                // Vertical
+                orientationWarning.style.display = 'flex';
+                startScreen.style.display = 'none';
+                return false;
+            } else {
+                // Horizontal
+                orientationWarning.style.display = 'none';
+                return true;
+            }
         }
-    }, 800);
-}
 
-// Manejar el clic del jugador
-function handleButtonClick(color) {
-    if (!isPlayerTurn) return;
-    
-    highlightButton(color);
-    playerSequence.push(color);
-    
-    if (playerSequence[playerSequence.length - 1] !== sequence[playerSequence.length - 1]) {
-        document.body.style.backgroundColor = '#ff0000';
-        setTimeout(() => {
-            document.body.style.backgroundColor = '#2c3e50';
-        }, 200);
-        
-        gameOver();
-        return;
-    }
-    
-    if (playerSequence.length === sequence.length) {
-        isPlayerTurn = false;
-        isGameActive = false;
-        score++;
-        scoreDisplay.textContent = score;
-        messageDisplay.textContent = "¡Correcto! Siguiente nivel...";
-        
-        setTimeout(() => {
-            nextStep();
-        }, 1000);
-    }
-}
-
-// Reproducir sonido de error
-function playErrorSound() {
-    if (!audioContext) initAudio();
-    
-    try {
-        const oscillator = audioContext.createOscillator();
-        const errorGain = audioContext.createGain();
-        
-        oscillator.type = 'square';
-        oscillator.frequency.value = tones.error;
-        oscillator.connect(errorGain);
-        errorGain.connect(audioContext.destination);
-        
-        oscillator.frequency.exponentialRampToValueAtTime(55, audioContext.currentTime + 0.5);
-        errorGain.gain.setValueAtTime(0.5, audioContext.currentTime);
-        errorGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-        
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.5);
-    } catch (e) {
-        console.error("Error en sonido de error:", e);
-    }
-}
-
-// Game over
-function gameOver() {
-    playErrorSound();
-    isGameActive = false;
-    isPlayerTurn = false;
-    messageDisplay.textContent = `¡Game Over! Puntuación: ${score}`;
-    controlBtn.textContent = "Iniciar"; // Cambiar texto a "Iniciar"
-    
-    if (score > highScore) {
-        highScore = score;
-        highScoreDisplay.textContent = highScore;
-        localStorage.setItem('simonHighScore', highScore);
-    }
-    
-    score = 0;
-    scoreDisplay.textContent = score;
-}
-
-// Iniciar juego
-function startGame() {
-    if (sequence.length > 0) return; // Evitar múltiples inicios
-    
-    messageDisplay.textContent = "Comenzando juego...";
-    score = 0;
-    scoreDisplay.textContent = score;
-    sequence = [];
-    playerSequence = [];
-    controlBtn.textContent = "Reiniciar"; // Cambiar texto a "Reiniciar"
-    
-    setTimeout(() => {
-        nextStep();
-    }, 1000);
-}
-
-// Reiniciar juego
-function restartGame() {
-    sequence = [];
-    playerSequence = [];
-    score = 0;
-    scoreDisplay.textContent = score;
-    isGameActive = false;
-    isPlayerTurn = false;
-    messageDisplay.textContent = "Presiona Iniciar para jugar";
-    controlBtn.textContent = "Iniciar"; // Cambiar texto a "Iniciar"
-}
-
-// Manejar el clic del botón único
-function handleControlClick() {
-    if (isGameActive || sequence.length > 0) {
-        restartGame();
-    } else {
-        startGame();
-    }
-}
-
-// Event listeners
-buttons.forEach(button => {
-    button.addEventListener('click', () => {
-        if (isPlayerTurn) {
-            handleButtonClick(button.id);
+        // Inicializar ruta
+        function initRoad() {
+            segments = [];
+            originX = 0;
+            trackSegmentIndex = 0;
+            turnDistance = 0;
+            cs = currentTrack[trackSegmentIndex].cs;
+            dist = currentTrack[trackSegmentIndex].dist;
+            for (let i = 0; i < POST_COUNT; i++) {
+                const distance = INITIAL_DISTANCE + i * POST_SPACING;
+                segments.push(createSegment(distance));
+            }
+            collisionCooldown = 60;
         }
-    });
-});
 
-controlBtn.addEventListener('click', handleControlClick);
+        function createSegment(distance) {
+            const progress = distance / MAX_DISTANCE;
+            const widthFactor = progress * progress * SEPARATION_FACTOR;
+            const leftPos = originX - widthFactor;
+            const rightPos = originX + widthFactor;
+            const height = (5 + progress * 50) * 0.5;
+            const width = 5 + progress * 20;
+            return {
+                distance: distance,
+                leftPos: leftPos,
+                rightPos: rightPos,
+                height: height,
+                width: width,
+                progress: progress
+            };
+        }
+
+        // Dibujar ruta
+        function drawRoad() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const offsetY = 45;
+            for (let i = 0; i < segments.length; i++) {
+                const seg = segments[i];
+                const yPos = (canvas.height * seg.progress) + (offsetY * 1.25);
+                const leftX = canvas.width * (0.5 + seg.leftPos);
+                const rightX = canvas.width * (0.5 + seg.rightPos);
+                const postWidth = seg.width;
+                const postHeight = seg.height;
+
+                if (yPos >= 0 && yPos <= canvas.height) {
+                    ctx.fillStyle = '#FFF';
+                    ctx.fillRect(leftX - postWidth / 2, yPos, postWidth, postHeight);
+                    ctx.fillRect(rightX - postWidth / 2, yPos, postWidth, postHeight);
+                }
+            }
+
+            // Draw player position
+            ctx.fillStyle = 'red';
+            ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 5, canvas.height - 20, 10, 10);
+        }
+
+        function updateRoad() {
+            // Update steering
+            const STEER_SPEED = 0.001;
+            steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
+
+            // Compute steering constant
+            const stc = steer * velocity * 50;
+
+            // Compute turning coefficient
+            const crv = cs * velocity * 50;
+
+            // Update origin
+            originX += (stc + crv);
+            originX = Math.max(-0.5, Math.min(0.5, originX));
+
+            // Update turn distance
+            turnDistance += velocity;
+            if (turnDistance >= dist) {
+                turnDistance = 0;
+                trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
+                cs = currentTrack[trackSegmentIndex].cs;
+                dist = currentTrack[trackSegmentIndex].dist;
+            }
+
+            // Update segments
+            segments.forEach(seg => {
+                seg.distance += segmentSpeed;
+                seg.progress = seg.distance / MAX_DISTANCE;
+                const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
+                seg.leftPos = originX - widthFactor;
+                seg.rightPos = originX + widthFactor;
+                seg.height = (5 + seg.progress * 50) * 0.5;
+                seg.width = 5 + seg.progress * 20;
+            });
+
+            // Recycle segments
+            if (segments[0].distance >= MAX_DISTANCE) {
+                const lastSeg = segments[segments.length - 1];
+                const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
+                const recycledSeg = segments.shift();
+                recycledSeg.distance = newDistance;
+                recycledSeg.progress = newDistance / MAX_DISTANCE;
+                const widthFactor = recycledSeg.progress * recycledSeg.progress * SEPARATION_FACTOR;
+                recycledSeg.leftPos = originX - widthFactor;
+                recycledSeg.rightPos = originX + widthFactor;
+                recycledSeg.height = (5 + recycledSeg.progress * 50) * 0.5;
+                recycledSeg.width = 5 + recycledSeg.progress * 20;
+                segments.push(recycledSeg);
+            }
+
+            // Check for collision with cooldown
+            if (collisionCooldown <= 0) {
+                const playerX = playerPos * 0.1;
+                const closestSeg = segments[0];
+                if (closestSeg.progress < 0.15) {
+                    const margin = 0.03;
+                    if (playerX < closestSeg.leftPos + margin || playerX > closestSeg.rightPos - margin) {
+                        lives--;
+                        livesElement.textContent = lives;
+                        if (lives <= 0) {
+                            gameOver();
+                        } else {
+                            playerPos = 0;
+                            collisionCooldown = 45;
+                        }
+                    }
+                }
+            } else {
+                collisionCooldown--;
+            }
+        }
+
+        function updateGame(timestamp) {
+            if (!gameRunning) return;
+            
+            if (!lastTime) lastTime = timestamp;
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            updateRoad();
+            time += segmentSpeed * 25;
+            timeElement.textContent = time.toFixed(1);
+
+            drawRoad();
+            gameLoopId = requestAnimationFrame(updateGame);
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            if (gameLoopId) {
+                cancelAnimationFrame(gameLoopId);
+                gameLoopId = null;
+            }
+            startScreen.style.display = 'flex';
+        }
+
+        function startGame() {
+            if (!checkOrientation()) return;
+            
+            if (gameLoopId) {
+                cancelAnimationFrame(gameLoopId);
+            }
+            
+            initRoad();
+            time = 0;
+            lives = 3;
+            steer = 0;
+            playerPos = 0;
+            livesElement.textContent = lives;
+            timeElement.textContent = "0";
+            
+            startScreen.style.display = 'none';
+            
+            gameRunning = true;
+            lastTime = 0;
+            gameLoopId = requestAnimationFrame(updateGame);
+            
+            drawRoad();
+        }
+
+        // Controles
+        leftBtn.addEventListener('touchstart', () => playerPos = -0.5);
+        leftBtn.addEventListener('touchend', () => playerPos = 0);
+        rightBtn.addEventListener('touchstart', () => playerPos = 0.5);
+        rightBtn.addEventListener('touchend', () => playerPos = 0);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') playerPos = -0.5;
+            if (e.key === 'ArrowRight') playerPos = 0.5;
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') playerPos = 0;
+        });
+
+        startButton.addEventListener('click', startGame);
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            if (gameRunning) {
+                drawRoad();
+            } else {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+        
+        // Evento para verificar cambios de orientación
+        window.addEventListener('resize', () => {
+            checkOrientation();
+            resizeCanvas();
+        });
+        
+        // Initialize
+        checkOrientation();
+        resizeCanvas();
+        
+        // Draw initial black screen
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
     </script>
 </body>
 </html>
