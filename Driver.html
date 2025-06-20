@@ -295,102 +295,89 @@
             }
         }
 
-        function updateRoad() {
-            // Aumentar velocidad progresivamente
-            velocity = Math.min(BASE_VELOCITY + (time * SPEED_INCREASE), MAX_VELOCITY);
+function updateRoad() {
+    // Aumentar velocidad progresivamente
+    velocity = Math.min(BASE_VELOCITY + (time * SPEED_INCREASE), MAX_VELOCITY);
 
-            // Update steering
-            const STEER_SPEED = 0.001;
-            steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
+    // Update steering
+    const STEER_SPEED = 0.001;
+    steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
 
-            // Compute steering constant
-            const stc = steer * velocity * 50;
+    // Compute steering constant
+    const stc = steer * velocity * 50;
 
-            // Compute turning coefficient
-            const crv = cs * velocity * 50;
+    // Compute turning coefficient
+    const crv = cs * velocity * 50;
 
-            // Update origin
-            originX += (stc + crv);
-            originX = Math.max(-0.5, Math.min(0.5, originX));
+    // Update origin
+    originX += (stc + crv);
+    originX = Math.max(-0.5, Math.min(0.5, originX));
 
-            // Update turn distance
-            turnDistance += velocity;
-            if (turnDistance >= dist) {
-                turnDistance = 0;
-                trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
-                cs = currentTrack[trackSegmentIndex].cs;
-                dist = currentTrack[trackSegmentIndex].dist;
-            }
+    // Update turn distance
+    turnDistance += velocity;
+    if (turnDistance >= dist) {
+        turnDistance = 0;
+        trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
+        cs = currentTrack[trackSegmentIndex].cs;
+        dist = currentTrack[trackSegmentIndex].dist;
+    }
 
-            // Update segments
-            segments.forEach(seg => {
-                seg.distance += velocity;
-                seg.progress = seg.distance / MAX_DISTANCE;
-                const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
-                seg.leftPos = originX - widthFactor;
-                seg.rightPos = originX + widthFactor;
-                seg.height = (5 + seg.progress * 50) * 0.5;
-                seg.width = 5 + seg.progress * 20;
-            });
+    // Update segments
+    segments.forEach(seg => {
+        seg.distance += velocity;
+        seg.progress = seg.distance / MAX_DISTANCE;
+        const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
+        seg.leftPos = originX - widthFactor;
+        seg.rightPos = originX + widthFactor;
+        seg.height = (5 + seg.progress * 50) * 0.5;
+        seg.width = 5 + seg.progress * 20;
+    });
 
-            // Recycle segments
-            if (segments[0].distance >= MAX_DISTANCE) {
-                const lastSeg = segments[segments.length - 1];
-                const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
-                const recycledSeg = segments.shift();
-                recycledSeg.distance = newDistance;
-                recycledSeg.progress = newDistance / MAX_DISTANCE;
-                const widthFactor = recycledSeg.progress * recycledSeg.progress * SEPARATION_FACTOR;
-                recycledSeg.leftPos = originX - widthFactor;
-                recycledSeg.rightPos = originX + widthFactor;
-                recycledSeg.height = (5 + recycledSeg.progress * 50) * 0.5;
-                recycledSeg.width = 5 + recycledSeg.progress * 20;
-                segments.push(recycledSeg);
-            }
+    // Recycle segments
+    if (segments[0].distance >= MAX_DISTANCE) {
+        const lastSeg = segments[segments.length - 1];
+        const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
+        const recycledSeg = segments.shift();
+        recycledSeg.distance = newDistance;
+        recycledSeg.progress = newDistance / MAX_DISTANCE;
+        const widthFactor = recycledSeg.progress * recycledSeg.progress * SEPARATION_FACTOR;
+        recycledSeg.leftPos = originX - widthFactor;
+        recycledSeg.rightPos = originX + widthFactor;
+        recycledSeg.height = (5 + recycledSeg.progress * 50) * 0.5;
+        recycledSeg.width = 5 + recycledSeg.progress * 20;
+        segments.push(recycledSeg);
+    }
 
-            // Check for collision with cooldown
-// Check for collision with cooldown
-if (collisionCooldown <= 0) {
-    const playerX = playerPos;
-    const closestSeg = segments.find(seg => seg.progress > 0.1 && seg.progress < 0.3);
-    
-    if (closestSeg) {
-        const margin = 0.02;
-        const leftBound = closestSeg.leftPos + margin;
-        const rightBound = closestSeg.rightPos - margin;
+    // Check for collision with cooldown
+    if (collisionCooldown <= 0) {
+        const playerX = playerPos;
+        const closestSeg = segments.find(seg => seg.progress > 0.1 && seg.progress < 0.3);
         
-        if ((playerPos !== 0) && (playerX < leftBound || playerX > rightBound)) {  // ← Este es el problema
-            lives--;
-            livesElement.textContent = lives;
-            if (lives <= 0) {
-                gameOver();
-            } else {
-                // Efecto visual de choque
-                ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                playerPos = 0;
-                collisionCooldown = 30;
-                velocity = Math.max(BASE_VELOCITY, velocity * 0.7);
+        if (closestSeg) {
+            const margin = 0.02;
+            const leftBound = closestSeg.leftPos + margin;
+            const rightBound = closestSeg.rightPos - margin;
+            
+            if (playerX < leftBound || playerX > rightBound) {
+                lives--;
+                livesElement.textContent = lives;
+                if (lives <= 0) {
+                    gameOver();
+                } else {
+                    // Efecto visual de choque
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    playerPos = 0;
+                    collisionCooldown = 30;
+                    velocity = Math.max(BASE_VELOCITY, velocity * 0.7);
+                }
             }
         }
-    }
-}
-            if (playerX < leftBound || playerX > rightBound) {  // ← Eliminamos (playerPos !== 0)
-    lives--;
-    livesElement.textContent = lives;
-    if (lives <= 0) {
-        gameOver();
     } else {
-        // Efecto visual de choque
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        playerPos = 0;  // Opcional: puedes decidir si recentrar el auto o no
-        collisionCooldown = 30;
-        velocity = Math.max(BASE_VELOCITY, velocity * 0.7);
+        collisionCooldown--;
     }
-}
+} // ← Esta llave faltaba
 
         function updateGame(timestamp) {
             if (!gameRunning) return;
