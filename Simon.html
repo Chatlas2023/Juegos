@@ -77,34 +77,11 @@
             cursor: pointer;
             border-radius: 5px;
         }
-        #orientationWarning {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 20;
-            text-align: center;
-            padding: 20px;
-        }
-        #orientationWarning h2 {
-            color: #FF0;
-            margin-bottom: 20px;
-        }
     </style>
 </head>
 <body>
-<div id="orientationWarning">
-    <h2>Gire su dispositivo a modo horizontal</h2>
-    <p>Para jugar Night Driver, por favor coloque su teléfono en posición horizontal</p>
-</div>
 <div id="ui">
-    <div id="left-ui">Ver 2.22 VIDAS: <span id="lives">3</span></div>
+    <div id="left-ui">Ver 2.21 VIDAS: <span id="lives">3</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -127,7 +104,6 @@
         const rightBtn = document.getElementById('rightBtn');
         const startScreen = document.getElementById('startScreen');
         const startButton = document.getElementById('startButton');
-        const orientationWarning = document.getElementById('orientationWarning');
 
         // Configuración optimizada
         const POST_COUNT = 14;
@@ -189,20 +165,6 @@
         let gameLoopId = null;
         let collisionCooldown = 0;
 
-        // Verificar orientación
-        function checkOrientation() {
-            if (window.innerHeight > window.innerWidth) {
-                // Vertical
-                orientationWarning.style.display = 'flex';
-                startScreen.style.display = 'none';
-                return false;
-            } else {
-                // Horizontal
-                orientationWarning.style.display = 'none';
-                return true;
-            }
-        }
-
         // Inicializar ruta
         function initRoad() {
             segments = [];
@@ -215,7 +177,7 @@
                 const distance = INITIAL_DISTANCE + i * POST_SPACING;
                 segments.push(createSegment(distance));
             }
-            collisionCooldown = 60;
+            collisionCooldown = 60; // Mayor cooldown inicial
         }
 
         function createSegment(distance) {
@@ -315,7 +277,9 @@
             if (collisionCooldown <= 0) {
                 const playerX = playerPos * 0.1;
                 const closestSeg = segments[0];
+                // Solo verificar colisión cuando los postes están cerca del jugador
                 if (closestSeg.progress < 0.15) {
+                    // Ajustamos los márgenes de colisión
                     const margin = 0.03;
                     if (playerX < closestSeg.leftPos + margin || playerX > closestSeg.rightPos - margin) {
                         lives--;
@@ -323,8 +287,9 @@
                         if (lives <= 0) {
                             gameOver();
                         } else {
+                            // Reset player position after collision
                             playerPos = 0;
-                            collisionCooldown = 45;
+                            collisionCooldown = 45; // Cooldown frames aumentado
                         }
                     }
                 }
@@ -358,12 +323,12 @@
         }
 
         function startGame() {
-            if (!checkOrientation()) return;
-            
+            // Cancel any existing game loop
             if (gameLoopId) {
                 cancelAnimationFrame(gameLoopId);
             }
             
+            // Reset game state
             initRoad();
             time = 0;
             lives = 3;
@@ -372,12 +337,15 @@
             livesElement.textContent = lives;
             timeElement.textContent = "0";
             
+            // Hide start screen
             startScreen.style.display = 'none';
             
+            // Start game loop
             gameRunning = true;
             lastTime = 0;
             gameLoopId = requestAnimationFrame(updateGame);
             
+            // Draw initial frame
             drawRoad();
         }
 
@@ -403,20 +371,15 @@
             if (gameRunning) {
                 drawRoad();
             } else {
+                // Clear canvas when not running
                 ctx.fillStyle = '#000';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
         }
         
-        // Evento para verificar cambios de orientación
-        window.addEventListener('resize', () => {
-            checkOrientation();
-            resizeCanvas();
-        });
-        
         // Initialize
-        checkOrientation();
         resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
         
         // Draw initial black screen
         ctx.fillStyle = '#000';
