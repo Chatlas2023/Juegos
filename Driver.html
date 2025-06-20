@@ -117,7 +117,7 @@
     <p>Para jugar Night Driver, por favor coloque su teléfono en posición horizontal</p>
 </div>
 <div id="ui">
-    <div id="left-ui">Ver 2.3 VIDAS: <span id="lives">10</span></div>
+    <div id="left-ui">Ver 2.9 VIDAS: <span id="lives">10</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -245,7 +245,7 @@
 
         function createSegment(distance) {
             const progress = distance / MAX_DISTANCE;
-            const widthFactor = progress * progress * SEPARATION_FACTOR;
+            const widthFactor = SEPARATION_FACTOR; // Constante en lugar de progresivo
             const leftPos = originX - widthFactor;
             const rightPos = originX + widthFactor;
             const height = (5 + progress * 50) * 0.5;
@@ -278,6 +278,26 @@
                     ctx.fillStyle = '#FFF';
                     ctx.fillRect(leftX - postWidth / 2, yPos, postWidth, postHeight);
                     ctx.fillRect(rightX - postWidth / 2, yPos, postWidth, postHeight);
+                    
+                    // Dibujar línea entre postes para mejor visualización
+                    if (i > 0) {
+                        const prevSeg = segments[i-1];
+                        const prevYPos = (canvas.height * prevSeg.progress) + (offsetY * 1.25);
+                        const prevLeftX = canvas.width * (0.5 + prevSeg.leftPos);
+                        const prevRightX = canvas.width * (0.5 + prevSeg.rightPos);
+                        
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(prevLeftX, prevYPos + prevSeg.height);
+                        ctx.lineTo(leftX, yPos + postHeight);
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(prevRightX, prevYPos + prevSeg.height);
+                        ctx.lineTo(rightX, yPos + postHeight);
+                        ctx.stroke();
+                    }
                 }
             }
 
@@ -295,92 +315,93 @@
             }
         }
 
-function updateRoad() {
-    // Aumentar velocidad progresivamente
-    velocity = Math.min(BASE_VELOCITY + (time * SPEED_INCREASE), MAX_VELOCITY);
+        function updateRoad() {
+            // Aumentar velocidad progresivamente
+            velocity = Math.min(BASE_VELOCITY + (time * SPEED_INCREASE), MAX_VELOCITY);
 
-    // Update steering
-    const STEER_SPEED = 0.001;
-    steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
+            // Update steering
+            const STEER_SPEED = 0.001;
+            steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
 
-    // Compute steering constant
-    const stc = steer * velocity * 50;
+            // Compute steering constant
+            const stc = steer * velocity * 50;
 
-    // Compute turning coefficient
-    const crv = cs * velocity * 50;
+            // Compute turning coefficient
+            const crv = cs * velocity * 50;
 
-    // Update origin
-    originX += (stc + crv);
-    originX = Math.max(-0.5, Math.min(0.5, originX));
+            // Update origin
+            originX += (stc + crv);
+            originX = Math.max(-0.5, Math.min(0.5, originX));
 
-    // Update turn distance
-    turnDistance += velocity;
-    if (turnDistance >= dist) {
-        turnDistance = 0;
-        trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
-        cs = currentTrack[trackSegmentIndex].cs;
-        dist = currentTrack[trackSegmentIndex].dist;
-    }
+            // Update turn distance
+            turnDistance += velocity;
+            if (turnDistance >= dist) {
+                turnDistance = 0;
+                trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
+                cs = currentTrack[trackSegmentIndex].cs;
+                dist = currentTrack[trackSegmentIndex].dist;
+            }
 
-    // Update segments
-    segments.forEach(seg => {
-        seg.distance += velocity;
-        seg.progress = seg.distance / MAX_DISTANCE;
-        const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
-        seg.leftPos = originX - widthFactor;
-        seg.rightPos = originX + widthFactor;
-        seg.height = (5 + seg.progress * 50) * 0.5;
-        seg.width = 5 + seg.progress * 20;
-    });
+            // Update segments
+            segments.forEach(seg => {
+                seg.distance += velocity;
+                seg.progress = seg.distance / MAX_DISTANCE;
+                // Mantenemos la separación constante en lugar de progresiva
+                const widthFactor = SEPARATION_FACTOR;
+                seg.leftPos = originX - widthFactor;
+                seg.rightPos = originX + widthFactor;
+                seg.height = (5 + seg.progress * 50) * 0.5;
+                seg.width = 5 + seg.progress * 20;
+            });
 
-    // Recycle segments
-    if (segments[0].distance >= MAX_DISTANCE) {
-        const lastSeg = segments[segments.length - 1];
-        const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
-        const recycledSeg = segments.shift();
-        recycledSeg.distance = newDistance;
-        recycledSeg.progress = newDistance / MAX_DISTANCE;
-        const widthFactor = recycledSeg.progress * recycledSeg.progress * SEPARATION_FACTOR;
-        recycledSeg.leftPos = originX - widthFactor;
-        recycledSeg.rightPos = originX + widthFactor;
-        recycledSeg.height = (5 + recycledSeg.progress * 50) * 0.5;
-        recycledSeg.width = 5 + recycledSeg.progress * 20;
-        segments.push(recycledSeg);
-    }
+            // Recycle segments
+            if (segments[0].distance >= MAX_DISTANCE) {
+                const lastSeg = segments[segments.length - 1];
+                const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
+                const recycledSeg = segments.shift();
+                recycledSeg.distance = newDistance;
+                recycledSeg.progress = newDistance / MAX_DISTANCE;
+                const widthFactor = SEPARATION_FACTOR;
+                recycledSeg.leftPos = originX - widthFactor;
+                recycledSeg.rightPos = originX + widthFactor;
+                recycledSeg.height = (5 + recycledSeg.progress * 50) * 0.5;
+                recycledSeg.width = 5 + recycledSeg.progress * 20;
+                segments.push(recycledSeg);
+            }
 
-    // Check for collision with cooldown
-    if (collisionCooldown <= 0) {
-        const playerX = playerPos;
-        // Buscamos segmentos más cercanos al jugador (entre 0.05 y 0.25 de progreso)
-        const closestSeg = segments.find(seg => seg.progress > 0.05 && seg.progress < 0.25);
-        
-        if (closestSeg) {
-            // Aumentamos el margen para hacerlo menos sensible
-            const margin = 0.05;  // Aumentado de 0.02 a 0.05
-            const leftBound = closestSeg.leftPos + margin;
-            const rightBound = closestSeg.rightPos - margin;
-            
-            // Solo colisión si el auto está claramente fuera de los límites
-            if (playerX <= leftBound || playerX >= rightBound) {
-                lives--;
-                livesElement.textContent = lives;
-                if (lives <= 0) {
-                    gameOver();
-                } else {
-                    // Efecto visual de choque
-                    ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Check for collision with cooldown
+            if (collisionCooldown <= 0) {
+                const playerX = playerPos;
+                // Buscamos segmentos más cercanos al jugador (entre 0.05 y 0.25 de progreso)
+                const closestSeg = segments.find(seg => seg.progress > 0.05 && seg.progress < 0.25);
+                
+                if (closestSeg) {
+                    // Aumentamos el margen para hacerlo menos sensible
+                    const margin = 0.05;  // Aumentado de 0.02 a 0.05
+                    const leftBound = closestSeg.leftPos + margin;
+                    const rightBound = closestSeg.rightPos - margin;
                     
-                    playerPos = 0;
-                    collisionCooldown = 30;
-                    velocity = Math.max(BASE_VELOCITY, velocity * 0.7);
+                    // Solo colisión si el auto está claramente fuera de los límites
+                    if (playerX <= leftBound || playerX >= rightBound) {
+                        lives--;
+                        livesElement.textContent = lives;
+                        if (lives <= 0) {
+                            gameOver();
+                        } else {
+                            // Efecto visual de choque
+                            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            
+                            playerPos = 0;
+                            collisionCooldown = 30;
+                            velocity = Math.max(BASE_VELOCITY, velocity * 0.7);
+                        }
+                    }
                 }
+            } else {
+                collisionCooldown--;
             }
         }
-    } else {
-        collisionCooldown--;
-    }
-}
 
         function updateGame(timestamp) {
             if (!gameRunning) return;
