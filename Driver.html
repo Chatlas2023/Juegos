@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Night Driver - Versión Estable</title>
+    <title>Night Driver - Ruta Continua</title>
     <style>
         body {
             margin: 0;
@@ -105,51 +105,74 @@
         const startScreen = document.getElementById('startScreen');
         const startButton = document.getElementById('startButton');
 
-        // Configuración
+        // Configuración optimizada
         const POST_COUNT = 14;
         const POST_SPACING = 0.1;
         const MAX_DISTANCE = 1.4;
         const INITIAL_DISTANCE = 0.0;
-        const BASE_SEPARATION = 1.5;
-        
-        // Tabla de pistas (simplificada para inicio más estable)
-        const TRACK_TABLE = [
-            { cs: 0, dist: 127 },   // Recta inicial larga
-            { cs: 20, dist: 80 },   // Curva suave derecha
-            { cs: -20, dist: 80 },  // Curva suave izquierda
-            { cs: 0, dist: 60 },    // Recta corta
-            { cs: 30, dist: 60 },   // Curva media derecha
-            { cs: -30, dist: 60 },  // Curva media izquierda
-            { cs: 0, dist: 100 }    // Recta final
+        const SEPARATION_FACTOR = 0.3; // Reduced to make road narrower
+        const PYMIN = 0.1; // Horizon distance
+        const PRSPC = 0.05; // Separation between pylon pairs
+        const KP = 0.5; // Velocity adjustment constant (from VELK = VEL * KP)
+
+        // Track data (simplified from original TKADT, NOTRK, EPTRK, PROTRK)
+        const TRACKS = [
+            // Novice Track: gentle curves
+            [
+                { cs: 0, dist: 0.5 },
+                { cs: 0.02, dist: 0.3 },
+                { cs: -0.02, dist: 0.3 },
+                { cs: 0.01, dist: 0.4 },
+                { cs: -0.01, dist: 0.4 },
+                { cs: 0, dist: 0.5 }
+            ],
+            // Expert Track: sharper curves
+            [
+                { cs: 0, dist: 0.4 },
+                { cs: 0.03, dist: 0.2 },
+                { cs: -0.03, dist: 0.2 },
+                { cs: 0.02, dist: 0.3 },
+                { cs: -0.02, dist: 0.3 },
+                { cs: 0.015, dist: 0.2 },
+                { cs: -0.015, dist: 0.2 }
+            ],
+            // Pro Track: very sharp curves
+            [
+                { cs: 0, dist: 0.3 },
+                { cs: 0.04, dist: 0.15 },
+                { cs: -0.04, dist: 0.15 },
+                { cs: 0.03, dist: 0.2 },
+                { cs: -0.03, dist: 0.2 },
+                { cs: 0.02, dist: 0.25 },
+                { cs: -0.02, dist: 0.25 }
+            ]
         ];
 
         // Variables del juego
         let gameRunning = false;
         let time = 0;
         let lives = 3;
-        let playerX = 0;
-        let playerPos = 0;
+        let playerPos = 0; // -1 (left), 0 (neutral), 1 (right)
+        let steer = 0; // Steering value (STEER)
         let segments = [];
-        let segmentSpeed = 0.002;
-        let trackIndex = 0;
-        let turnProgress = 0;
-        let currentCS = 0;
-        let currentDist = 127;
-        let roadOffset = 0;
-        let gameLoopId;
+        let velocity = 0.002; // Base velocity (VELH, VELL)
+        let segmentSpeed = velocity;
+        let originX = 0; // Road origin (ORH, ORL, ORVH)
+        let trackIndex = 0; // Current track (0: Novice, 1: Expert, 2: Pro)
+        let currentTrack = TRACKS[trackIndex];
+        let trackSegmentIndex = 0; // TRNDX
+        let turnDistance = 0; // TURNL, TURNH
+        let cs = currentTrack[trackSegmentIndex].cs; // Coefficient of sharpness
+        let dist = currentTrack[trackSegmentIndex].dist; // Distance for current track segment
 
         // Inicializar ruta
         function initRoad() {
             segments = [];
-            trackIndex = 0;
-            turnProgress = 0;
-            currentCS = TRACK_TABLE[0].cs;
-            currentDist = TRACK_TABLE[0].dist;
-            roadOffset = 0;
-            playerX = 0;
-            time = 0;
-            lives = 3;
-            
+            originX = 0;
+            trackSegmentIndex = 0;
+            turnDistance = 0;
+            cs = currentTrack[trackSegmentIndex].cs;
+            dist = currentTrack[trackSegmentIndex].dist;
             for (let i = 0; i < POST_COUNT; i++) {
                 const distance = INITIAL_DISTANCE + i * POST_SPACING;
                 segments.push(createSegment(distance));
@@ -158,27 +181,20 @@
 
         function createSegment(distance) {
             const progress = distance / MAX_DISTANCE;
-            
-            // Factor de curvatura más suave al inicio
-            const curveFactor = currentCS / 200;  // Reducido el divisor para hacerlo menos intenso
-            const widthFactor = progress * progress * BASE_SEPARATION;
-            
-            // Aplicar curvatura de manera más gradual
-            const curveEffect = curveFactor * progress * 1.5;  // Reducido el multiplicador
-            
-            const leftPos = -widthFactor + curveEffect + roadOffset;
-            const rightPos = widthFactor + curveEffect + roadOffset;
-            
-            const height = (5 + progress * 50) * 0.5;
+            const pya = progress - PYMIN; // Adjusted y-position (PYA)
+            const widthFactor = pya > 0 ? pya * pya * SEPARATION_FACTOR : 0;
+            const leftPos = originX - widthFactor - PRSPC;
+            const rightPos = originX + widthFactor + PRSPC;
+            const height = 5 + progress * 50;
             const width = 5 + progress * 20;
-            
             return {
                 distance: distance,
                 leftPos: leftPos,
                 rightPos: rightPos,
                 height: height,
                 width: width,
-                progress: progress
+                progress: progress,
+                pya: pya
             };
         }
 
@@ -187,121 +203,101 @@
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            const offsetY = 45;
-
-            // Dibujar postes
+            const offsetY = 45; // 1cm offset in pixels
             for (let i = 0; i < segments.length; i++) {
                 const seg = segments[i];
-                
                 const yPos = (canvas.height * seg.progress) + (offsetY * 1.25);
                 const leftX = canvas.width * (0.5 + seg.leftPos);
                 const rightX = canvas.width * (0.5 + seg.rightPos);
-                
                 const postWidth = seg.width;
                 const postHeight = seg.height;
-                
+
                 if (yPos >= 0 && yPos <= canvas.height) {
                     ctx.fillStyle = '#FFF';
-                    // Poste izquierdo
-                    ctx.fillRect(leftX - postWidth/2, yPos, postWidth, postHeight);
-                    // Poste derecho
-                    ctx.fillRect(rightX - postWidth/2, yPos, postWidth, postHeight);
+                    ctx.fillRect(leftX - postWidth / 2, yPos, postWidth, postHeight);
+                    ctx.fillRect(rightX - postWidth / 2, yPos, postWidth, postHeight);
                 }
             }
-            
-            // Dibujar coche del jugador
-            const carWidth = 30;
-            const carHeight = 50;
-            const carY = canvas.height * 0.8;
-            const carX = canvas.width * (0.5 + playerX);
-            
-            ctx.fillStyle = '#FF0';
-            ctx.fillRect(carX - carWidth/2, carY - carHeight/2, carWidth, carHeight);
+
+            // Draw player position (for visualization, optional)
+            ctx.fillStyle = 'red';
+            ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 5, canvas.height - 20, 10, 10);
         }
 
         function updateRoad() {
-            // Actualizar posición del jugador con inercia
-            const steerAmount = playerPos * 0.01;  // Reducida la sensibilidad
-            playerX = Math.max(-0.3, Math.min(0.3, playerX + steerAmount));
-            
-            // Actualizar offset de la carretera de manera más suave
-            roadOffset += currentCS / 8000;  // Reducido el divisor para hacerlo más gradual
-            
-            // Limitar el offset para que la carretera no se desvíe demasiado
-            roadOffset = Math.max(-0.2, Math.min(0.2, roadOffset));
-            
-            // Actualizar segmentos
+            // Update steering
+            const STEER_SPEED = 0.005;
+            steer = Math.max(-0.1, Math.min(0.1, steer + playerPos * STEER_SPEED));
+
+            // Compute steering constant (STC = STEER * VEL)
+            const stc = steer * velocity * 100;
+
+            // Compute turning coefficient (CRV = CS * VEL)
+            const crv = cs * velocity * 100;
+
+            // Update origin (OR = OR + STC + CRV)
+            originX += (stc + crv);
+
+            // Limit origin to prevent extreme shifts
+            originX = Math.max(-0.5, Math.min(0.5, originX));
+
+            // Update turn distance
+            turnDistance += velocity;
+            if (turnDistance >= dist) {
+                turnDistance = 0;
+                trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
+                cs = currentTrack[trackSegmentIndex].cs;
+                dist = currentTrack[trackSegmentIndex].dist;
+            }
+
+            // Update segments
             segments.forEach(seg => {
                 seg.distance += segmentSpeed;
                 seg.progress = seg.distance / MAX_DISTANCE;
-                
-                // Aplicar curvatura actual de manera más estable
-                const curveFactor = currentCS / 200;
-                const widthFactor = seg.progress * seg.progress * BASE_SEPARATION;
-                const curveEffect = curveFactor * seg.progress * 1.5;
-                
-                seg.leftPos = -widthFactor + curveEffect + roadOffset;
-                seg.rightPos = widthFactor + curveEffect + roadOffset;
+                seg.pya = seg.progress - PYMIN;
+                const widthFactor = seg.pya > 0 ? seg.pya * seg.pya * SEPARATION_FACTOR : 0;
+                seg.leftPos = originX - widthFactor - PRSPC;
+                seg.rightPos = originX + widthFactor + PRSPC;
                 seg.height = 5 + seg.progress * 50;
                 seg.width = 5 + seg.progress * 20;
             });
 
-            // Manejo de la tabla de pistas
-            turnProgress += segmentSpeed * 30;  // Reducida la velocidad de progresión
-            if (turnProgress >= currentDist / 127) {
-                turnProgress = 0;
-                trackIndex = (trackIndex + 1) % TRACK_TABLE.length;
-                currentCS = TRACK_TABLE[trackIndex].cs;
-                currentDist = TRACK_TABLE[trackIndex].dist;
-            }
-
-            // Reutilizar segmentos que salen de la pantalla
+            // Recycle segments
             if (segments[0].distance >= MAX_DISTANCE) {
                 const lastSeg = segments[segments.length - 1];
                 const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
-                
                 const recycledSeg = segments.shift();
                 recycledSeg.distance = newDistance;
                 recycledSeg.progress = newDistance / MAX_DISTANCE;
-                
+                recycledSeg.pya = recycledSeg.progress - PYMIN;
+                const widthFactor = recycledSeg.pya > 0 ? recycledSeg.pya * recycledSeg.pya * SEPARATION_FACTOR : 0;
+                recycledSeg.leftPos = originX - widthFactor - PRSPC;
+                recycledSeg.rightPos = originX + widthFactor + PRSPC;
+                recycledSeg.height = 5 + recycledSeg.progress * 50;
+                recycledSeg.width = 5 + recycledSeg.progress * 20;
                 segments.push(recycledSeg);
             }
-            
-            // Detección de colisión más tolerante
-            const frontSeg = segments[Math.floor(segments.length * 0.7)];
-            const carLeft = (canvas.width * 0.5 + playerX * canvas.width) - 15;
-            const carRight = carLeft + 30;
-            const roadLeft = canvas.width * (0.5 + frontSeg.leftPos);
-            const roadRight = canvas.width * (0.5 + frontSeg.rightPos);
-            
-            // Margen de error para colisiones (20% del ancho del coche)
-            const margin = 6;
-            if (carLeft + margin < roadLeft || carRight - margin > roadRight) {
-                // Colisión
-                lives--;
-                livesElement.textContent = lives;
-                if (lives <= 0) {
-                    gameOver();
-                } else {
-                    // Pequeño retroceso como penalización
-                    segments.forEach(seg => {
-                        seg.distance -= segmentSpeed * 10;
-                        seg.progress = seg.distance / MAX_DISTANCE;
-                    });
-                    // Resetear posición después de colisión
-                    playerX = 0;
-                    roadOffset *= 0.5; // Reducir el offset pero no resetearlo completamente
+
+            // Check for collision
+            const playerX = playerPos * 0.1; // Player's relative x-position
+            const closestSeg = segments[0]; // Check collision with closest pylon pair
+            if (closestSeg.progress < 0.2) { // Only check close segments
+                if (playerX < closestSeg.leftPos + 0.02 || playerX > closestSeg.rightPos - 0.02) {
+                    lives--;
+                    livesElement.textContent = lives;
+                    if (lives <= 0) {
+                        gameOver();
+                    } else {
+                        initRoad(); // Reset road on crash
+                    }
                 }
             }
         }
 
         function updateGame() {
             updateRoad();
-            time += segmentSpeed * 20;  // Ajustado el factor de tiempo
+            time += segmentSpeed * 25;
             timeElement.textContent = time.toFixed(1);
-            
-            // Aumentar dificultad con el tiempo de manera más gradual
-            segmentSpeed = Math.min(0.008, 0.002 + time * 0.00005);
         }
 
         function gameOver() {
@@ -310,12 +306,13 @@
             startScreen.style.display = 'flex';
         }
 
+        let gameLoopId;
         function runGame() {
-            if (!gameRunning) return;
-            
-            drawRoad();
-            updateGame();
-            gameLoopId = requestAnimationFrame(runGame);
+            if (gameRunning) {
+                drawRoad();
+                updateGame();
+                gameLoopId = requestAnimationFrame(runGame);
+            }
         }
 
         // Controles
@@ -333,10 +330,10 @@
         });
 
         startButton.addEventListener('click', () => {
-            if (gameRunning) {
-                cancelAnimationFrame(gameLoopId);
-            }
             initRoad();
+            time = 0;
+            lives = 3;
+            steer = 0;
             livesElement.textContent = lives;
             startScreen.style.display = 'none';
             gameRunning = true;
