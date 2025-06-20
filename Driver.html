@@ -288,6 +288,8 @@
         }
 
         function updateGame(timestamp) {
+            if (!gameRunning) return;
+            
             if (!lastTime) lastTime = timestamp;
             const deltaTime = timestamp - lastTime;
             lastTime = timestamp;
@@ -297,9 +299,7 @@
             timeElement.textContent = time.toFixed(1);
 
             drawRoad();
-            if (gameRunning) {
-                gameLoopId = requestAnimationFrame(updateGame);
-            }
+            gameLoopId = requestAnimationFrame(updateGame);
         }
 
         function gameOver() {
@@ -312,9 +312,12 @@
         }
 
         function startGame() {
+            // Cancel any existing game loop
             if (gameLoopId) {
                 cancelAnimationFrame(gameLoopId);
             }
+            
+            // Reset game state
             initRoad();
             time = 0;
             lives = 3;
@@ -322,10 +325,17 @@
             playerPos = 0;
             livesElement.textContent = lives;
             timeElement.textContent = "0";
+            
+            // Hide start screen
             startScreen.style.display = 'none';
+            
+            // Start game loop
             gameRunning = true;
             lastTime = 0;
             gameLoopId = requestAnimationFrame(updateGame);
+            
+            // Draw initial frame
+            drawRoad();
         }
 
         // Controles
@@ -349,10 +359,20 @@
             canvas.height = window.innerHeight;
             if (gameRunning) {
                 drawRoad();
+            } else {
+                // Clear canvas when not running
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
         }
+        
+        // Initialize
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
+        
+        // Draw initial black screen
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
     </script>
 </body>
 </html>
