@@ -376,56 +376,46 @@
             }
             
             // Mover pelota solo si ha sido lanzada
-            if (ballLaunched) {
-                ball.x += ball.speedX;
-                ball.y += ball.speedY;
-            }
-            
-            // Detección de colisión con los bordes superior e inferior
-            if (ballLaunched && (ball.y - ball.size < 0 || ball.y + ball.size > canvas.height)) {
-                if (Math.abs(ball.speedY) < 1) {
-                    ball.speedY = (ball.speedY < 0 ? -2 : 2);
-                } else {
-                    ball.speedY = -ball.speedY;
-                }
-                sounds.wallHit.currentTime = 0;
-                sounds.wallHit.play();
-            }
-            
-            // Detección de colisión con las paletas
-            // Paleta de la máquina (izquierda)
-            if (ballLaunched && 
-                ball.x - ball.size < machinePaddle.x + machinePaddle.width &&
-                ball.y > machinePaddle.y &&
-                ball.y < machinePaddle.y + machinePaddle.height
-            ) {
-                ball.speedX = Math.abs(ball.speedX);
-                const hitPosition = (ball.y - (machinePaddle.y + machinePaddle.height / 2)) / (machinePaddle.height / 2);
-                let speedY = hitPosition * 5;
-                if (Math.abs(speedY) < 1) {
-                    speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1);
-                }
-                ball.speedY = speedY;
-                sounds.paddleHit.currentTime = 0;
-                sounds.paddleHit.play();
-            }
-            
-            // Paleta del jugador (derecha)
-            if (ballLaunched && 
-                ball.x + ball.size > playerPaddle.x &&
-                ball.y > playerPaddle.y &&
-                ball.y < playerPaddle.y + playerPaddle.height
-            ) {
-                ball.speedX = -Math.abs(ball.speedX);
-                const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
-                let speedY = hitPosition * 5;
-                if (Math.abs(speedY) < 1) {
-                    speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1);
-                }
-                ball.speedY = speedY;
-                sounds.paddleHit.currentTime = 0;
-                sounds.paddleHit.play();
-            }
+    if (ballLaunched && 
+        ball.x - ball.size < machinePaddle.x + machinePaddle.width &&
+        ball.y > machinePaddle.y &&
+        ball.y < machinePaddle.y + machinePaddle.height
+    ) {
+        // Aumentar velocidad en 3%
+        ball.speedX *= 1.03;
+        ball.speedY *= 1.03;
+        
+        ball.speedX = Math.abs(ball.speedX);
+        const hitPosition = (ball.y - (machinePaddle.y + machinePaddle.height / 2)) / (machinePaddle.height / 2);
+        let speedY = hitPosition * 5;
+        if (Math.abs(speedY) < 1) {
+            speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1);
+        }
+        ball.speedY = speedY;
+        sounds.paddleHit.currentTime = 0;
+        sounds.paddleHit.play();
+    }
+    
+    // Paleta del jugador (derecha)
+    if (ballLaunched && 
+        ball.x + ball.size > playerPaddle.x &&
+        ball.y > playerPaddle.y &&
+        ball.y < playerPaddle.y + playerPaddle.height
+    ) {
+        // Aumentar velocidad en 3%
+        ball.speedX *= 1.03;
+        ball.speedY *= 1.03;
+        
+        ball.speedX = -Math.abs(ball.speedX);
+        const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
+        let speedY = hitPosition * 5;
+        if (Math.abs(speedY) < 1) {
+            speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1);
+        }
+        ball.speedY = speedY;
+        sounds.paddleHit.currentTime = 0;
+        sounds.paddleHit.play();
+    }
             
             // Puntuación
             if (ballLaunched) {
