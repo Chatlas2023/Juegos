@@ -180,22 +180,22 @@
             collisionCooldown = 60; // Mayor cooldown inicial
         }
 
-        function createSegment(distance) {
-            const progress = distance / MAX_DISTANCE;
-            const widthFactor = progress * progress * SEPARATION_FACTOR;
-            const leftPos = originX - widthFactor;
-            const rightPos = originX + widthFactor;
-            const height = (5 + progress * 50) * 0.5;
-            const width = 5 + progress * 20;
-            return {
-                distance: distance,
-                leftPos: leftPos,
-                rightPos: rightPos,
-                height: height,
-                width: width,
-                progress: progress
-            };
-        }
+function createSegment(distance) {
+    const progress = distance / MAX_DISTANCE;
+    const widthFactor = progress * progress * SEPARATION_FACTOR;
+    const leftPos = originX - widthFactor;
+    const rightPos = originX + widthFactor;
+    const height = 10 + progress * 100;  // Aumentamos la altura (antes era 5 + progress * 50)
+    const width = 2 + progress * 10;     // Reducimos el ancho (antes era 5 + progress * 20)
+    return {
+        distance: distance,
+        leftPos: leftPos,
+        rightPos: rightPos,
+        height: height,
+        width: width,
+        progress: progress
+    };
+}
 
         // Dibujar ruta
         function drawRoad() {
@@ -212,9 +212,11 @@
                 const postHeight = seg.height;
 
                 if (yPos >= 0 && yPos <= canvas.height) {
-                    ctx.fillStyle = '#FFF';
-                    ctx.fillRect(leftX - postWidth / 2, yPos, postWidth, postHeight);
-                    ctx.fillRect(rightX - postWidth / 2, yPos, postWidth, postHeight);
+ctx.fillStyle = '#FFF';
+// Poste izquierdo
+ctx.fillRect(leftX - postWidth/2, yPos - postHeight, postWidth, postHeight);
+// Poste derecho
+ctx.fillRect(rightX - postWidth/2, yPos - postHeight, postWidth, postHeight);
                 }
             }
 
