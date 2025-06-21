@@ -155,57 +155,53 @@
         let paddleStartY = 0;
         
         // Eventos táctiles
-        canvas.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            const touchX = touch.clientX - rect.left;
-            const touchY = touch.clientY - rect.top;
-            
-            // Verificar si el toque está dentro de la paleta del jugador
-            if (touchX > playerPaddle.x && 
-                touchX < playerPaddle.x + playerPaddle.width &&
-                touchY > playerPaddle.y && 
-                touchY < playerPaddle.y + playerPaddle.height) {
-                
-                isDragging = true;
-                touchStartY = touchY;
-                paddleStartY = playerPaddle.y;
-                
-                // Si la pelota no ha sido lanzada, lanzarla al primer movimiento
-                if (!ballLaunched) {
-                    launchBall();
-                }
-                
-                e.preventDefault();
-            }
-        });
+    canvas.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
         
-        canvas.addEventListener('touchmove', (e) => {
-            if (!gameActive || !isDragging) return;
+        // Verificar si el toque está dentro de la paleta del jugador
+        if (touchX > playerPaddle.x && 
+            touchX < playerPaddle.x + playerPaddle.width &&
+            touchY > playerPaddle.y && 
+            touchY < playerPaddle.y + playerPaddle.height) {
             
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            const touchY = touch.clientY - rect.top;
-            
-            // Calcular nueva posición de la paleta
-            const deltaY = touchY - touchStartY;
-            let newY = paddleStartY + deltaY;
-            
-            // Limitar la paleta dentro del canvas
-            newY = Math.max(0, Math.min(newY, canvas.height - playerPaddle.height));
-            playerPaddle.y = newY;
-            
-            // Mover la pelota con la paleta si no ha sido lanzada
-            if (!ballLaunched) {
-                ball.y = playerPaddle.y + playerPaddle.height / 2;
-            }
+            isDragging = true;
+            touchStartY = touchY;
+            paddleStartY = playerPaddle.y;
             
             e.preventDefault();
-        });
+        }
+    });
+    
+    canvas.addEventListener('touchmove', (e) => {
+        if (!gameActive) return;
         
-        canvas.addEventListener('touchend', (e) => {
-            isDragging = false;
-        });
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const touchY = touch.clientY - rect.top;
+        
+        // Calcular nueva posición de la paleta
+        const deltaY = touchY - touchStartY;
+        let newY = paddleStartY + deltaY;
+        
+        // Limitar la paleta dentro del canvas
+        newY = Math.max(0, Math.min(newY, canvas.height - playerPaddle.height));
+        playerPaddle.y = newY;
+        
+        // Si es el primer movimiento y la pelota no ha sido lanzada, lanzarla
+        if (!ballLaunched && Math.abs(deltaY) > 5) { // Umbral de movimiento para lanzar
+            launchBall();
+        }
+        
+        // Mover la pelota con la paleta si no ha sido lanzada
+        if (!ballLaunched) {
+            ball.y = playerPaddle.y + playerPaddle.height / 2;
+        }
+        
+        e.preventDefault();
+    });
         
         // Eventos de ratón para probar en desktop
         canvas.addEventListener('mousedown', (e) => {
@@ -260,14 +256,17 @@
         });
         
         // Función para lanzar la pelota
-        function launchBall() {
-            ballLaunched = true;
-            ball.speedX = -INITIAL_SPEED;
-            ball.speedY = (Math.random() * 2 - 1) * INITIAL_SPEED;
-            
-            if (Math.abs(ball.speedY) < 0.5) {
-                ball.speedY = (Math.random() > 0.5 ? 1 : -1) * 2;
-            }
+    function launchBall() {
+        if (ballLaunched) return;
+        
+        ballLaunched = true;
+        ball.speedX = -INITIAL_SPEED;
+        ball.speedY = (Math.random() * 2 - 1) * INITIAL_SPEED;
+        
+        if (Math.abs(ball.speedY) < 0.5) {
+            ball.speedY = (Math.random() > 0.5 ? 1 : -1) * 2;
+        }
+    }
             
             function increaseSpeed() {
                 if (!gameActive || !ballLaunched) return;
