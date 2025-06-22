@@ -100,6 +100,12 @@
             const container = document.getElementById('gameContainer');
             canvas.width = container.clientWidth;
             canvas.height = container.clientHeight;
+            
+            // Reajustar posición de la pelota al cambiar tamaño
+            if (!ballLaunched) {
+                ball.x = playerPaddle.x - BALL_SIZE;
+                ball.y = playerPaddle.y + playerPaddle.height / 2;
+            }
         }
         
         resizeCanvas();
@@ -115,13 +121,6 @@
         let playerScore = 0;
         let gameActive = true;
         let ballLaunched = false;
-        
-        // Cargar sonidos
-        const sounds = {
-            paddleHit: new Audio('ping-pong1.mp3'),
-            wallHit: new Audio('ping-pong2.mp3'),
-            score: new Audio('notification.mp3')
-        };
         
         // Paletas
         const machinePaddle = {
@@ -155,53 +154,57 @@
         let paddleStartY = 0;
         
         // Eventos táctiles
-    canvas.addEventListener('touchstart', (e) => {
-        const touch = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        const touchX = touch.clientX - rect.left;
-        const touchY = touch.clientY - rect.top;
-        
-        // Verificar si el toque está dentro de la paleta del jugador
-        if (touchX > playerPaddle.x && 
-            touchX < playerPaddle.x + playerPaddle.width &&
-            touchY > playerPaddle.y && 
-            touchY < playerPaddle.y + playerPaddle.height) {
+        canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const touchX = touch.clientX - rect.left;
+            const touchY = touch.clientY - rect.top;
             
-            isDragging = true;
-            touchStartY = touchY;
-            paddleStartY = playerPaddle.y;
+            // Verificar si el toque está dentro de la paleta del jugador
+            if (touchX > playerPaddle.x && 
+                touchX < playerPaddle.x + playerPaddle.width &&
+                touchY > playerPaddle.y && 
+                touchY < playerPaddle.y + playerPaddle.height) {
+                
+                isDragging = true;
+                touchStartY = touchY;
+                paddleStartY = playerPaddle.y;
+                e.preventDefault();
+            }
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            if (!gameActive || !isDragging) return;
+            
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const touchY = touch.clientY - rect.top;
+            
+            // Calcular nueva posición de la paleta
+            const deltaY = touchY - touchStartY;
+            let newY = paddleStartY + deltaY;
+            
+            // Limitar la paleta dentro del canvas
+            newY = Math.max(0, Math.min(newY, canvas.height - playerPaddle.height));
+            playerPaddle.y = newY;
+            
+            // Si es el primer movimiento y la pelota no ha sido lanzada, lanzarla
+            if (!ballLaunched && Math.abs(deltaY) > 5) {
+                launchBall();
+            }
+            
+            // Mover la pelota con la paleta si no ha sido lanzada
+            if (!ballLaunched) {
+                ball.y = playerPaddle.y + playerPaddle.height / 2;
+                ball.x = playerPaddle.x - BALL_SIZE;
+            }
             
             e.preventDefault();
-        }
-    });
-    
-    canvas.addEventListener('touchmove', (e) => {
-        if (!gameActive) return;
+        });
         
-        const touch = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        const touchY = touch.clientY - rect.top;
-        
-        // Calcular nueva posición de la paleta
-        const deltaY = touchY - touchStartY;
-        let newY = paddleStartY + deltaY;
-        
-        // Limitar la paleta dentro del canvas
-        newY = Math.max(0, Math.min(newY, canvas.height - playerPaddle.height));
-        playerPaddle.y = newY;
-        
-        // Si es el primer movimiento y la pelota no ha sido lanzada, lanzarla
-        if (!ballLaunched && Math.abs(deltaY) > 5) { // Umbral de movimiento para lanzar
-            launchBall();
-        }
-        
-        // Mover la pelota con la paleta si no ha sido lanzada
-        if (!ballLaunched) {
-            ball.y = playerPaddle.y + playerPaddle.height / 2;
-        }
-        
-        e.preventDefault();
-    });
+        canvas.addEventListener('touchend', (e) => {
+            isDragging = false;
+        });
         
         // Eventos de ratón para probar en desktop
         canvas.addEventListener('mousedown', (e) => {
@@ -217,12 +220,6 @@
                 isDragging = true;
                 touchStartY = mouseY;
                 paddleStartY = playerPaddle.y;
-                
-                // Si la pelota no ha sido lanzada, lanzarla al primer movimiento
-                if (!ballLaunched) {
-                    launchBall();
-                }
-                
                 e.preventDefault();
             }
         });
@@ -239,9 +236,15 @@
             newY = Math.max(0, Math.min(newY, canvas.height - playerPaddle.height));
             playerPaddle.y = newY;
             
+            // Si es el primer movimiento y la pelota no ha sido lanzada, lanzarla
+            if (!ballLaunched && Math.abs(deltaY) > 5) {
+                launchBall();
+            }
+            
             // Mover la pelota con la paleta si no ha sido lanzada
             if (!ballLaunched) {
                 ball.y = playerPaddle.y + playerPaddle.height / 2;
+                ball.x = playerPaddle.x - BALL_SIZE;
             }
             
             e.preventDefault();
@@ -256,34 +259,16 @@
         });
         
         // Función para lanzar la pelota
-    function launchBall() {
-        if (ballLaunched) return;
-        
-        ballLaunched = true;
-        ball.speedX = -INITIAL_SPEED;
-        ball.speedY = (Math.random() * 2 - 1) * INITIAL_SPEED;
-        
-        if (Math.abs(ball.speedY) < 0.5) {
-            ball.speedY = (Math.random() > 0.5 ? 1 : -1) * 2;
-        
-    }
+        function launchBall() {
+            if (ballLaunched) return;
             
-            function increaseSpeed() {
-                if (!gameActive || !ballLaunched) return;
-                
-                if (Math.abs(ball.speedX) < NORMAL_SPEED) {
-                    ball.speedX *= 1.05;
-                    ball.speedY *= 1.05;
-                    requestAnimationFrame(increaseSpeed);
-                } else {
-                    ball.speedX = Math.sign(ball.speedX) * NORMAL_SPEED;
-                    ball.speedY = Math.min(Math.abs(ball.speedY), NORMAL_SPEED) * Math.sign(ball.speedY);
-                }
+            ballLaunched = true;
+            ball.speedX = -INITIAL_SPEED;
+            ball.speedY = (Math.random() * 2 - 1) * INITIAL_SPEED;
+            
+            if (Math.abs(ball.speedY) < 0.5) {
+                ball.speedY = (Math.random() > 0.5 ? 1 : -1) * 2;
             }
-            
-            setTimeout(() => {
-                increaseSpeed();
-            }, 500);
         }
         
         // Función para reiniciar el juego
@@ -354,74 +339,64 @@
         function update() {
             if (!gameActive) return;
             
-            // IA para la paleta de la máquina con posibilidad de fallo
-            const machinePaddleCenter = machinePaddle.y + machinePaddle.height / 2;
-            const isSharpAngle = Math.abs(ball.speedY / ball.speedX) > 1;
-            
-            if (ballLaunched) {
-                if (!isSharpAngle || Math.random() > 0.5) { // 50% de fallo solo en ángulos pronunciados
-                    if (machinePaddleCenter < ball.y - 20) {
-                        machinePaddle.y += machinePaddle.speed;
-                    } else if (machinePaddleCenter > ball.y + 20) {
-                        machinePaddle.y -= machinePaddle.speed;
-                    }
-                }
-            }
-            
-            // Asegurar que la paleta de la máquina no salga del canvas
-            if (machinePaddle.y < 0) machinePaddle.y = 0;
-            if (machinePaddle.y > canvas.height - machinePaddle.height) {
-                machinePaddle.y = canvas.height - machinePaddle.height;
-            }
-            
             // Mover pelota solo si ha sido lanzada
-    if (ballLaunched && 
-        ball.x - ball.size < machinePaddle.x + machinePaddle.width &&
-        ball.y > machinePaddle.y &&
-        ball.y < machinePaddle.y + machinePaddle.height
-    ) {
-        // Aumentar velocidad en 3%
-        ball.speedX *= 1.03;
-        ball.speedY *= 1.03;
-        
-        ball.speedX = Math.abs(ball.speedX);
-        const hitPosition = (ball.y - (machinePaddle.y + machinePaddle.height / 2)) / (machinePaddle.height / 2);
-        let speedY = hitPosition * 5;
-        if (Math.abs(speedY) < 1) {
-            speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1);
-        }
-        ball.speedY = speedY;
-        sounds.paddleHit.currentTime = 0;
-        sounds.paddleHit.play();
-    }
-    
-    // Paleta del jugador (derecha)
-    if (ballLaunched && 
-        ball.x + ball.size > playerPaddle.x &&
-        ball.y > playerPaddle.y &&
-        ball.y < playerPaddle.y + playerPaddle.height
-    ) {
-        // Aumentar velocidad en 3%
-        ball.speedX *= 1.03;
-        ball.speedY *= 1.03;
-        
-        ball.speedX = -Math.abs(ball.speedX);
-        const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
-        let speedY = hitPosition * 5;
-        if (Math.abs(speedY) < 1) {
-            speedY = (Math.random() > 0.5 ? 1 : -1) * (1 + Math.random() * 1);
-        }
-        ball.speedY = speedY;
-        sounds.paddleHit.currentTime = 0;
-        sounds.paddleHit.play();
-    }
+            if (ballLaunched) {
+                ball.x += ball.speedX;
+                ball.y += ball.speedY;
+            }
+            
+            // IA para la paleta de la máquina
+            if (ballLaunched) {
+                const machinePaddleCenter = machinePaddle.y + machinePaddle.height / 2;
+                const targetY = ball.y - machinePaddle.height / 2;
+                
+                // Movimiento suavizado de la paleta de la máquina
+                machinePaddle.y += (targetY - machinePaddle.y) * 0.1;
+                
+                // Limitar la paleta dentro del canvas
+                machinePaddle.y = Math.max(0, Math.min(machinePaddle.y, canvas.height - machinePaddle.height));
+            }
+            
+            // Detección de colisión con los bordes superior e inferior
+            if (ballLaunched && (ball.y - ball.size < 0 || ball.y + ball.size > canvas.height)) {
+                ball.speedY = -ball.speedY;
+            }
+            
+            // Detección de colisión con las paletas
+            // Paleta de la máquina (izquierda)
+            if (ballLaunched && 
+                ball.x - ball.size < machinePaddle.x + machinePaddle.width &&
+                ball.y > machinePaddle.y &&
+                ball.y < machinePaddle.y + machinePaddle.height) {
+                
+                // Aumentar velocidad en 3%
+                ball.speedX = Math.abs(ball.speedX) * 1.03;
+                ball.speedY *= 1.03;
+                
+                // Calcular ángulo de rebote basado en donde golpea la paleta
+                const hitPosition = (ball.y - (machinePaddle.y + machinePaddle.height / 2)) / (machinePaddle.height / 2);
+                ball.speedY = hitPosition * 5;
+            }
+            
+            // Paleta del jugador (derecha)
+            if (ballLaunched && 
+                ball.x + ball.size > playerPaddle.x &&
+                ball.y > playerPaddle.y &&
+                ball.y < playerPaddle.y + playerPaddle.height) {
+                
+                // Aumentar velocidad en 3%
+                ball.speedX = -Math.abs(ball.speedX) * 1.03;
+                ball.speedY *= 1.03;
+                
+                // Calcular ángulo de rebote basado en donde golpea la paleta
+                const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
+                ball.speedY = hitPosition * 5;
+            }
             
             // Puntuación
             if (ballLaunched) {
                 if (ball.x - ball.size < 0) {
                     playerScore++;
-                    sounds.score.currentTime = 0;
-                    sounds.score.play();
                     ballLaunched = false;
                     
                     if (playerScore >= WINNING_SCORE) {
@@ -431,8 +406,6 @@
                     }
                 } else if (ball.x + ball.size > canvas.width) {
                     machineScore++;
-                    sounds.score.currentTime = 0;
-                    sounds.score.play();
                     ballLaunched = false;
                     
                     if (machineScore >= WINNING_SCORE) {
