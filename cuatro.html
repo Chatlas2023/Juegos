@@ -416,67 +416,67 @@
         
         // --- Manejo de eventos para PC ---
 
-        function handleDragStart(e) {
-            if (e.target.classList.contains('color-option')) {
-                draggedColor = e.target.dataset.color;
-                draggedElement = e.target;
-            } else if (e.target.classList.contains('filled')) {
-                draggedColor = e.target.dataset.color;
-                draggedElement = e.target;
-            }
-            
-            e.target.classList.add('dragging');
-            e.dataTransfer.setData('text/plain', draggedColor);
-            e.dataTransfer.effectAllowed = 'copy';
-        }
+function handleDragStart(e) {
+    if (e.target.classList.contains('color-option')) {
+        draggedColor = e.target.dataset.color;
+        draggedElement = e.target;
+    } else if (e.target.classList.contains('filled')) {
+        draggedColor = e.target.dataset.color;
+        draggedElement = e.target;
+        // Eliminamos esta línea para evitar que el cuadro original se vea afectado
+        // e.target.classList.add('dragging');
+    }
+    
+    e.dataTransfer.setData('text/plain', draggedColor);
+    e.dataTransfer.effectAllowed = 'copy';
+}
         
-        function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
-            draggedColor = null;
-            draggedElement = null;
-        }
+function handleDragEnd(e) {
+    // Solo limpiamos si es un color de la paleta, no un cuadro lleno
+    if (e.target.classList.contains('color-option')) {
+        e.target.classList.remove('dragging');
+    }
+    draggedColor = null;
+    draggedElement = null;
+}
         
         function handleDragOver(e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'copy';
         }
         
-        function handleDragEnter(e) {
-            e.preventDefault();
-            if (!e.target.classList.contains('filled')) {
-                e.target.classList.add('highlight');
-            }
-        }
+function handleDragEnter(e) {
+    e.preventDefault();
+    // Eliminamos la condición para permitir resaltar cuadros llenos
+    e.target.classList.add('highlight');
+}
         
         function handleDragLeave(e) {
             e.target.classList.remove('highlight');
         }
         
-        function handleDrop(e) {
-            e.preventDefault();
-            e.target.classList.remove('highlight');
-            
-            if (gameOver || !draggedColor) return;
-            
-            if (e.target.closest('.guess-row') !== currentRow) return;
-            
-            if (e.target.classList.contains('filled')) return;
-            
-            e.target.className = 'guess-slot';
-            e.target.style.backgroundColor = '';
-            e.target.dataset.color = '';
-            
-            const color = COLORS.find(c => c.id === draggedColor);
-            if (color) {
-                e.target.style.backgroundColor = color.value;
-                e.target.classList.add('filled');
-                e.target.dataset.color = draggedColor;
-                e.target.draggable = true;
-                
-                e.target.addEventListener('dragstart', handleDragStart);
-                e.target.addEventListener('dragend', handleDragEnd);
-            }
-        }
+function handleDrop(e) {
+    e.preventDefault();
+    e.target.classList.remove('highlight');
+    
+    if (gameOver || !draggedColor) return;
+    
+    if (e.target.closest('.guess-row') !== currentRow) return;
+    
+    // Eliminamos esta condición para permitir reemplazar colores
+    // if (e.target.classList.contains('filled')) return;
+    
+    const color = COLORS.find(c => c.id === draggedColor);
+    if (color) {
+        e.target.style.backgroundColor = color.value;
+        e.target.classList.add('filled');
+        e.target.dataset.color = draggedColor;
+        e.target.draggable = true;
+        
+        e.target.addEventListener('dragstart', handleDragStart);
+        e.target.addEventListener('dragend', handleDragEnd);
+    }
+}
 
         // --- Manejo de eventos táctiles ---
 
@@ -502,31 +502,31 @@
             draggedElement.classList.add('dragging');
         }
 
-        function handleTouchStartSlot(e) {
-            if (gameOver) return;
-            
-            const slot = e.target;
-            
-            if (slot.classList.contains('filled')) {
-                e.preventDefault(); 
-                
-                isDragging = false;
-                const touch = e.touches[0];
-                activeTouch = touch.identifier;
-                
-                draggedElement = slot;
-                draggedColor = slot.dataset.color;
-                
-                draggingClone = document.createElement('div');
-                draggingClone.className = 'color-option-clone';
-                draggingClone.style.backgroundColor = slot.style.backgroundColor;
-                document.body.appendChild(draggingClone);
-                
-                updateClonePosition(touch);
-                
-                slot.classList.add('dragging');
-            }
-        }
+function handleTouchStartSlot(e) {
+    if (gameOver) return;
+    
+    const slot = e.target;
+    
+    if (slot.classList.contains('filled')) {
+        e.preventDefault(); 
+        
+        isDragging = false;
+        const touch = e.touches[0];
+        activeTouch = touch.identifier;
+        
+        draggedElement = slot;
+        draggedColor = slot.dataset.color;
+        
+        draggingClone = document.createElement('div');
+        draggingClone.className = 'color-option-clone';
+        draggingClone.style.backgroundColor = slot.style.backgroundColor;
+        document.body.appendChild(draggingClone);
+        
+        updateClonePosition(touch);
+        
+        // No aplicamos la clase dragging al elemento original
+    }
+}
 
         function handleTouchMoveColor(e) {
             if (!draggingClone) return;
@@ -627,47 +627,42 @@
             }
         }
 
-        function placeColorInSlot(slot) {
-            if (gameOver || !draggedColor || slot.closest('.guess-row') !== currentRow) return;
-            
-            if (slot.classList.contains('filled')) return;
-            
-            slot.className = 'guess-slot';
-            slot.style.backgroundColor = '';
-            slot.dataset.color = '';
-            
-            const color = COLORS.find(c => c.id === draggedColor);
-            if (color) {
-                slot.style.backgroundColor = color.value;
-                slot.classList.add('filled');
-                slot.dataset.color = draggedColor;
-                
-                slot.addEventListener('touchstart', handleTouchStartSlot);
-                slot.addEventListener('touchmove', handleTouchMoveSlot);
-                slot.addEventListener('touchend', handleTouchEndSlot);
-                slot.addEventListener('touchcancel', handleTouchCancel);
-            }
-        }
+function placeColorInSlot(slot) {
+    if (gameOver || !draggedColor || slot.closest('.guess-row') !== currentRow) return;
+    
+    const color = COLORS.find(c => c.id === draggedColor);
+    if (color) {
+        slot.style.backgroundColor = color.value;
+        slot.classList.add('filled');
+        slot.dataset.color = draggedColor;
+        
+        slot.addEventListener('touchstart', handleTouchStartSlot);
+        slot.addEventListener('touchmove', handleTouchMoveSlot);
+        slot.addEventListener('touchend', handleTouchEndSlot);
+        slot.addEventListener('touchcancel', handleTouchCancel);
+    }
+}
 
-        function cleanupAfterTouch() {
-            if (draggingClone) {
-                draggingClone.remove();
-                draggingClone = null;
-            }
-            
-            document.querySelectorAll('.guess-slot').forEach(slot => {
-                slot.classList.remove('highlight');
-            });
-            
-            document.querySelectorAll('.dragging').forEach(el => {
-                el.classList.remove('dragging');
-            });
-            
-            draggedColor = null;
-            draggedElement = null;
-            activeTouch = null;
-            isDragging = false;
-        }
+function cleanupAfterTouch() {
+    if (draggingClone) {
+        draggingClone.remove();
+        draggingClone = null;
+    }
+    
+    document.querySelectorAll('.guess-slot').forEach(slot => {
+        slot.classList.remove('highlight');
+    });
+    
+    // Solo limpiamos dragging de los colores de la paleta
+    document.querySelectorAll('.color-option.dragging').forEach(el => {
+        el.classList.remove('dragging');
+    });
+    
+    draggedColor = null;
+    draggedElement = null;
+    activeTouch = null;
+    isDragging = false;
+}
 
         // Nueva función para manejar el clic en un color
         function handleColorClick(e) {
