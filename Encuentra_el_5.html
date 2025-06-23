@@ -10,21 +10,18 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: calc(100vh - 1cm);
+        min-height: 100vh;
         margin: 0;
-        padding: 20px 20px 20px 20px;
-        padding-top: 0;
-        transform: translateY(-1cm);
+        padding: 20px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background-color: #1a1a1a; /* Dark background */
-        color: #e0e0e0; /* Light text for contrast */
+        background-color: #1a1a1a;
+        color: #e0e0e0;
     }
     
     h1 {
-        color: #ffffff; /* White for the title */
+        color: #ffffff;
         margin-bottom: 10px;
         text-align: center;
-        margin-top: 0;
     }
     
     h1 .subtitle {
@@ -33,64 +30,62 @@
         opacity: 0.7;
         display: block;
         margin-top: 5px;
-        color: #b0b0b0; /* Slightly dimmed subtitle */
+        color: #b0b0b0;
     }
     
     #game-container {
-        position: relative;
         width: 100%;
         max-width: 400px;
         height: 400px;
-        border: 2px solid #3c3c3c; /* Darker border */
+        border: 2px solid #3c3c3c;
         border-radius: 10px;
-        background-color: #2c2c2c; /* Dark container background */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Subtle shadow for depth */
+        background-color: #2c2c2c;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
         overflow: hidden;
     }
     
-.grid {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-    gap: 3px; /* Increased from 1px to 3px for thicker lines */
-    background-color: #ffffff; /* White for high contrast (grid lines) */
-}
+    .grid {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        gap: 3px;
+        background-color: #ffffff;
+    }
 
-.cell {
-    background-color: #333333; /* Dark cell background (unchanged) */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 36px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    user-select: none;
-    color: #e0e0e0; /* Light text for numbers (unchanged) */
-}
+    .cell {
+        background-color: #333333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        user-select: none;
+        color: #e0e0e0;
+    }
     
     .cell:hover {
-        background-color: #4a4a4a; /* Slightly lighter on hover */
+        background-color: #4a4a4a;
     }
     
     .cell.correct {
-        background-color: #4caf50; /* Green for correct */
+        background-color: #4caf50;
         transform: scale(0.95);
-        color: #ffffff; /* White text for visibility */
+        color: #ffffff;
     }
     
     .cell.incorrect {
-        background-color: #d32f2f; /* Red for incorrect */
+        background-color: #d32f2f;
         animation: shake 0.5s;
-        color: #ffffff; /* White text for visibility */
+        color: #ffffff;
     }
     
     .cell.target {
-        background-color: #0288d1; /* Blue for target */
-        color: #ffffff; /* White text for visibility */
+        background-color: #0288d1;
+        color: #ffffff;
     }
     
     @keyframes shake {
@@ -99,26 +94,18 @@
         40%, 80% { transform: translateX(5px); }
     }
     
-    #stats-container {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-        max-width: 400px;
-        margin: 15px 0;
-    }
-    
-    #score-display, #timer {
-        background-color: #2c2c2c; /* Dark background for stats */
+    #score-display {
+        background-color: #2c2c2c;
         padding: 10px 15px;
         border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); /* Subtle shadow */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         font-size: 18px;
         font-weight: bold;
-        color: #e0e0e0; /* Light text */
-    }
-    
-    #timer {
-        color: #ff5252; /* Brighter red for timer */
+        color: #e0e0e0;
+        margin: 15px 0;
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
     }
     
     #message {
@@ -126,7 +113,7 @@
         font-size: 24px;
         text-align: center;
         min-height: 36px;
-        color: #e0e0e0; /* Light text for message */
+        color: #e0e0e0;
     }
     
     #controls {
@@ -139,8 +126,8 @@
         padding: 12px 20px;
         font-size: 18px;
         cursor: pointer;
-        background-color: #3c3c3c; /* Dark button */
-        color: #ffffff; /* White text */
+        background-color: #3c3c3c;
+        color: #ffffff;
         border: none;
         border-radius: 5px;
         transition: all 0.3s;
@@ -148,15 +135,15 @@
     }
     
     button:hover {
-        background-color: #555555; /* Lighter on hover */
+        background-color: #555555;
         transform: translateY(-2px);
     }
     
     button:disabled {
-        background-color: #666666; /* Gray for disabled */
+        background-color: #666666;
         cursor: not-allowed;
         transform: none;
-        color: #b0b0b0; /* Dimmed text */
+        color: #b0b0b0;
     }
     
     @media (max-width: 480px) {
@@ -177,11 +164,7 @@
 <body>
     <h1>Encuentra el 5 <span class="subtitle">(Aunque desaparezcan los números)</span></h1>
 
-    
-    <div id="stats-container">
-        <div id="score-display">Aciertos: 0 | Récord: 0</div>
-        <div id="timer">Tiempo: 2.0s</div>
-    </div>
+    <div id="score-display">Aciertos: 0 | Récord: 0</div>
     
     <div id="game-container">
         <div class="grid" id="grid"></div>
@@ -198,17 +181,14 @@
         let numbers = [];
         let score = 0;
         let highScore = localStorage.getItem('highScore') || 0;
-        let timer;
-        let gameTimeout;
         let isGameRunning = false;
-        let displayTime = 2.0; // Tiempo inicial de visualización
+        let displayTime = 2.0;
         let hideNumbersTimeout;
         
         // Elementos del DOM
         const grid = document.getElementById('grid');
         const message = document.getElementById('message');
         const scoreDisplay = document.getElementById('score-display');
-        const timerDisplay = document.getElementById('timer');
         const playBtn = document.getElementById('play-btn');
         
         // Event Listeners
@@ -217,7 +197,6 @@
         // Inicializar el juego
         function initialize() {
             updateScoreDisplay();
-            updateTimerDisplay();
             createEmptyGrid();
         }
         
@@ -245,51 +224,43 @@
         // Comenzar el juego
         function startGame() {
             score = 0;
-            displayTime = 2.0; // Resetear tiempo a 2 segundos
+            displayTime = 2.0;
             isGameRunning = true;
             playBtn.textContent = 'Detener';
             playBtn.style.backgroundColor = '#d32f2f';
             updateScoreDisplay();
-            updateTimerDisplay();
             
             playRound();
         }
         
         // Jugar una ronda
-function playRound() {
-    if (!isGameRunning) return;
-    
-    generateNumbers();
-    showNumbers();
-    message.textContent = 'Memoriza los números...';
-    
-    hideNumbersTimeout = setTimeout(() => {
-        if (!document.querySelector('.cell.target')) { // Solo ocultar si no se ha encontrado el 5
-            hideNumbers();
-            message.textContent = '¡Encuentra el 5!';
-            startAnswerTimer();
+        function playRound() {
+            if (!isGameRunning) return;
+            
+            generateNumbers();
+            showNumbers();
+            message.textContent = 'Memoriza los números...';
+            
+            hideNumbersTimeout = setTimeout(() => {
+                if (!document.querySelector('.cell.target')) {
+                    hideNumbers();
+                    message.textContent = '¡Encuentra el 5!';
+                }
+            }, displayTime * 1000);
         }
-    }, displayTime * 1000);
-}
         
         // Generar números aleatorios
         function generateNumbers() {
             numbers = [];
-            // Creamos un array con números del 1 al 16
             let possibleNumbers = Array.from({length: 16}, (_, i) => i + 1);
-            
-            // Eliminamos el 5 original (posición 4 porque el array es base 0)
             possibleNumbers.splice(4, 1);
             
-            // Elegimos una posición aleatoria para insertar el 5
             const fivePosition = Math.floor(Math.random() * 16);
             
-            // Insertamos el 5 en la posición elegida
             for (let i = 0; i < 16; i++) {
                 if (i === fivePosition) {
                     numbers.push(5);
                 } else {
-                    // Tomamos números aleatorios del array possibleNumbers
                     const randomIndex = Math.floor(Math.random() * possibleNumbers.length);
                     numbers.push(possibleNumbers.splice(randomIndex, 1)[0]);
                 }
@@ -297,76 +268,64 @@ function playRound() {
         }
         
         // Mostrar números en la cuadrícula
-function showNumbers() {
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach((cell, index) => {
-        cell.textContent = numbers[index];
-        cell.classList.remove('correct', 'incorrect', 'target');
-        // Quitar cualquier listener existente primero para evitar duplicados
-        cell.replaceWith(cell.cloneNode(true));
-        // Agregar el event listener para permitir clics
-        cell = document.querySelector(`.cell[data-index="${index}"]`);
-        cell.addEventListener('click', handleCellClick);
-        cell.style.pointerEvents = 'auto'; // Habilitar clics nuevamente
-    });
-}
+        function showNumbers() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, index) => {
+                cell.textContent = numbers[index];
+                cell.classList.remove('correct', 'incorrect', 'target');
+                cell.replaceWith(cell.cloneNode(true));
+                cell = document.querySelector(`.cell[data-index="${index}"]`);
+                cell.addEventListener('click', handleCellClick);
+                cell.style.pointerEvents = 'auto';
+            });
+        }
         
         // Ocultar números y preparar para la selección
         function hideNumbers() {
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach((cell, index) => {
-        cell.textContent = '';
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, index) => {
+                cell.textContent = '';
             });
         }
         
         // Manejar clic en una celda
-function handleCellClick(event) {
-    if (!isGameRunning) return;
-    
-    // Deshabilitar clics adicionales
-    const cells = document.querySelectorAll('.cell');
-    cells.forEach(cell => {
-        cell.style.pointerEvents = 'none';
-    });
-    
-    clearTimeout(gameTimeout);
-    
-    const cellIndex = parseInt(event.target.dataset.index);
-    const isCorrect = numbers[cellIndex] === 5;
-    
-    // Mostrar retroalimentación visual
-    showFeedback(cellIndex, isCorrect);
-    
-    // Actualizar puntuación
-    if (isCorrect) {
-        score++;
-        if (score > highScore) {
-            highScore = score;
-            localStorage.setItem('highScore', highScore);
+        function handleCellClick(event) {
+            if (!isGameRunning) return;
+            
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.style.pointerEvents = 'none';
+            });
+            
+            clearTimeout(hideNumbersTimeout);
+            
+            const cellIndex = parseInt(event.target.dataset.index);
+            const isCorrect = numbers[cellIndex] === 5;
+            
+            showFeedback(cellIndex, isCorrect);
+            
+            if (isCorrect) {
+                score++;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('highScore', highScore);
+                }
+                message.textContent = '¡Correcto! +1 punto';
+                displayTime = Math.max(0.5, displayTime - 0.1);
+            } else {
+                message.textContent = `Incorrecto. Era el 5 (Puntuación: ${score})`;
+            }
+            
+            updateScoreDisplay();
+            
+            setTimeout(() => {
+                if (isCorrect) {
+                    playRound();
+                } else {
+                    endGame();
+                }
+            }, 1500);
         }
-        message.textContent = '¡Correcto! +1 punto';
-        
-        // Disminuir el tiempo para la próxima ronda (mínimo 0.5 segundos)
-        displayTime = Math.max(0.5, displayTime - 0.1);
-        updateTimerDisplay();
-    } else {
-        message.textContent = `Incorrecto. Era el 5 (Puntuación: ${score})`;
-    }
-    
-    updateScoreDisplay();
-    
-    // Cancelar el temporizador de ocultación si aún está pendiente
-    clearTimeout(hideNumbersTimeout);
-    
-    // Esperar un segundo y continuar o terminar
-    setTimeout(() => {
-        if (isCorrect) {
-            playRound();
-        } else {
-            endGame();
-        }
-    }, 1500);
-}
         
         // Mostrar retroalimentación visual
         function showFeedback(clickedIndex, isCorrect) {
@@ -375,46 +334,16 @@ function handleCellClick(event) {
             cells.forEach((cell, index) => {
                 cell.classList.remove('correct', 'incorrect', 'target');
                 
-                // Resaltar el 5
                 if (numbers[index] === 5) {
                     cell.classList.add('target');
                     cell.textContent = numbers[index];
                 }
                 
-                // Resaltar la celda clickeada
                 if (index === clickedIndex) {
                     cell.classList.add(isCorrect ? 'correct' : 'incorrect');
                     cell.textContent = numbers[index];
                 }
             });
-        }
-        
-        // Temporizador para responder
-        function startAnswerTimer() {
-            let timeLeft = 1.0; // 1 segundo para responder
-            updateTimerDisplay(timeLeft);
-            
-            gameTimeout = setTimeout(() => {
-                handleTimeOut();
-            }, timeLeft * 1000);
-        }
-        
-        // Actualizar display del temporizador
-        function updateTimerDisplay(time = displayTime) {
-            timerDisplay.textContent = `Tiempo: ${time.toFixed(1)}s`;
-        }
-        
-        // Manejar tiempo agotado
-        function handleTimeOut() {
-            if (!isGameRunning) return;
-            
-            showFeedback(-1, false);
-            message.textContent = `Tiempo agotado! Puntuación: ${score}`;
-            updateScoreDisplay();
-            
-            setTimeout(() => {
-                endGame();
-            }, 1500);
         }
         
         // Finalizar el juego
@@ -423,7 +352,6 @@ function handleCellClick(event) {
             playBtn.textContent = 'Jugar';
             playBtn.style.backgroundColor = '#2c3e50';
             
-            // Mostrar todos los números
             const cells = document.querySelectorAll('.cell');
             cells.forEach((cell, index) => {
                 cell.textContent = numbers[index];
