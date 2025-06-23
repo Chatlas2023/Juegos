@@ -32,7 +32,7 @@
             align-items: center;
             justify-content: center;
             width: 100%;
-           max-height: 60vh;
+           height: 55vh; 
         }
         #canvas {
             background-color: black;
@@ -62,9 +62,10 @@
         #status {
             color: white;
             text-align: center;
-            margin: 1px 0;
-            font-size: 18px;
+            margin: 2px 0;
+            font-size: 16px;
             flex-shrink: 0;
+             line-height: 1.2;
         }
         #game-over {
             color: red;
@@ -77,9 +78,10 @@
             display: flex;
             flex-direction: column;
             width: 95%;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             flex-shrink: 0;
             padding-top: 2px;
+            margin-top: 2px;
         }
         .top-section {
             display: flex;
@@ -89,13 +91,14 @@
             flex-grow: 1;
             overflow: hidden;
             justify-content: flex-start;
-            padding-bottom: 5px;
+            padding-bottom: 2px;
             flex-shrink: 1;
+            gap: 2px;
         }
         .row {
             display: flex;
             justify-content: center;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         .btn {
             background-color: #333;
@@ -297,10 +300,10 @@
             this.gameOverMsg = document.getElementById('game-over');
             
             // Ajustar tamaño del canvas principal (un poco más pequeño para dejar espacio a los próximos bloques)
-            const scaleFactor = 0.9;
+            const scaleFactor = 0.85;
             const pieceSize = Math.min(
                 window.innerWidth * 0.95 / this.tetris.FIELD_WIDTH,
-                window.innerHeight * 0.6 / this.tetris.FIELD_HEIGHT
+                window.innerHeight * 0.5 / this.tetris.FIELD_HEIGHT
             ) * scaleFactor;
             
             this.canvas.width = pieceSize * this.tetris.FIELD_WIDTH;
