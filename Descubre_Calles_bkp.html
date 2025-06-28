@@ -91,26 +91,26 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .game-info {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+.game-info {
+    display: flex;
+    flex-direction: row; /* Asegura que los elementos estén en una fila */
+    justify-content: space-between; /* Espacio equitativo entre los contenedores */
+    gap: 10px; /* Espacio entre los contenedores */
+}
 
-        .info-box {
-            background: rgba(33, 37, 41, 0.8);
-            padding: 12px 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-            min-width: 45%;
-            color: var(--light);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-                min-height: 60px; /* Altura fija para mantener el espacio */
+.info-box {
+    background: rgba(33, 37, 41, 0.8);
+    padding: 12px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    width: 48%; /* Cada contenedor ocupa casi la mitad del espacio */
+    color: var(--light);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    min-height: 60px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-        }
+}
 
         .info-box h3 {
             margin: 0 0 8px 0;
