@@ -336,22 +336,12 @@
             
             // IA para la paleta de la máquina
             if (ballLaunched) {
-            const machinePaddleCenter = machinePaddle.y + machinePaddle.height / 2;
-            const isSharpAngle = Math.abs(ball.speedY / ball.speedX) > 1;
-            
-            // 30% de probabilidad de fallar en ángulos pronunciados
-            if (!isSharpAngle || Math.random() > 0.3) {
+                const machinePaddleCenter = machinePaddle.y + machinePaddle.height / 2;
                 const targetY = ball.y - machinePaddle.height / 2;
-                // Movimiento con suavizado y margen de error
-                machinePaddle.y += (targetY - machinePaddle.y) * (0.08 + Math.random() * 0.04);
-            } else {
-                // Movimiento erróneo (falla a propósito)
-                machinePaddle.y += (Math.random() * 4 - 2);
+                
+                machinePaddle.y += (targetY - machinePaddle.y) * 0.1;
+                machinePaddle.y = Math.max(0, Math.min(machinePaddle.y, canvas.height - machinePaddle.height));
             }
-            
-            // Limitar la paleta dentro del canvas
-            machinePaddle.y = Math.max(0, Math.min(machinePaddle.y, canvas.height - machinePaddle.height));
-        }
             
             // Colisión con bordes
             if (ballLaunched && (ball.y - ball.size < 0 || ball.y + ball.size > canvas.height)) {
