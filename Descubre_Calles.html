@@ -77,6 +77,11 @@
             color: white;
             animation: blink 1s ease-in-out 3;
         }
+        .word-display.incorrect {
+    background: linear-gradient(to right, var(--danger), #d90429);
+    color: white;
+    animation: blink 1s ease-in-out 3;
+}
 
         @keyframes blink {
             0%, 100% { opacity: 1; }
@@ -1358,45 +1363,50 @@
                 }
             }
             
-            makeGuess(guess) {
-                if (this.guessedLetters.has(guess) || this.attempts <= 0) {
-                    return;
-                }
-                
-                this.guessedLetters.add(guess);
-                this.updateGuessedLettersDisplay();
-                
-                const keys = document.querySelectorAll('.key');
-                keys.forEach(key => {
-                    if (key.textContent === guess) {
-                        if (this.wordToGuess.includes(guess)) {
-                            key.classList.add('correct');
-                        } else {
-                            key.classList.add('wrong');
-                        }
-                        key.classList.add('used');
-                        key.disabled = true;
-                    }
-                });
-                
-                if (this.wordToGuess.includes(guess)) {
-                    const currentDisplay = this.displayWord();
-                    if (!currentDisplay.includes('_')) {
-                        this.wordDisplay.classList.add('correct');
-                        this.showNextWordButton();
-                        setTimeout(() => {
-                            this.wordDisplay.classList.remove('correct');
-                        }, 3000);
-                    }
-                } else {
-                    this.attempts--;
-                    this.updateAttemptsDisplay();
-                    if (this.attempts <= 0) {
-                        this.showMessage('¡Perdiste!', `La palabra era: ${this.wordToGuess}`);
-                        this.showNextWordButton();
-                    }
-                }
+makeGuess(guess) {
+    if (this.guessedLetters.has(guess) || this.attempts <= 0) {
+        return;
+    }
+    
+    this.guessedLetters.add(guess);
+    this.updateGuessedLettersDisplay();
+    
+    const keys = document.querySelectorAll('.key');
+    keys.forEach(key => {
+        if (key.textContent === guess) {
+            if (this.wordToGuess.includes(guess)) {
+                key.classList.add('correct');
+            } else {
+                key.classList.add('wrong');
             }
+            key.classList.add('used');
+            key.disabled = true;
+        }
+    });
+    
+    if (this.wordToGuess.includes(guess)) {
+        const currentDisplay = this.displayWord();
+        if (!currentDisplay.includes('_')) {
+            this.wordDisplay.classList.add('correct');
+            this.showNextWordButton();
+            setTimeout(() => {
+                this.wordDisplay.classList.remove('correct');
+            }, 3000);
+        }
+    } else {
+        this.attempts--;
+        this.updateAttemptsDisplay();
+        if (this.attempts <= 0) {
+            // Mostrar la palabra completa con fondo rojo
+            this.wordDisplay.textContent = this.wordToGuess;
+            this.wordDisplay.classList.add('incorrect');
+            this.showNextWordButton();
+            setTimeout(() => {
+                this.wordDisplay.classList.remove('incorrect');
+            }, 3000);
+        }
+    }
+}
             
             showNextWordButton() {
                 this.nextWordBtn.classList.add('show');
@@ -1410,28 +1420,28 @@
                 alert(`${title}\n${message}`);
             }
             
-            nextWord() {
-                if (this.words.length === 0) {
-                    alert('No hay más palabras');
-                    return;
-                }
-                
-                this.wordToGuess = this.words[Math.floor(Math.random() * this.words.length)].toUpperCase();
-                this.guessedLetters = new Set();
-                this.attempts = 6;
-                
-                this.wordDisplay.classList.remove('correct');
-                this.displayWord();
-                this.updateAttemptsDisplay();
-                this.guessedLettersDisplay.textContent = '';
-                this.hideNextWordButton();
-                
-                const keys = document.querySelectorAll('.key');
-                keys.forEach(key => {
-                    key.classList.remove('used', 'correct', 'wrong');
-                    key.disabled = false;
-                });
-            }
+nextWord() {
+    if (this.words.length === 0) {
+        alert('No hay más palabras');
+        return;
+    }
+    
+    this.wordToGuess = this.words[Math.floor(Math.random() * this.words.length)].toUpperCase();
+    this.guessedLetters = new Set();
+    this.attempts = 6;
+    
+    this.wordDisplay.classList.remove('correct', 'incorrect'); // Asegurar que ambas clases se eliminen
+    this.displayWord();
+    this.updateAttemptsDisplay();
+    this.guessedLettersDisplay.textContent = '';
+    this.hideNextWordButton();
+    
+    const keys = document.querySelectorAll('.key');
+    keys.forEach(key => {
+        key.classList.remove('used', 'correct', 'wrong');
+        key.disabled = false;
+    });
+}
         }
 
         document.addEventListener('DOMContentLoaded', () => {
