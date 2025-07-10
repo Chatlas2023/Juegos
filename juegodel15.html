@@ -69,7 +69,7 @@
         }
         
         .cell.correct {
-            background-color: #1e88e5; /* Cambiado de verde a celeste */
+            background-color: #1e88e5;
         }
         
         #stats-container {
@@ -175,7 +175,7 @@
         
         #high-scores-list li span:first-child {
             font-weight: bold;
-            color: #1e88e5; /* Cambiado a celeste para coincidir */
+            color: #1e88e5;
         }
         
         #close-high-scores {
@@ -233,7 +233,7 @@
     <script>
         // Variables del juego
         let board = [];
-        let emptyPos = 15; // Posición inicial del espacio vacío (última celda)
+        let emptyPos = 15;
         let moves = 0;
         let isGameWon = false;
         let highScores = JSON.parse(localStorage.getItem('highScores')) || [];
@@ -251,7 +251,7 @@
         // Inicializar el juego
         function initialize() {
             createBoard();
-            shuffleBoard(); // Mezclar automáticamente al iniciar
+            shuffleBoard();
             renderBoard();
             shuffleBtn.addEventListener('click', shuffleBoard);
             highScoresBtn.addEventListener('click', showHighScores);
@@ -264,7 +264,7 @@
             for (let i = 1; i <= 15; i++) {
                 board.push(i);
             }
-            board.push(0); // 0 representa el espacio vacío
+            board.push(0);
         }
         
         // Renderizar el tablero en el DOM
@@ -284,31 +284,32 @@
                 // Solo las celdas adyacentes al espacio vacío son clickeables
                 if (num !== 0 && isAdjacent(index, emptyPos)) {
                     cell.addEventListener('click', () => moveTile(index));
+                } else if (num !== 0) {
+                    cell.style.cursor = 'not-allowed';
                 }
                 
                 grid.appendChild(cell);
             });
             
             movesDisplay.textContent = `Movimientos: ${moves}`;
-            
-            // Verificar si el jugador ganó
             checkWin();
         }
         
-        // Verificar si una celda es adyacente al espacio vacío
+        // Verificar si una celda es adyacente al espacio vacío (CORREGIDO)
         function isAdjacent(pos1, pos2) {
             const row1 = Math.floor(pos1 / 4);
             const col1 = pos1 % 4;
             const row2 = Math.floor(pos2 / 4);
             const col2 = pos2 % 4;
             
+            // Verificar si son adyacentes horizontal o verticalmente
             return (Math.abs(row1 - row2) === 1 && col1 === col2) || 
                    (Math.abs(col1 - col2) === 1 && row1 === row2);
         }
         
-        // Mover una ficha al espacio vacío
+        // Mover una ficha al espacio vacío (CORREGIDO)
         function moveTile(pos) {
-            if (isGameWon) return;
+            if (isGameWon || !isAdjacent(pos, emptyPos)) return;
             
             // Intercambiar posiciones
             [board[pos], board[emptyPos]] = [board[emptyPos], board[pos]];
@@ -334,19 +335,13 @@
         
         // Actualizar las mejores puntuaciones
         function updateHighScores(score) {
-            // Agregar el nuevo puntaje
             highScores.push({
                 score: score,
                 date: new Date().toLocaleDateString()
             });
             
-            // Ordenar de menor a mayor (menos movimientos es mejor)
             highScores.sort((a, b) => a.score - b.score);
-            
-            // Mantener solo los 5 mejores
             highScores = highScores.slice(0, 5);
-            
-            // Guardar en localStorage
             localStorage.setItem('highScores', JSON.stringify(highScores));
         }
         
@@ -372,19 +367,14 @@
             highScoresModal.style.display = 'none';
         }
         
-        // Barajar el tablero
+        // Barajar el tablero (CORREGIDO)
         function shuffleBoard() {
-            if (isGameWon) {
-                isGameWon = false;
-                message.textContent = '';
-            }
-            
+            isGameWon = false;
+            message.textContent = '';
             moves = 0;
-            
-            // Crear un tablero ordenado
             createBoard();
             
-            // Realizar movimientos aleatorios para mezclar
+            // Realizar movimientos aleatorios válidos para mezclar
             const shuffleMoves = 200;
             let lastMoved = -1;
             
@@ -398,7 +388,7 @@
                     }
                 }
                 
-                // Filtrar la ficha que se movió en el último movimiento para evitar deshacerlo
+                // Filtrar la ficha que se movió en el último movimiento
                 const validMoves = adjacentTiles.filter(pos => pos !== lastMoved);
                 if (validMoves.length === 0) continue;
                 
