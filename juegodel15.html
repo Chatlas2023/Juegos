@@ -69,7 +69,7 @@
         }
         
         .cell.correct {
-            background-color: #2d572c;
+            background-color: #1e88e5; /* Cambiado de verde a celeste */
         }
         
         #stats-container {
@@ -175,7 +175,7 @@
         
         #high-scores-list li span:first-child {
             font-weight: bold;
-            color: #4CAF50;
+            color: #1e88e5; /* Cambiado a celeste para coincidir */
         }
         
         #close-high-scores {
@@ -251,6 +251,7 @@
         // Inicializar el juego
         function initialize() {
             createBoard();
+            shuffleBoard(); // Mezclar automáticamente al iniciar
             renderBoard();
             shuffleBtn.addEventListener('click', shuffleBoard);
             highScoresBtn.addEventListener('click', showHighScores);
