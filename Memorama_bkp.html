@@ -90,7 +90,18 @@
         
         .card.matched {
             cursor: default;
-            opacity: 0.6;
+        }
+        
+        .card.matched .front {
+            background-color: #4CAF50;
+        }
+        
+        .card.matched .front::after {
+            content: "✓";
+            position: absolute;
+            font-size: 40px;
+            color: white;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
         
         .card img {
@@ -327,10 +338,10 @@
                 img.alt = `Imagen ${card.image.split('.')[0]}`;
                 front.appendChild(img);
                 
-                // Crear cara posterior
+                // Crear cara posterior (X grande y de color)
                 const back = document.createElement('div');
                 back.className = 'back';
-                back.textContent = '?';
+                back.innerHTML = '<span style="color: #ff5252; font-size: 40px;">✗</span>';
                 
                 cardElement.appendChild(front);
                 cardElement.appendChild(back);
@@ -367,20 +378,24 @@
                 const card2 = cards[flippedCards[1]];
                 
                 if (card1.image === card2.image) {
-                    // Son pareja
-                    card1.isMatched = true;
-                    card2.isMatched = true;
-                    matchedPairs++;
-                    
-                    flippedCards = [];
-                    renderCards();
-                    
-                    // Comprobar si el juego ha terminado
-                    if (matchedPairs === images.length) {
-                        isGameWon = true;
-                        message.textContent = '¡Felicidades! Has ganado.';
-                        updateHighScores(moves);
-                    }
+                    // Son pareja - mostramos durante 1 segundo antes de marcarlas
+                    canFlip = false;
+                    setTimeout(() => {
+                        card1.isMatched = true;
+                        card2.isMatched = true;
+                        matchedPairs++;
+                        
+                        flippedCards = [];
+                        canFlip = true;
+                        renderCards();
+                        
+                        // Comprobar si el juego ha terminado
+                        if (matchedPairs === images.length) {
+                            isGameWon = true;
+                            message.textContent = '¡Felicidades! Has ganado.';
+                            updateHighScores(moves);
+                        }
+                    }, 1000);
                 } else {
                     // No son pareja, voltear de nuevo después de un breve retraso
                     canFlip = false;
