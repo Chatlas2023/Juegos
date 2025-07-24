@@ -246,7 +246,7 @@
             for (let alien of aliens) {
                 if (!alien.alive) continue;
                 alien.x += alienSpeed * alienDirection;
-                if (alien.x + alien.width > canvas.width / dpr || alien.x < 0) {
+                if (alien.x + alien.width > canvas.width / dpr - 5 || alien.x < 5) {
                     hitEdge = true;
                 }
                 if (alien.y + alien.height >= canvas.height / dpr - 50) {
@@ -256,12 +256,17 @@
             if (hitEdge) {
                 alienDirection *= -1;
                 alienMoveDown = true;
-                alienSpeed += 0.2;
+                alienSpeed = Math.min(alienSpeed + 0.2, 3); // Cap speed to prevent excessive increase
+                // Shift aliens slightly to prevent sticking to edges
+                for (let alien of aliens) {
+                    if (!alien.alive) continue;
+                    alien.x += alienDirection * 10; // Small adjustment to clear edge
+                }
             }
             if (alienMoveDown) {
                 for (let alien of aliens) {
                     if (!alien.alive) continue;
-                    alien.y += alienHeight;
+                    alien.y += alienHeight + 5; // Move down by alien height plus padding
                 }
                 alienMoveDown = false;
             }
