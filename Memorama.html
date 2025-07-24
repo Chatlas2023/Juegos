@@ -378,24 +378,21 @@
                 const card2 = cards[flippedCards[1]];
                 
                 if (card1.image === card2.image) {
-                    // Son pareja - mostramos durante 1 segundo antes de marcarlas
-                    canFlip = false;
-                    setTimeout(() => {
-                        card1.isMatched = true;
-                        card2.isMatched = true;
-                        matchedPairs++;
-                        
-                        flippedCards = [];
-                        canFlip = true;
-                        renderCards();
-                        
-                        // Comprobar si el juego ha terminado
-                        if (matchedPairs === images.length) {
-                            isGameWon = true;
-                            message.textContent = '¡Felicidades! Has ganado.';
-                            updateHighScores(moves);
-                        }
-                    }, 1000);
+                    // Son pareja - marcar inmediatamente
+                    card1.isMatched = true;
+                    card2.isMatched = true;
+                    matchedPairs++;
+                    
+                    flippedCards = [];
+                    canFlip = true;
+                    renderCards();
+                    
+                    // Comprobar si el juego ha terminado
+                    if (matchedPairs === images.length) {
+                        isGameWon = true;
+                        message.textContent = '¡Felicidades! Has ganado.';
+                        updateHighScores(moves);
+                    }
                 } else {
                     // No son pareja, voltear de nuevo después de un breve retraso
                     canFlip = false;
