@@ -34,6 +34,7 @@
             max-width: 100%;
             height: auto;
             aspect-ratio: 4 / 3;
+            margin-bottom: 10px;
         }
         h1 {
             color: #bb86fc;
@@ -50,27 +51,41 @@
             font-size: 12px;
             margin-top: 10px;
         }
-        .touch-controls {
+        .control-panel {
             display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-            flex-wrap: wrap;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 15px;
         }
-        .touch-button {
+        .control-btn {
             background-color: #bb86fc;
             color: #1e1e1e;
             border: none;
-            padding: 10px 20px;
+            padding: 15px 0;
             font-size: 16px;
             font-weight: bold;
-            border-radius: 5px;
+            border-radius: 10px;
             cursor: pointer;
             text-align: center;
             user-select: none;
+            flex: 1;
+            margin: 0 5px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .touch-button:active {
+        .control-btn:active {
             background-color: #9b59b6;
+        }
+        .start-btn {
+            background-color: #2ecc71;
+            width: 100%;
+            margin: 10px 0;
+            padding: 15px;
+        }
+        .start-btn:active {
+            background-color: #27ae60;
         }
         @media (max-width: 600px) {
             h1 {
@@ -79,13 +94,16 @@
             p, .controls {
                 font-size: 12px;
             }
-            .touch-button {
-                padding: 8px;
+            .control-btn {
                 font-size: 14px;
+                min-height: 50px;
             }
         }
         @media (min-width: 601px) {
-            .touch-controls {
+            .control-panel {
+                display: none;
+            }
+            .start-btn {
                 display: none;
             }
         }
@@ -97,11 +115,14 @@
         <p>¡Destruye a los invasores alienígenas antes de que lleguen al fondo!</p>
         <canvas id="gameCanvas" width="400" height="300"></canvas>
         <div class="controls">
-            <p>Controles: Inclina tu dispositivo para moverte | Toca la pantalla para disparar</p>
+            <p>Controles PC: Flechas Izquierda/Derecha para mover, Espacio para disparar</p>
+            <p>Controles Móvil: Usa los botones inferiores</p>
         </div>
-        <div class="touch-controls">
-            <button class="touch-button" id="startBtn">Iniciar Juego</button>
-            <button class="touch-button" id="shootBtn">Disparar</button>
+        <button class="start-btn" id="startBtn">Iniciar Juego</button>
+        <div class="control-panel">
+            <button class="control-btn" id="leftBtn">← Mover y Disparar</button>
+            <button class="control-btn" id="shootBtn">Disparar</button>
+            <button class="control-btn" id="rightBtn">→ Mover y Disparar</button>
         </div>
     </div>
     <script>
@@ -119,7 +140,6 @@
         let gameOver = false;
         let win = false;
         let gameStarted = false;
-        let beta = 0; // Para almacenar la inclinación del dispositivo
 
         // Initialize game state
         function startGame() {
@@ -158,33 +178,19 @@
             }
         }
 
-        // Configurar el acelerómetro
-        function setupAccelerometer() {
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', handleOrientation);
-            } else {
-                alert("Tu dispositivo no soporta el acelerómetro o está desactivado. Usa los botones en su lugar.");
-            }
-        }
-
-        function handleOrientation(event) {
-            beta = event.beta; // Inclinación frontal (hacia adelante/atrás)
-            
+        // Disparar
+        function shoot() {
             if (gameStarted && !gameOver && !win) {
-                // Ajustar la sensibilidad según sea necesario
-                const sensitivity = 0.5;
-                
-                if (beta > 10) { // Inclinado a la derecha
-                    player.dx = player.speed * sensitivity;
-                } else if (beta < -10) { // Inclinado a la izquierda
-                    player.dx = -player.speed * sensitivity;
-                } else { // Dispositivo nivelado
-                    player.dx = 0;
-                }
+                bullets.push({
+                    x: player.x + player.width / 2 - 5 / 2,
+                    y: player.y - 10,
+                    width: 5,
+                    height: 10
+                });
             }
         }
 
-        // Keyboard controls (para pruebas en desktop)
+        // Keyboard controls (para PC)
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') player.dx = -player.speed;
             if (e.key === 'ArrowRight') player.dx = player.speed;
@@ -199,33 +205,65 @@
 
         // Touch controls
         const startBtn = document.getElementById('startBtn');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
         const shootBtn = document.getElementById('shootBtn');
 
-        function shoot() {
-            if (gameStarted && !gameOver && !win) {
-                bullets.push({
-                    x: player.x + player.width / 2 - 5 / 2,
-                    y: player.y - 10,
-                    width: 5,
-                    height: 10
-                });
-            }
-        }
-
-        startBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
+        startBtn.addEventListener('click', () => {
             startGame();
-            setupAccelerometer();
         });
-        
+
+        // Botón izquierdo: mover izquierda y disparar
+        leftBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            player.dx = -player.speed;
+            shoot();
+        });
+        leftBtn.addEventListener('mousedown', () => {
+            player.dx = -player.speed;
+            shoot();
+        });
+        leftBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            player.dx = 0;
+        });
+        leftBtn.addEventListener('mouseup', () => {
+            player.dx = 0;
+        });
+
+        // Botón derecho: mover derecha y disparar
+        rightBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            player.dx = player.speed;
+            shoot();
+        });
+        rightBtn.addEventListener('mousedown', () => {
+            player.dx = player.speed;
+            shoot();
+        });
+        rightBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            player.dx = 0;
+        });
+        rightBtn.addEventListener('mouseup', () => {
+            player.dx = 0;
+        });
+
+        // Botón central: solo disparar
         shootBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            shoot();
+        });
+        shootBtn.addEventListener('mousedown', () => {
             shoot();
         });
 
         // También permitir disparar tocando la pantalla
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            shoot();
+        });
+        canvas.addEventListener('mousedown', () => {
             shoot();
         });
 
@@ -299,14 +337,6 @@
             }
         }
 
-        // Check win condition
-        function checkWin() {
-            const livingAliens = aliens.filter(alien => alien.alive).length;
-            if (livingAliens === 0) {
-                win = true;
-            }
-        }
-
         // Draw everything
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -356,7 +386,6 @@
                 updatePlayer();
                 updateBullets();
                 updateAliens();
-                checkWin();
             }
             draw();
             requestAnimationFrame(gameLoop);
