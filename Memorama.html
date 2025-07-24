@@ -360,51 +360,55 @@
         }
         
         // Voltear una carta
-function flipCard(index) {
-    if (!canFlip || cards[index].isFlipped || cards[index].isMatched || flippedCards.length >= 2) {
-        return;
-    }
-    
-    cards[index].isFlipped = true;
-    flippedCards.push(index);
-    renderCards();
-    
-    // Si tenemos dos cartas volteadas, comprobar si son pareja
-    if (flippedCards.length === 2) {
-        moves++;
-        movesDisplay.textContent = `Movimientos: ${moves}`;
-        
-        const card1 = cards[flippedCards[0]];
-        const card2 = cards[flippedCards[1]];
-        
-        if (card1.image === card2.image) {
-            // Son pareja - marcamos inmediatamente
-            card1.isMatched = true;
-            card2.isMatched = true;
-            matchedPairs++;
+        function flipCard(index) {
+            if (!canFlip || cards[index].isFlipped || cards[index].isMatched || flippedCards.length >= 2) {
+                return;
+            }
             
-            flippedCards = [];
+            cards[index].isFlipped = true;
+            flippedCards.push(index);
             renderCards();
             
-            // Comprobar si el juego ha terminado
-            if (matchedPairs === images.length) {
-                isGameWon = true;
-                message.textContent = '¡Felicidades! Has ganado.';
-                updateHighScores(moves);
+            // Si tenemos dos cartas volteadas, comprobar si son pareja
+            if (flippedCards.length === 2) {
+                moves++;
+                movesDisplay.textContent = `Movimientos: ${moves}`;
+                
+                const card1 = cards[flippedCards[0]];
+                const card2 = cards[flippedCards[1]];
+                
+                if (card1.image === card2.image) {
+                    // Son pareja - mostramos durante 1 segundo antes de marcarlas
+                    canFlip = false;
+                    setTimeout(() => {
+                        card1.isMatched = true;
+                        card2.isMatched = true;
+                        matchedPairs++;
+                        
+                        flippedCards = [];
+                        canFlip = true;
+                        renderCards();
+                        
+                        // Comprobar si el juego ha terminado
+                        if (matchedPairs === images.length) {
+                            isGameWon = true;
+                            message.textContent = '¡Felicidades! Has ganado.';
+                            updateHighScores(moves);
+                        }
+                    }, 1000);
+                } else {
+                    // No son pareja, voltear de nuevo después de un breve retraso
+                    canFlip = false;
+                    setTimeout(() => {
+                        cards[flippedCards[0]].isFlipped = false;
+                        cards[flippedCards[1]].isFlipped = false;
+                        flippedCards = [];
+                        canFlip = true;
+                        renderCards();
+                    }, 1000);
+                }
             }
-        } else {
-            // No son pareja, voltear de nuevo después de un breve retraso
-            canFlip = false;
-            setTimeout(() => {
-                cards[flippedCards[0]].isFlipped = false;
-                cards[flippedCards[1]].isFlipped = false;
-                flippedCards = [];
-                canFlip = true;
-                renderCards();
-            }, 1000);
         }
-    }
-}
         
         // Barajar las cartas
         function shuffleCards() {
