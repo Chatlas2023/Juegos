@@ -119,10 +119,10 @@
             <p>Controles Móvil: Usa los botones inferiores</p>
         </div>
         <button class="start-btn" id="startBtn">Iniciar Juego</button>
-        <div class="control-panel">
-            <button class="control-btn" id="leftBtn">← Mover y Disparar</button>
-            <button class="control-btn" id="shootBtn">Disparar</button>
-            <button class="control-btn" id="rightBtn">→ Mover y Disparar</button>
+<div class="control-panel">
+    <button class="control-btn" id="leftBtn">← Mover y Disparar</button>
+    <button class="control-btn" id="rightBtn">Disparar</button>  <!-- Antes era shootBtn -->
+    <button class="control-btn" id="shootBtn">→ Mover y Disparar</button>  <!-- Antes era rightBtn -->
         </div>
     </div>
     <script>
@@ -224,58 +224,61 @@
         });
 
         // Botón izquierdo: mover izquierda y disparar
-        leftBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            player.dx = -player.speed;
-            shoot();
-        });
-        leftBtn.addEventListener('mousedown', () => {
-            player.dx = -player.speed;
-            shoot();
-        });
-        leftBtn.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            player.dx = 0;
-        });
-        leftBtn.addEventListener('mouseup', () => {
-            player.dx = 0;
-        });
+// Botón izquierdo: mantener igual (mover izquierda y disparar)
+leftBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    player.dx = -player.speed;
+    shoot();
+});
+leftBtn.addEventListener('mousedown', () => {
+    player.dx = -player.speed;
+    shoot();
+});
 
-        // Botón derecho: mover derecha y disparar
-        rightBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            player.dx = player.speed;
-            shoot();
-        });
-        rightBtn.addEventListener('mousedown', () => {
-            player.dx = player.speed;
-            shoot();
-        });
-        rightBtn.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            player.dx = 0;
-        });
-        rightBtn.addEventListener('mouseup', () => {
-            player.dx = 0;
-        });
+// Botón CENTRAL (ahora: mover derecha y disparar)
+shootBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    player.dx = player.speed;  // Mover derecha
+    shoot();  // Disparar
+});
+shootBtn.addEventListener('mousedown', () => {
+    player.dx = player.speed;  // Mover derecha
+    shoot();  // Disparar
+});
 
-        // Botón central: solo disparar
-        shootBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            shoot();
-        });
-        shootBtn.addEventListener('mousedown', () => {
-            shoot();
-        });
+// Botón DERECHO (ahora: solo disparar)
+rightBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    shoot();  // Solo disparar (sin mover)
+});
+rightBtn.addEventListener('mousedown', () => {
+    shoot();  // Solo disparar (sin mover)
+});
 
-        // También permitir disparar tocando la pantalla
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            shoot();
-        });
-        canvas.addEventListener('mousedown', () => {
-            shoot();
-        });
+// Eventos de "touchend" y "mouseup" (mantener igual para detener movimiento)
+leftBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    player.dx = 0;
+});
+leftBtn.addEventListener('mouseup', () => {
+    player.dx = 0;
+});
+
+shootBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    player.dx = 0;
+});
+shootBtn.addEventListener('mouseup', () => {
+    player.dx = 0;
+});
+
+rightBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    player.dx = 0;  // Aunque no mueva, por si acaso
+});
+rightBtn.addEventListener('mouseup', () => {
+    player.dx = 0;  // Aunque no mueva, por si acaso
+});
 
         // Update player position
         function updatePlayer() {
