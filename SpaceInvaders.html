@@ -126,13 +126,21 @@
         </div>
     </div>
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-            // Cargar la imagen de la nave
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Cargar la imagen de la nave
     const playerImg = new Image();
     playerImg.src = 'nave.png'; // Asegúrate de que la imagen esté en la misma ruta
+    
+    // Variable para controlar si la imagen está cargada
+    let imageLoaded = false;
+    playerImg.onload = function() {
+        imageLoaded = true;
+    };
 
-       // Adjust canvas for high-DPI displays
+    // Adjust canvas for high-DPI displays
     const dpr = window.devicePixelRatio || 1;
     canvas.width = 400 * dpr;
     canvas.height = 360 * dpr; // 20% más alto
@@ -162,7 +170,7 @@
         win = false;
         gameStarted = true;
 
-        // Initialize aliens (código sin cambios)
+        // Initialize aliens
         const alienRows = 5;
         const alienCols = 10;
         const alienWidth = 20;
@@ -180,6 +188,71 @@
             }
         }
     }
+
+    // [Resto de tus funciones sin cambios...]
+
+    // Draw everything
+ function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (gameStarted) {
+            // Draw player (ahora con imagen)
+            if (imageLoaded) {
+                ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+            } else {
+                // Si la imagen no se ha cargado, dibuja un rectángulo como respaldo
+                ctx.fillStyle = '#bb86fc';
+                ctx.fillRect(player.x, player.y, player.width, player.height);
+            }
+
+            // Draw bullets
+            ctx.fillStyle = '#ffffff';
+            for (let bullet of bullets) {
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            }
+
+            // Draw aliens
+            ctx.fillStyle = '#2ecc71';
+            for (let alien of aliens) {
+                if (alien.alive) {
+                    ctx.fillRect(alien.x, alien.y, alien.width, alien.height);
+                }
+            }
+        }
+
+        // Draw start or game over/win message
+        if (!gameStarted) {
+            ctx.fillStyle = '#bb86fc';
+            ctx.font = '24px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText('Toca "Iniciar Juego"', canvas.width / dpr / 2, canvas.height / dpr / 2);
+        } else if (gameOver) {
+            ctx.fillStyle = '#e74c3c';
+            ctx.font = '24px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText('¡Game Over!', canvas.width / dpr / 2, canvas.height / dpr / 2);
+        } else if (win) {
+            ctx.fillStyle = '#2ecc71';
+            ctx.font = '24px Segoe UI';
+            ctx.textAlign = 'center';
+            ctx.fillText('¡Ganaste!', canvas.width / dpr / 2, canvas.height / dpr / 2);
+        }
+    }
+
+    // Game loop
+    function gameLoop() {
+        if (gameStarted && !gameOver && !win) {
+            updatePlayer();
+            updateBullets();
+            updateAliens();
+        }
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+
+    // Start game loop
+    gameLoop();
+</script>
 
         // Disparar
         function shoot() {
