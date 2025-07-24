@@ -33,7 +33,7 @@
             width: 100%;
             max-width: 100%;
             height: auto;
-            aspect-ratio: 4 / 3;
+            aspect-ratio: 4 / 3.6; /* 20% más alto (de 3 a 3.6) */
             margin-bottom: 10px;
         }
         h1 {
@@ -113,7 +113,7 @@
     <div class="game-container">
         <h1>Space Invaders</h1>
         <p>¡Destruye a los invasores alienígenas antes de que lleguen al fondo!</p>
-        <canvas id="gameCanvas" width="400" height="300"></canvas>
+        <canvas id="gameCanvas" width="400" height="360"></canvas> <!-- 20% más alto (de 300 a 360) -->
         <div class="controls">
             <p>Controles PC: Flechas Izquierda/Derecha para mover, Espacio para disparar</p>
             <p>Controles Móvil: Usa los botones inferiores</p>
@@ -132,7 +132,7 @@
         // Adjust canvas for high-DPI displays
         const dpr = window.devicePixelRatio || 1;
         canvas.width = 400 * dpr;
-        canvas.height = 300 * dpr;
+        canvas.height = 360 * dpr; // 20% más alto
         ctx.scale(dpr, dpr);
 
         // Game objects
@@ -148,7 +148,7 @@
                 y: canvas.height / dpr - 40,
                 width: 50,
                 height: 30,
-                speed: 5,
+                speed: 4, // Disminuido de 5 a 4 (20% menos)
                 dx: 0
             };
             bullets = [];
@@ -169,7 +169,7 @@
                 for (let col = 0; col < alienCols; col++) {
                     aliens.push({
                         x: col * (alienWidth + alienPadding) + 30,
-                        y: row * (alienHeight + alienPadding) + 60,
+                        y: row * (alienHeight + alienPadding) + 40, // Aumentada distancia inicial (de 60 a 40)
                         width: alienWidth,
                         height: alienHeight,
                         alive: true
