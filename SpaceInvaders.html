@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Invaders V1.0</title>
+    <title>Space Invaders</title>
     <style>
         * {
             box-sizing: border-box;
@@ -52,7 +52,7 @@
         }
         .touch-controls {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             gap: 10px;
             margin-top: 10px;
             flex-wrap: wrap;
@@ -66,7 +66,6 @@
             font-weight: bold;
             border-radius: 5px;
             cursor: pointer;
-            flex: 1;
             text-align: center;
             user-select: none;
         }
@@ -98,13 +97,11 @@
         <p>¡Destruye a los invasores alienígenas antes de que lleguen al fondo!</p>
         <canvas id="gameCanvas" width="400" height="300"></canvas>
         <div class="controls">
-            <p>Controles: Flechas Izquierda/Derecha para mover, Espacio para disparar (PC) | Botones táctiles (móvil)</p>
+            <p>Controles: Inclina tu dispositivo para moverte | Toca la pantalla para disparar</p>
         </div>
         <div class="touch-controls">
             <button class="touch-button" id="startBtn">Iniciar Juego</button>
-            <button class="touch-button" id="leftBtn">Izquierda</button>
             <button class="touch-button" id="shootBtn">Disparar</button>
-            <button class="touch-button" id="rightBtn">Derecha</button>
         </div>
     </div>
     <script>
@@ -118,10 +115,11 @@
         ctx.scale(dpr, dpr);
 
         // Game objects
-        let player, bullets, aliens, alienSpeed, alienDirection, alienMoveDown;
+        let player, bullets, aliens, alienSpeed, alienDirection;
         let gameOver = false;
         let win = false;
         let gameStarted = false;
+        let beta = 0; // Para almacenar la inclinación del dispositivo
 
         // Initialize game state
         function startGame() {
@@ -160,17 +158,38 @@
             }
         }
 
-        // Keyboard controls
+        // Configurar el acelerómetro
+        function setupAccelerometer() {
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', handleOrientation);
+            } else {
+                alert("Tu dispositivo no soporta el acelerómetro o está desactivado. Usa los botones en su lugar.");
+            }
+        }
+
+        function handleOrientation(event) {
+            beta = event.beta; // Inclinación frontal (hacia adelante/atrás)
+            
+            if (gameStarted && !gameOver && !win) {
+                // Ajustar la sensibilidad según sea necesario
+                const sensitivity = 0.5;
+                
+                if (beta > 10) { // Inclinado a la derecha
+                    player.dx = player.speed * sensitivity;
+                } else if (beta < -10) { // Inclinado a la izquierda
+                    player.dx = -player.speed * sensitivity;
+                } else { // Dispositivo nivelado
+                    player.dx = 0;
+                }
+            }
+        }
+
+        // Keyboard controls (para pruebas en desktop)
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') player.dx = -player.speed;
             if (e.key === 'ArrowRight') player.dx = player.speed;
             if (e.key === ' ' && gameStarted && !gameOver && !win) {
-                bullets.push({
-                    x: player.x + player.width / 2 - 5 / 2,
-                    y: player.y - 10,
-                    width: 5,
-                    height: 10
-                });
+                shoot();
             }
         });
 
@@ -180,26 +199,9 @@
 
         // Touch controls
         const startBtn = document.getElementById('startBtn');
-        const leftBtn = document.getElementById('leftBtn');
-        const rightBtn = document.getElementById('rightBtn');
         const shootBtn = document.getElementById('shootBtn');
 
-        startBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            startGame();
-        });
-        leftBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            player.dx = -player.speed;
-        });
-        leftBtn.addEventListener('touchend', () => player.dx = 0);
-        rightBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            player.dx = player.speed;
-        });
-        rightBtn.addEventListener('touchend', () => player.dx = 0);
-        shootBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
+        function shoot() {
             if (gameStarted && !gameOver && !win) {
                 bullets.push({
                     x: player.x + player.width / 2 - 5 / 2,
@@ -208,6 +210,23 @@
                     height: 10
                 });
             }
+        }
+
+        startBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startGame();
+            setupAccelerometer();
+        });
+        
+        shootBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            shoot();
+        });
+
+        // También permitir disparar tocando la pantalla
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            shoot();
         });
 
         // Update player position
@@ -240,46 +259,45 @@
         }
 
         // Update aliens
-// Update aliens
-function updateAliens() {
-    let hitEdge = false;
-    let anyAlienAlive = false;
-    
-    for (let alien of aliens) {
-        if (!alien.alive) continue;
-        
-        anyAlienAlive = true;
-        alien.x += alienSpeed * alienDirection;
-        
-        // Check if any alien has hit the edge
-        if ((alien.x + alien.width > canvas.width / dpr - 5 && alienDirection > 0) || 
-            (alien.x < 5 && alienDirection < 0)) {
-            hitEdge = true;
+        function updateAliens() {
+            let hitEdge = false;
+            let anyAlienAlive = false;
+            
+            for (let alien of aliens) {
+                if (!alien.alive) continue;
+                
+                anyAlienAlive = true;
+                alien.x += alienSpeed * alienDirection;
+                
+                // Check if any alien has hit the edge
+                if ((alien.x + alien.width > canvas.width / dpr - 5 && alienDirection > 0) || 
+                    (alien.x < 5 && alienDirection < 0)) {
+                    hitEdge = true;
+                }
+                
+                // Check if aliens have reached the bottom
+                if (alien.y + alien.height >= canvas.height / dpr - 50) {
+                    gameOver = true;
+                }
+            }
+            
+            // If no aliens are alive, set win condition
+            if (!anyAlienAlive) {
+                win = true;
+                return;
+            }
+            
+            if (hitEdge) {
+                alienDirection *= -1;
+                // Move all aliens down
+                for (let alien of aliens) {
+                    if (!alien.alive) continue;
+                    alien.y += 20; // Move down by 20 pixels
+                }
+                // Increase speed slightly
+                alienSpeed = Math.min(alienSpeed + 0.1, 3);
+            }
         }
-        
-        // Check if aliens have reached the bottom
-        if (alien.y + alien.height >= canvas.height / dpr - 50) {
-            gameOver = true;
-        }
-    }
-    
-    // If no aliens are alive, set win condition
-    if (!anyAlienAlive) {
-        win = true;
-        return;
-    }
-    
-    if (hitEdge) {
-        alienDirection *= -1;
-        // Move all aliens down
-        for (let alien of aliens) {
-            if (!alien.alive) continue;
-            alien.y += 20; // Move down by 20 pixels
-        }
-        // Increase speed slightly
-        alienSpeed = Math.min(alienSpeed + 0.1, 3);
-    }
-}
 
         // Check win condition
         function checkWin() {
