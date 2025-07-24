@@ -10,6 +10,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: manipulation; /* Prevents default touch behaviors */
         }
         body {
             background-color: #121212;
@@ -21,13 +22,18 @@
             min-height: 100vh;
             padding: 20px;
         }
+        .game-container {
+            text-align: center;
+            width: 100%;
+            max-width: 600px; /* Constrain for smaller screens */
+        }
         canvas {
             border: 2px solid #bb86fc;
             background-color: #1e1e1e;
+            width: 100%;
             max-width: 100%;
-        }
-        .game-container {
-            text-align: center;
+            height: auto;
+            aspect-ratio: 4 / 3; /* Maintain canvas proportion */
         }
         h1 {
             color: #bb86fc;
@@ -44,16 +50,44 @@
             font-size: 12px;
             margin-top: 10px;
         }
+        .touch-controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .touch-button {
+            background-color: #bb86fc;
+            color: #1e1e1e;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            user-select: none;
+        }
+        .touch-button:active {
+            background-color: #9b59b6;
+        }
         @media (max-width: 600px) {
-            canvas {
-                width: 100%;
-                height: auto;
-            }
             h1 {
                 font-size: 20px;
             }
             p, .controls {
                 font-size: 12px;
+            }
+            .touch-button {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+        @media (min-width: 601px) {
+            .touch-controls {
+                display: none; /* Hide touch buttons on desktop */
             }
         }
     </style>
@@ -62,19 +96,30 @@
     <div class="game-container">
         <h1>Space Invaders</h1>
         <p>¡Destruye a los invasores alienígenas antes de que lleguen al fondo!</p>
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <canvas id="gameCanvas" width="400" height="300"></canvas>
         <div class="controls">
-            <p>Controles: Flechas Izquierda/Derecha para mover, Espacio para disparar</p>
+            <p>Controles: Flechas Izquierda/Derecha para mover, Espacio para disparar (PC) | Botones táctiles (móvil)</p>
+        </div>
+        <div class="touch-controls">
+            <button class="touch-button" id="leftBtn">Izquierda</button>
+            <button class="touch-button" id="shootBtn">Disparar</button>
+            <button class="touch-button" id="rightBtn">Derecha</button>
         </div>
     </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
+        // Adjust canvas for high-DPI displays
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = 400 * dpr;
+        canvas.height = 300 * dpr;
+        ctx.scale(dpr, dpr);
+
         // Player
         const player = {
-            x: canvas.width / 2 - 25,
-            y: canvas.height - 50,
+            x: canvas.width / dpr / 2 - 25,
+            y: canvas.height / dpr - 50,
             width: 50,
             height: 30,
             speed: 5,
@@ -90,8 +135,8 @@
         // Aliens
         const alienRows = 5;
         const alienCols = 10;
-        const alienWidth = 40;
-        const alienHeight = 30;
+        const alienWidth = 30;
+        const alienHeight = 20;
         const alienPadding = 10;
         const aliens = [];
         let alienSpeed = 1;
@@ -102,8 +147,8 @@
         for (let row = 0; row < alienRows; row++) {
             for (let col = 0; col < alienCols; col++) {
                 aliens.push({
-                    x: col * (alienWidth + alienPadding) + 50,
-                    y: row * (alienHeight + alienPadding) + 50,
+                    x: col * (alienWidth + alienPadding) + 30,
+                    y: row * (alienHeight + alienPadding) + 30,
                     width: alienWidth,
                     height: alienHeight,
                     alive: true
@@ -115,7 +160,7 @@
         let gameOver = false;
         let win = false;
 
-        // Controls
+        // Keyboard controls
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') player.dx = -player.speed;
             if (e.key === 'ArrowRight') player.dx = player.speed;
@@ -133,11 +178,32 @@
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
         });
 
+        // Touch controls
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const shootBtn = document.getElementById('shootBtn');
+
+        leftBtn.addEventListener('touchstart', () => player.dx = -player.speed);
+        leftBtn.addEventListener('touchend', () => player.dx = 0);
+        rightBtn.addEventListener('touchstart', () => player.dx = player.speed);
+        rightBtn.addEventListener('touchend', () => player.dx = 0);
+        shootBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent scrolling
+            if (!gameOver && !win) {
+                bullets.push({
+                    x: player.x + player.width / 2 - bulletWidth / 2,
+                    y: player.y - bulletHeight,
+                    width: bulletWidth,
+                    height: bulletHeight
+                });
+            }
+        });
+
         // Update player position
         function updatePlayer() {
             player.x += player.dx;
             if (player.x < 0) player.x = 0;
-            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+            if (player.x + player.width > canvas.width / dpr) player.x = canvas.width / dpr - player.width;
         }
 
         // Update bullets
@@ -169,7 +235,7 @@
             for (let alien of aliens) {
                 if (!alien.alive) continue;
                 alien.x += alienSpeed * alienDirection;
-                if (alien.x + alien.width > canvas.width || alien.x < 0) {
+                if (alien.x + alien.width > canvas.width / dpr || alien.x < 0) {
                     hitEdge = true;
                 }
                 if (alien.y + alien.height >= player.y) {
@@ -179,7 +245,7 @@
             if (hitEdge) {
                 alienDirection *= -1;
                 alienMoveDown = true;
-                alienSpeed += 0.2; // Increase speed
+                alienSpeed += 0.2;
             }
             if (alienMoveDown) {
                 for (let alien of aliens) {
@@ -223,14 +289,14 @@
             // Draw game over or win message
             if (gameOver) {
                 ctx.fillStyle = '#e74c3c';
-                ctx.font = '30px Segoe UI';
+                ctx.font = '24px Segoe UI';
                 ctx.textAlign = 'center';
-                ctx.fillText('¡Game Over!', canvas.width / 2, canvas.height / 2);
+                ctx.fillText('¡Game Over!', canvas.width / dpr / 2, canvas.height / dpr / 2);
             } else if (win) {
                 ctx.fillStyle = '#2ecc71';
-                ctx.font = '30px Segoe UI';
+                ctx.font = '24px Segoe UI';
                 ctx.textAlign = 'center';
-                ctx.fillText('¡Ganaste!', canvas.width / 2, canvas.height / 2);
+                ctx.fillText('¡Ganaste!', canvas.width / dpr / 2, canvas.height / dpr / 2);
             }
         }
 
