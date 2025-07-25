@@ -524,6 +524,7 @@ function resetGameAfterLifeLost() {
 function updateAliens() {
     let hitEdge = false;
     let anyAlienAlive = false;
+    let alienReachedBottom = false;  // Nueva variable para controlar si algún alien llegó al fondo
     
     for (let alien of aliens) {
         if (!alien.alive) continue;
@@ -531,46 +532,50 @@ function updateAliens() {
         anyAlienAlive = true;
         alien.x += alienSpeed * alienDirection;
         
-        // Check if any alien has hit the edge
+        // Verificar si algún alien tocó el borde
         if ((alien.x + alien.width > canvas.width / dpr - 5 && alienDirection > 0) || 
             (alien.x < 5 && alienDirection < 0)) {
             hitEdge = true;
         }
         
-        // Check if aliens have reached the bottom
+        // Verificar si algún alien llegó al fondo (sin break para revisar todos)
         if (alien.y + alien.height >= canvas.height / dpr - 50) {
-            lives--;
-            updateScoreDisplay();
-            if (lives <= 0) {
-                gameOver = true;
-                saveScore();
-            } else {
-                resetGameAfterLifeLost(); // Los aliens vuelven arriba
-            }
-            break;
+            alienReachedBottom = true;
         }
     }
-            
-            // If no aliens are alive, advance to next level
-            if (!anyAlienAlive) {
-                win = true;
-                setTimeout(() => {
-                    level++;
-                    win = false;
-                    startGame();
-                }, 1000);
-                return;
-            }
-            
-            if (hitEdge) {
-                alienDirection *= -1;
-                // Move all aliens down
-                for (let alien of aliens) {
-                    if (!alien.alive) continue;
-                    alien.y += 20;
-                }
-            }
+    
+    // Manejar aliens que llegaron al fondo (fuera del bucle)
+    if (alienReachedBottom) {
+        lives--;
+        updateScoreDisplay();
+        if (lives <= 0) {
+            gameOver = true;
+            saveScore();
+        } else {
+            resetGameAfterLifeLost(); // Los aliens vuelven arriba
         }
+    }
+    
+    // Avanzar al siguiente nivel si no quedan aliens vivos
+    if (!anyAlienAlive) {
+        win = true;
+        setTimeout(() => {
+            level++;
+            win = false;
+            startGame();
+        }, 1000);
+        return;
+    }
+    
+    // Cambiar dirección si algún alien tocó el borde
+    if (hitEdge) {
+        alienDirection *= -1;
+        for (let alien of aliens) {
+            if (!alien.alive) continue;
+            alien.y += 20;  // Mover todos los aliens hacia abajo
+        }
+    }
+}
 
         // Draw everything
         function draw() {
