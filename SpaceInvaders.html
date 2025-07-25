@@ -314,41 +314,41 @@
             }
         }
 
-        function resetGameAfterLifeLost() {
-            // Resetear posición del jugador
-            player.x = canvas.width / dpr / 2 - 25;
-            player.dx = 0;
-            
-            // Limpiar balas
-            bullets = [];
-            
-            // Resetear posición de aliens
-            const aliveAliens = aliens.filter(alien => alien.alive);
-            aliens = [];
-            
-            const alienWidth = 25;
-            const alienHeight = 15;
-            const alienPadding = 8;
-            const startY = 40;
-            
-            // Recrear solo los aliens que estaban vivos en sus posiciones iniciales
-            aliveAliens.forEach(alien => {
-                const col = Math.floor((alien.x - 30) / (alienWidth + alienPadding));
-                const row = Math.floor((alien.y - startY) / (alienHeight + alienPadding));
-                
-                aliens.push({
-                    x: col * (alienWidth + alienPadding) + 30,
-                    y: startY + row * (alienHeight + alienPadding),
-                    width: alienWidth,
-                    height: alienHeight,
-                    alive: true,
-                    points: alien.points
-                });
-            });
-            
-            // Resetear dirección de movimiento
-            alienDirection = 1;
-        }
+function resetGameAfterLifeLost() {
+    // Resetear posición del jugador
+    player.x = canvas.width / dpr / 2 - 25;
+    player.dx = 0;
+    
+    // Limpiar balas
+    bullets = [];
+    
+    // Resetear posición de aliens (todos vuelven arriba)
+    const aliveAliens = aliens.filter(alien => alien.alive);
+    aliens = [];
+    
+    const alienWidth = 25;
+    const alienHeight = 15;
+    const alienPadding = 8;
+    const startY = 40; // Posición inicial superior
+    
+    // Recrear solo los aliens que estaban vivos pero en la posición superior
+    aliveAliens.forEach(alien => {
+        const col = Math.floor((alien.x - 30) / (alienWidth + alienPadding));
+        const row = Math.floor((alien.y - startY) / (alienHeight + alienPadding));
+        
+        aliens.push({
+            x: col * (alienWidth + alienPadding) + 30,
+            y: startY + row * (alienHeight + alienPadding), // Siempre posición inicial Y
+            width: alienWidth,
+            height: alienHeight,
+            alive: true,
+            points: alien.points
+        });
+    });
+    
+    // Resetear dirección de movimiento
+    alienDirection = 1;
+}
 
         function updateScoreDisplay() {
             scoreDisplay.textContent = score;
@@ -521,35 +521,35 @@
         }
 
         // Update aliens
-        function updateAliens() {
-            let hitEdge = false;
-            let anyAlienAlive = false;
-            
-            for (let alien of aliens) {
-                if (!alien.alive) continue;
-                
-                anyAlienAlive = true;
-                alien.x += alienSpeed * alienDirection;
-                
-                // Check if any alien has hit the edge
-                if ((alien.x + alien.width > canvas.width / dpr - 5 && alienDirection > 0) || 
-                    (alien.x < 5 && alienDirection < 0)) {
-                    hitEdge = true;
-                }
-                
-                // Check if aliens have reached the bottom
-                if (alien.y + alien.height >= canvas.height / dpr - 50) {
-                    lives--;
-                    updateScoreDisplay();
-                    if (lives <= 0) {
-                        gameOver = true;
-                        saveScore();
-                    } else {
-                        resetGameAfterLifeLost();
-                    }
-                    break;
-                }
+function updateAliens() {
+    let hitEdge = false;
+    let anyAlienAlive = false;
+    
+    for (let alien of aliens) {
+        if (!alien.alive) continue;
+        
+        anyAlienAlive = true;
+        alien.x += alienSpeed * alienDirection;
+        
+        // Check if any alien has hit the edge
+        if ((alien.x + alien.width > canvas.width / dpr - 5 && alienDirection > 0) || 
+            (alien.x < 5 && alienDirection < 0)) {
+            hitEdge = true;
+        }
+        
+        // Check if aliens have reached the bottom
+        if (alien.y + alien.height >= canvas.height / dpr - 50) {
+            lives--;
+            updateScoreDisplay();
+            if (lives <= 0) {
+                gameOver = true;
+                saveScore();
+            } else {
+                resetGameAfterLifeLost(); // Los aliens vuelven arriba
             }
+            break;
+        }
+    }
             
             // If no aliens are alive, advance to next level
             if (!anyAlienAlive) {
