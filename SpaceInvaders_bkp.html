@@ -222,7 +222,10 @@
                     <!-- Las filas se llenarán con JavaScript -->
                 </tbody>
             </table>
-            <button id="closeModalBtn">Cerrar</button>
+              <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                <button id="resetScoresBtn">Resetear Puntajes</button>
+                <button id="closeModalBtn">Cerrar</button>
+            </div>
         </div>
     </div>
 
@@ -371,6 +374,13 @@
             
             topScoresModal.style.display = 'flex';
         }
+                function resetScores() {
+            if (confirm('¿Estás seguro que quieres borrar todos los puntajes guardados?')) {
+                topScores = [];
+                localStorage.setItem('spaceInvadersTopScores', JSON.stringify(topScores));
+                showTopScores(); // Actualizar la tabla mostrada
+            }
+        }
 
         function saveScore() {
             const playerName = prompt('¡Juego terminado! Ingresa tu nombre para el ranking:', 'Jugador');
@@ -410,6 +420,14 @@
                 showTopScores();
             }
         });
+                // Event listeners para los nuevos botones
+        closeModalBtn.addEventListener('click', () => {
+            topScoresModal.style.display = 'none';
+        });
+
+        // Agregar el event listener para el nuevo botón de reset
+        document.getElementById('resetScoresBtn').addEventListener('click', resetScores);
+
 
         document.addEventListener('keyup', (e) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
