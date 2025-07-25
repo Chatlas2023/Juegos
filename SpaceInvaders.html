@@ -60,23 +60,11 @@
         }
         .joystick-area {
             flex: 2;
-            background-color: #333;
+            background-color: rgba(51, 51, 51, 0.5);
             border-radius: 10px;
             margin-right: 5px;
             position: relative;
             touch-action: none;
-        }
-        .joystick-thumb {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            background-color: #bb86fc;
-            border-radius: 50%;
-            top: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            opacity: 0.7;
-            display: none;
         }
         .shoot-btn {
             flex: 1;
@@ -121,10 +109,6 @@
             .control-panel {
                 height: 50px;
             }
-            .joystick-thumb {
-                width: 40px;
-                height: 40px;
-            }
             .shoot-btn {
                 font-size: 14px;
             }
@@ -150,9 +134,7 @@
         </div>
         <button class="start-btn" id="startBtn">Iniciar Juego</button>
         <div class="control-panel">
-            <div class="joystick-area" id="joystickArea">
-                <div class="joystick-thumb" id="joystickThumb"></div>
-            </div>
+            <div class="joystick-area" id="joystickArea"></div>
             <button class="shoot-btn" id="shootBtn">DISPARAR</button>
         </div>
     </div>
@@ -160,7 +142,6 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const joystickArea = document.getElementById('joystickArea');
-        const joystickThumb = document.getElementById('joystickThumb');
         const shootBtn = document.getElementById('shootBtn');
         const startBtn = document.getElementById('startBtn');
         
@@ -270,9 +251,6 @@
             const clientX = e.clientX || e.touches[0].clientX;
             joystickStartX = clientX - rect.left;
             joystickCurrentX = joystickStartX;
-            
-            joystickThumb.style.display = 'block';
-            joystickThumb.style.left = joystickStartX + 'px';
             e.preventDefault();
         }
 
@@ -282,9 +260,6 @@
             const rect = joystickArea.getBoundingClientRect();
             const clientX = e.clientX || e.touches[0].clientX;
             joystickCurrentX = Math.max(0, Math.min(rect.width, clientX - rect.left));
-            
-            // Mover el thumb del joystick
-            joystickThumb.style.left = joystickCurrentX + 'px';
             
             // Calcular dirección y velocidad basada en la posición relativa
             const center = rect.width / 2;
@@ -299,7 +274,6 @@
             
             isJoystickActive = false;
             player.dx = 0;
-            joystickThumb.style.display = 'none';
         }
 
         // Shoot button controls
