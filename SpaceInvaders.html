@@ -287,16 +287,15 @@
             gameStarted = true;
 
             // Initialize aliens - ahora exactamente 'level' filas
-            const alienRows = level; // 1 fila en nivel 1, 2 en nivel 2, etc.
+            const alienRows = Math.min(level, 5); // Máximo 5 filas para que quepan en pantalla
             const alienCols = 8;
             const alienWidth = 25;
             const alienHeight = 15;
             const alienPadding = 8;
             const startY = 40; // Posición inicial Y
             
-            // Ajustamos el espaciado vertical para que no se salga de la pantalla
-            const maxVisibleRows = 5; // Máximo de filas visibles sin salir de la pantalla
-            const verticalSpacing = alienHeight + (alienRows <= maxVisibleRows ? alienPadding : alienPadding / 2);
+            // Espaciado vertical fijo
+            const verticalSpacing = alienHeight + alienPadding;
             
             for (let row = 0; row < alienRows; row++) {
                 for (let col = 0; col < alienCols; col++) {
@@ -529,9 +528,10 @@
             
             // If no aliens are alive, advance to next level
             if (!anyAlienAlive) {
-                level++;
-                updateScoreDisplay();
+                win = true;
                 setTimeout(() => {
+                    level++;
+                    win = false;
                     startGame();
                 }, 1000);
                 return;
@@ -599,9 +599,9 @@
                 ctx.fillStyle = '#2ecc71';
                 ctx.font = '24px Segoe UI';
                 ctx.textAlign = 'center';
-                ctx.fillText(`¡Nivel ${level-1} completado!`, canvas.width / dpr / 2, canvas.height / dpr / 2);
+                ctx.fillText(`¡Nivel ${level} completado!`, canvas.width / dpr / 2, canvas.height / dpr / 2);
                 ctx.font = '16px Segoe UI';
-                ctx.fillText(`Preparando nivel ${level}...`, canvas.width / dpr / 2, canvas.height / dpr / 2 + 30);
+                ctx.fillText(`Preparando nivel ${level+1}...`, canvas.width / dpr / 2, canvas.height / dpr / 2 + 30);
             }
         }
 
