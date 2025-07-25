@@ -183,6 +183,37 @@
                 display: none;
             }
         }
+        /* Estilos para los botones del modal */
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    gap: 10px;
+}
+
+.modal button {
+    flex: 1;
+    background-color: #2ecc71;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.modal button:hover {
+    background-color: #27ae60;
+}
+
+#resetScoresBtn {
+    background-color: #e74c3c;
+}
+
+#resetScoresBtn:hover {
+    background-color: #c0392b;
+}
     </style>
 </head>
 <body>
@@ -204,7 +235,10 @@
             <button class="shoot-btn" id="shootBtn">DISPARAR</button>
         </div>
     </div>
-
+<div class="modal-buttons">
+    <button id="resetScoresBtn">Resetear Puntajes</button>
+    <button id="closeModalBtn">Cerrar</button>
+</div>
     <!-- Modal para Top Scores -->
     <div class="modal" id="topScoresModal">
         <div class="modal-content">
