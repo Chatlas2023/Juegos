@@ -235,33 +235,30 @@
             <button class="shoot-btn" id="shootBtn">DISPARAR</button>
         </div>
     </div>
-<div class="modal-buttons">
-    <button id="resetScoresBtn">Resetear Puntajes</button>
-    <button id="closeModalBtn">Cerrar</button>
-</div>
     <!-- Modal para Top Scores -->
-    <div class="modal" id="topScoresModal">
-        <div class="modal-content">
-            <h2>Top Scores</h2>
-            <table id="topScoresTable">
-                <thead>
-                    <tr>
-                        <th>Posición</th>
-                        <th>Nombre</th>
-                        <th>Puntos</th>
-                        <th>Nivel</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Las filas se llenarán con JavaScript -->
-                </tbody>
-            </table>
-              <div style="display: flex; justify-content: space-between; margin-top: 15px;">
-                <button id="resetScoresBtn">Resetear Puntajes</button>
-                <button id="closeModalBtn">Cerrar</button>
-            </div>
+<!-- Modal para Top Scores -->
+<div class="modal" id="topScoresModal">
+    <div class="modal-content">
+        <h2>Top Scores</h2>
+        <table id="topScoresTable">
+            <thead>
+                <tr>
+                    <th>Posición</th>
+                    <th>Nombre</th>
+                    <th>Puntos</th>
+                    <th>Nivel</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Las filas se llenarán con JavaScript -->
+            </tbody>
+        </table>
+        <div class="modal-buttons">
+            <button id="resetScoresBtn">Resetear Puntajes</button>
+            <button id="closeModalBtn">Cerrar</button>
         </div>
     </div>
+</div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
