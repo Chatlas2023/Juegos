@@ -280,24 +280,29 @@
             };
             bullets = [];
             aliens = [];
-            alienSpeed = 1; // Velocidad constante para todos los niveles
+            alienSpeed = 1; // Velocidad constante
             alienDirection = 1;
             gameOver = false;
             win = false;
             gameStarted = true;
 
-            // Initialize aliens - ahora el número de filas es igual al nivel actual
+            // Initialize aliens - ahora exactamente 'level' filas
             const alienRows = level; // 1 fila en nivel 1, 2 en nivel 2, etc.
             const alienCols = 8;
             const alienWidth = 25;
             const alienHeight = 15;
             const alienPadding = 8;
+            const startY = 40; // Posición inicial Y
+            
+            // Ajustamos el espaciado vertical para que no se salga de la pantalla
+            const maxVisibleRows = 5; // Máximo de filas visibles sin salir de la pantalla
+            const verticalSpacing = alienHeight + (alienRows <= maxVisibleRows ? alienPadding : alienPadding / 2);
             
             for (let row = 0; row < alienRows; row++) {
                 for (let col = 0; col < alienCols; col++) {
                     aliens.push({
                         x: col * (alienWidth + alienPadding) + 30,
-                        y: row * (alienHeight + alienPadding) + 40,
+                        y: startY + row * verticalSpacing,
                         width: alienWidth,
                         height: alienHeight,
                         alive: true,
