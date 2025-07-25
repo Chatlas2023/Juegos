@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Invaders</title>
+    <title>Space Invaders V2.1</title>
     <style>
         * {
             box-sizing: border-box;
@@ -183,6 +183,37 @@
                 display: none;
             }
         }
+        /* Estilos para los botones del modal */
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    gap: 10px;
+}
+
+.modal button {
+    flex: 1;
+    background-color: #2ecc71;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.modal button:hover {
+    background-color: #27ae60;
+}
+
+#resetScoresBtn {
+    background-color: #e74c3c;
+}
+
+#resetScoresBtn:hover {
+    background-color: #c0392b;
+}
     </style>
 </head>
 <body>
@@ -204,27 +235,30 @@
             <button class="shoot-btn" id="shootBtn">DISPARAR</button>
         </div>
     </div>
-
     <!-- Modal para Top Scores -->
-    <div class="modal" id="topScoresModal">
-        <div class="modal-content">
-            <h2>Top Scores</h2>
-            <table id="topScoresTable">
-                <thead>
-                    <tr>
-                        <th>Posición</th>
-                        <th>Nombre</th>
-                        <th>Puntos</th>
-                        <th>Nivel</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Las filas se llenarán con JavaScript -->
-                </tbody>
-            </table>
+<!-- Modal para Top Scores -->
+<div class="modal" id="topScoresModal">
+    <div class="modal-content">
+        <h2>Top Scores</h2>
+        <table id="topScoresTable">
+            <thead>
+                <tr>
+                    <th>Posición</th>
+                    <th>Nombre</th>
+                    <th>Puntos</th>
+                    <th>Nivel</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Las filas se llenarán con JavaScript -->
+            </tbody>
+        </table>
+        <div class="modal-buttons">
+            <button id="resetScoresBtn">Resetear Puntajes</button>
             <button id="closeModalBtn">Cerrar</button>
         </div>
     </div>
+</div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -371,6 +405,13 @@
             
             topScoresModal.style.display = 'flex';
         }
+                function resetScores() {
+            if (confirm('¿Estás seguro que quieres borrar todos los puntajes guardados?')) {
+                topScores = [];
+                localStorage.setItem('spaceInvadersTopScores', JSON.stringify(topScores));
+                showTopScores(); // Actualizar la tabla mostrada
+            }
+        }
 
         function saveScore() {
             const playerName = prompt('¡Juego terminado! Ingresa tu nombre para el ranking:', 'Jugador');
@@ -410,6 +451,14 @@
                 showTopScores();
             }
         });
+                // Event listeners para los nuevos botones
+        closeModalBtn.addEventListener('click', () => {
+            topScoresModal.style.display = 'none';
+        });
+
+        // Agregar el event listener para el nuevo botón de reset
+        document.getElementById('resetScoresBtn').addEventListener('click', resetScores);
+
 
         document.addEventListener('keyup', (e) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
