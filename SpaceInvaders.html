@@ -303,6 +303,8 @@
             for (let row = 0; row < alienRows; row++) {
                 for (let col = 0; col < alienCols; col++) {
                     aliens.push({
+                        row,
+                        col,
                         x: col * (alienWidth + alienPadding) + 30,
                         y: startY + row * verticalSpacing,
                         width: alienWidth,
@@ -333,18 +335,16 @@ function resetGameAfterLifeLost() {
     
     // Recrear solo los aliens que estaban vivos pero en la posición superior
     aliveAliens.forEach(alien => {
-        const col = Math.floor((alien.x - 30) / (alienWidth + alienPadding));
-        const row = Math.floor((alien.y - startY) / (alienHeight + alienPadding));
-        
         aliens.push({
-            x: col * (alienWidth + alienPadding) + 30,
-            y: startY + row * (alienHeight + alienPadding), // Siempre posición inicial Y
-            width: alienWidth,
-            height: alienHeight,
-            alive: true,
-            points: alien.points
-        });
-    });
+        row: alien.row,
+        col: alien.col,
+        x: alien.col * (alienWidth + alienPadding) + 30,
+        y: startY + alien.row * (alienHeight + alienPadding),
+        width: alienWidth,
+        height: alienHeight,
+        alive: true,
+        points: alien.points
+});
     
     // Resetear dirección de movimiento
     alienDirection = 1;
