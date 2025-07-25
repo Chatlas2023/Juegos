@@ -28,7 +28,7 @@
             max-width: 600px;
         }
         canvas {
-            border: 2px solid #bb break;
+            border: 2px solid #bb86fc;
             background-color: #4c7588;
             width: 100%;
             max-width: 100%;
@@ -88,7 +88,8 @@
             background-color: #2ecc71;
             width: 100%;
             margin: 10px 0;
-            padding: 15px; border: none;
+            padding: 15px;
+            border: none;
             border-radius: 10px;
             color: white;
             font-size: 16px;
@@ -190,7 +191,7 @@
         <p>¡Destruye a los invasores alienígenas!</p>
         <div class="score-display">
             <div class="score-box">Puntos: <span id="score">0</span></div>
-            <div class="score-box">Nivel: 1</span></div>
+            <div class="score-box">Nivel: <span id="level">1</span></div>
             <div class="score-box">Vidas: <span id="lives">3</span></div>
         </div>
         <canvas id="gameCanvas" width="400" height="360"></canvas>
@@ -240,7 +241,7 @@
         
         // Cargar la imagen de la nave
         const playerImg = new Image();
-        playerImg.src = 'nave1.png';
+        playerImg.src = 'nave1.png'; // Usamos la imagen nave1.png
         
         // Variable para controlar si la imagen está cargada
         let imageLoaded = false;
@@ -279,22 +280,22 @@
             };
             bullets = [];
             aliens = [];
-            alienSpeed = 1;
+            alienSpeed = 1 + (level * 0.1); // La velocidad aumenta con el nivel
             alienDirection = 1;
             gameOver = false;
             win = false;
             gameStarted = true;
 
-            // Initialize aliens - level filas
+            // Initialize aliens - ahora exactamente 'level' filas
             const alienRows = level; // 1 fila en nivel 1, 2 en nivel 2, etc.
             const alienCols = 8;
             const alienWidth = 25;
             const alienHeight = 15;
             const alienPadding = 8;
-            const startY = 40;
-
+            const startY = 40; // Posición inicial Y
+            
             // Ajustamos el espaciado vertical para que no se salga de la pantalla
-            const maxVisibleRows = 5;
+            const maxVisibleRows = 5; // Máximo de filas visibles sin salir de la pantalla
             const verticalSpacing = alienHeight + (alienRows <= maxVisibleRows ? alienPadding : alienPadding / 2);
             
             for (let row = 0; row < alienRows; row++) {
@@ -305,7 +306,7 @@
                         width: alienWidth,
                         height: alienHeight,
                         alive: true,
-                        points: (alienRows - row) * 10
+                        points: (alienRows - row) * 10 // Puntos basados en la fila
                     });
                 }
             }
@@ -320,8 +321,13 @@
         }
 
         function showTopScores() {
+            // Ordenar los scores de mayor a menor
             const sortedScores = [...topScores].sort((a, b) => b.score - a.score);
+            
+            // Limpiar la tabla
             topScoresTable.innerHTML = '';
+            
+            // Mostrar los top 10
             sortedScores.slice(0, 10).forEach((entry, index) => {
                 const row = topScoresTable.insertRow();
                 row.insertCell(0).textContent = index + 1;
@@ -329,21 +335,29 @@
                 row.insertCell(2).textContent = entry.score;
                 row.insertCell(3).textContent = entry.level;
             });
+            
+            // Mostrar el modal
             topScoresModal.style.display = 'flex';
         }
 
         function saveScore() {
             const playerName = prompt('¡Juego terminado! Ingresa tu nombre para el ranking:', 'Jugador');
+            
             topScores.push({
                 name: playerName || 'Anónimo',
                 score: score,
                 level: level,
                 date: new Date().toISOString()
             });
+            
+            // Guardar en localStorage
             localStorage.setItem('spaceInvadersTopScores', JSON.stringify(topScores));
+            
+            // Mostrar los top scores
             showTopScores();
         }
 
+        // Disparar
         function shoot() {
             if (gameStarted && !gameOver && !win) {
                 bullets.push({
@@ -356,6 +370,7 @@
             }
         }
 
+        // Keyboard controls (para PC)
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') player.dx = -player.speed;
             if (e.key === 'ArrowRight') player.dx = player.speed;
@@ -371,16 +386,20 @@
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
         });
 
+        // Joystick controls
         joystickArea.addEventListener('touchstart', handleJoystickStart);
         joystickArea.addEventListener('mousedown', handleJoystickStart);
+        
         joystickArea.addEventListener('touchmove', handleJoystickMove);
         joystickArea.addEventListener('mousemove', handleJoystickMove);
+        
         joystickArea.addEventListener('touchend', handleJoystickEnd);
         joystickArea.addEventListener('mouseup', handleJoystickEnd);
         joystickArea.addEventListener('mouseleave', handleJoystickEnd);
 
         function handleJoystickStart(e) {
             if (!gameStarted || gameOver || win) return;
+            
             isJoystickActive = true;
             const rect = joystickArea.getBoundingClientRect();
             const clientX = e.clientX || e.touches[0].clientX;
@@ -391,21 +410,27 @@
 
         function handleJoystickMove(e) {
             if (!isJoystickActive) return;
+            
             const rect = joystickArea.getBoundingClientRect();
             const clientX = e.clientX || e.touches[0].clientX;
             joystickCurrentX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+            
+            // Calcular dirección y velocidad basada en la posición relativa
             const center = rect.width / 2;
             const relativeX = (joystickCurrentX - center) / center;
-            player.dx = relativeX * player.speed * 2;
+            
+            player.dx = relativeX * player.speed * 2; // Multiplicamos por 2 para mayor sensibilidad
             e.preventDefault();
         }
 
         function handleJoystickEnd() {
             if (!isJoystickActive) return;
+            
             isJoystickActive = false;
             player.dx = 0;
         }
 
+        // Shoot button controls
         shootBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             shoot();
@@ -414,6 +439,7 @@
             shoot();
         });
 
+        // Start button
         startBtn.addEventListener('click', () => {
             if (!gameStarted || gameOver || win) {
                 score = 0;
@@ -423,6 +449,7 @@
             }
         });
 
+        // También permitir disparar tocando la pantalla
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             shoot();
@@ -431,16 +458,19 @@
             shoot();
         });
 
+        // Cerrar modal
         closeModalBtn.addEventListener('click', () => {
             topScoresModal.style.display = 'none';
         });
 
+        // Update player position
         function updatePlayer() {
             player.x += player.dx;
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > canvas.width / dpr) player.x = canvas.width / dpr - player.width;
         }
 
+        // Update bullets
         function updateBullets() {
             for (let i = bullets.length - 1; i >= 0; i--) {
                 bullets[i].y -= bullets[i].speed;
@@ -464,6 +494,7 @@
             }
         }
 
+        // Update aliens
         function updateAliens() {
             let hitEdge = false;
             let anyAlienAlive = false;
@@ -474,11 +505,13 @@
                 anyAlienAlive = true;
                 alien.x += alienSpeed * alienDirection;
                 
+                // Check if any alien has hit the edge
                 if ((alien.x + alien.width > canvas.width / dpr - 5 && alienDirection > 0) || 
                     (alien.x < 5 && alienDirection < 0)) {
                     hitEdge = true;
                 }
                 
+                // Check if aliens have reached the bottom
                 if (alien.y + alien.height >= canvas.height / dpr - 50) {
                     lives--;
                     updateScoreDisplay();
@@ -486,6 +519,7 @@
                         gameOver = true;
                         saveScore();
                     } else {
+                        // Reset position after losing a life
                         player.x = canvas.width / dpr / 2 - 25;
                         bullets = [];
                     }
@@ -493,6 +527,7 @@
                 }
             }
             
+            // If no aliens are alive, advance to next level
             if (!anyAlienAlive) {
                 level++;
                 updateScoreDisplay();
@@ -504,6 +539,7 @@
             
             if (hitEdge) {
                 alienDirection *= -1;
+                // Move all aliens down
                 for (let alien of aliens) {
                     if (!alien.alive) continue;
                     alien.y += 20;
@@ -511,24 +547,30 @@
             }
         }
 
+        // Draw everything
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             if (gameStarted) {
+                // Draw player con la imagen nave1.png
                 if (imageLoaded) {
                     ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
                 } else {
+                    // Si la imagen no se ha cargado, dibuja un rectángulo como respaldo
                     ctx.fillStyle = '#bb86fc';
                     ctx.fillRect(player.x, player.y, player.width, player.height);
                 }
 
+                // Draw bullets
                 ctx.fillStyle = '#ffffff';
                 for (let bullet of bullets) {
                     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
                 }
 
+                // Draw aliens
                 for (let alien of aliens) {
                     if (alien.alive) {
+                        // Color diferente según la fila (para mejor visualización)
                         const rowColor = Math.floor((alien.y - 40) / (15 + 8));
                         const colors = ['#2ecc71', '#3498db', '#9b59b6', '#e74c3c', '#f39c12', '#1abc9c'];
                         ctx.fillStyle = colors[rowColor % colors.length];
@@ -537,6 +579,7 @@
                 }
             }
 
+            // Draw start or game over/win message
             if (!gameStarted) {
                 ctx.fillStyle = '#bb86fc';
                 ctx.font = '24px Segoe UI';
@@ -562,6 +605,7 @@
             }
         }
 
+        // Game loop
         function gameLoop() {
             if (gameStarted && !gameOver && !win) {
                 updatePlayer();
@@ -572,6 +616,7 @@
             requestAnimationFrame(gameLoop);
         }
 
+        // Start game loop
         gameLoop();
     </script>
 </body>
