@@ -56,33 +56,57 @@
             justify-content: space-between;
             width: 100%;
             margin-top: 15px;
+            height: 60px;
         }
-        .control-btn {
+        .joystick-area {
+            flex: 2;
+            background-color: #333;
+            border-radius: 10px;
+            margin-right: 5px;
+            position: relative;
+            touch-action: none;
+        }
+        .joystick-thumb {
+            position: absolute;
+            width: 50px;
+            height: 50px;
             background-color: #bb86fc;
-            color: #1e1e1e;
+            border-radius: 50%;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0.7;
+            display: none;
+        }
+        .shoot-btn {
+            flex: 1;
+            background-color: #e74c3c;
+            color: white;
             border: none;
-            padding: 15px 0;
+            border-radius: 10px;
             font-size: 16px;
             font-weight: bold;
-            border-radius: 10px;
             cursor: pointer;
-            text-align: center;
             user-select: none;
-            flex: 1;
-            margin: 0 5px;
-            min-height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-left: 5px;
         }
-        .control-btn:active {
-            background-color: #9b59b6;
+        .shoot-btn:active {
+            background-color: #c0392b;
         }
         .start-btn {
             background-color: #2ecc71;
             width: 100%;
             margin: 10px 0;
             padding: 15px;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
         }
         .start-btn:active {
             background-color: #27ae60;
@@ -94,9 +118,15 @@
             p, .controls {
                 font-size: 12px;
             }
-            .control-btn {
+            .control-panel {
+                height: 50px;
+            }
+            .joystick-thumb {
+                width: 40px;
+                height: 40px;
+            }
+            .shoot-btn {
                 font-size: 14px;
-                min-height: 50px;
             }
         }
         @media (min-width: 601px) {
@@ -116,18 +146,23 @@
         <canvas id="gameCanvas" width="400" height="360"></canvas>
         <div class="controls">
             <p>Controles PC: Flechas Izquierda/Derecha para mover, Espacio para disparar</p>
-            <p>Controles Móvil: Usa los botones inferiores</p>
+            <p>Controles Móvil: Desliza en el área izquierda para mover, toca el botón rojo para disparar</p>
         </div>
         <button class="start-btn" id="startBtn">Iniciar Juego</button>
-<div class="control-panel">
-    <button class="control-btn" id="leftBtn">← Mover y Disparar</button>
-    <button class="control-btn" id="rightBtn">Disparar</button>  <!-- Antes era shootBtn -->
-    <button class="control-btn" id="shootBtn">→ Mover y Disparar</button>  <!-- Antes era rightBtn -->
+        <div class="control-panel">
+            <div class="joystick-area" id="joystickArea">
+                <div class="joystick-thumb" id="joystickThumb"></div>
+            </div>
+            <button class="shoot-btn" id="shootBtn">DISPARAR</button>
         </div>
     </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const joystickArea = document.getElementById('joystickArea');
+        const joystickThumb = document.getElementById('joystickThumb');
+        const shootBtn = document.getElementById('shootBtn');
+        const startBtn = document.getElementById('startBtn');
         
         // Cargar la imagen de la nave
         const playerImg = new Image();
@@ -150,6 +185,9 @@
         let gameOver = false;
         let win = false;
         let gameStarted = false;
+        let isJoystickActive = false;
+        let joystickStartX = 0;
+        let joystickCurrentX = 0;
 
         // Initialize game state
         function startGame() {
@@ -213,72 +251,79 @@
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
         });
 
-        // Touch controls
-        const startBtn = document.getElementById('startBtn');
-        const leftBtn = document.getElementById('leftBtn');
-        const rightBtn = document.getElementById('rightBtn');
-        const shootBtn = document.getElementById('shootBtn');
+        // Joystick controls
+        joystickArea.addEventListener('touchstart', handleJoystickStart);
+        joystickArea.addEventListener('mousedown', handleJoystickStart);
+        
+        joystickArea.addEventListener('touchmove', handleJoystickMove);
+        joystickArea.addEventListener('mousemove', handleJoystickMove);
+        
+        joystickArea.addEventListener('touchend', handleJoystickEnd);
+        joystickArea.addEventListener('mouseup', handleJoystickEnd);
+        joystickArea.addEventListener('mouseleave', handleJoystickEnd);
 
+        function handleJoystickStart(e) {
+            if (!gameStarted || gameOver || win) return;
+            
+            isJoystickActive = true;
+            const rect = joystickArea.getBoundingClientRect();
+            const clientX = e.clientX || e.touches[0].clientX;
+            joystickStartX = clientX - rect.left;
+            joystickCurrentX = joystickStartX;
+            
+            joystickThumb.style.display = 'block';
+            joystickThumb.style.left = joystickStartX + 'px';
+            e.preventDefault();
+        }
+
+        function handleJoystickMove(e) {
+            if (!isJoystickActive) return;
+            
+            const rect = joystickArea.getBoundingClientRect();
+            const clientX = e.clientX || e.touches[0].clientX;
+            joystickCurrentX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+            
+            // Mover el thumb del joystick
+            joystickThumb.style.left = joystickCurrentX + 'px';
+            
+            // Calcular dirección y velocidad basada en la posición relativa
+            const center = rect.width / 2;
+            const relativeX = (joystickCurrentX - center) / center;
+            
+            player.dx = relativeX * player.speed * 2; // Multiplicamos por 2 para mayor sensibilidad
+            e.preventDefault();
+        }
+
+        function handleJoystickEnd() {
+            if (!isJoystickActive) return;
+            
+            isJoystickActive = false;
+            player.dx = 0;
+            joystickThumb.style.display = 'none';
+        }
+
+        // Shoot button controls
+        shootBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            shoot();
+        });
+        shootBtn.addEventListener('mousedown', () => {
+            shoot();
+        });
+
+        // Start button
         startBtn.addEventListener('click', () => {
             startGame();
         });
 
-        // Botón izquierdo: mover izquierda y disparar
-// Botón izquierdo: mantener igual (mover izquierda y disparar)
-leftBtn.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    player.dx = -player.speed;
-    shoot();
-});
-leftBtn.addEventListener('mousedown', () => {
-    player.dx = -player.speed;
-    shoot();
-});
-
-// Botón CENTRAL (ahora: mover derecha y disparar)
-shootBtn.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    player.dx = player.speed;  // Mover derecha
-    shoot();  // Disparar
-});
-shootBtn.addEventListener('mousedown', () => {
-    player.dx = player.speed;  // Mover derecha
-    shoot();  // Disparar
-});
-
-// Botón DERECHO (ahora: solo disparar)
-rightBtn.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    shoot();  // Solo disparar (sin mover)
-});
-rightBtn.addEventListener('mousedown', () => {
-    shoot();  // Solo disparar (sin mover)
-});
-
-// Eventos de "touchend" y "mouseup" (mantener igual para detener movimiento)
-leftBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    player.dx = 0;
-});
-leftBtn.addEventListener('mouseup', () => {
-    player.dx = 0;
-});
-
-shootBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    player.dx = 0;
-});
-shootBtn.addEventListener('mouseup', () => {
-    player.dx = 0;
-});
-
-rightBtn.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    player.dx = 0;  // Aunque no mueva, por si acaso
-});
-rightBtn.addEventListener('mouseup', () => {
-    player.dx = 0;  // Aunque no mueva, por si acaso
-});
+        // También permitir disparar tocando la pantalla
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            shoot();
+        });
+        canvas.addEventListener('mousedown', () => {
+            shoot();
+        });
 
         // Update player position
         function updatePlayer() {
