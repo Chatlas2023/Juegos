@@ -521,11 +521,44 @@
                         // Reset position after losing a life
                         player.x = canvas.width / dpr / 2 - 25;
                         bullets = [];
+                        // También debemos resetear la posición de los aliens
+                        resetAliensPosition();
                     }
                     break;
                 }
+            function resetAliensPosition() {
+    const alienRows = Math.min(level, 5);
+    const alienCols = 8;
+    const alienWidth = 25;
+    const alienHeight = 15;
+    const alienPadding = 8;
+    const startY = 40;
+    const verticalSpacing = alienHeight + alienPadding;
+    
+    let aliveAliens = aliens.filter(alien => alien.alive);
+    aliens = [];
+    
+    for (let row = 0; row < alienRows; row++) {
+        for (let col = 0; col < alienCols; col++) {
+            // Solo recreamos los aliens que estaban vivos
+            if (aliveAliens.some(a => 
+                Math.floor((a.y - startY) / verticalSpacing) === row && 
+                Math.floor((a.x - 30) / (alienWidth + alienPadding)) === col)) {
+                aliens.push({
+                    x: col * (alienWidth + alienPadding) + 30,
+                    y: startY + row * verticalSpacing,
+                    width: alienWidth,
+                    height: alienHeight,
+                    alive: true,
+                    points: (alienRows - row) * 10
+                });
             }
-            
+        }
+    }
+    
+    // También reiniciamos la dirección de movimiento
+    alienDirection = 1;
+}
             // If no aliens are alive, advance to next level
             if (!anyAlienAlive) {
                 win = true;
