@@ -196,7 +196,6 @@
         </div>
         <canvas id="gameCanvas" width="400" height="360"></canvas>
         <div class="controls">
-            
             <p>Controles Móvil: Desliza en el área izquierda y botón rojo para disparar</p>
         </div>
         <button class="start-btn" id="startBtn">Iniciar Juego</button>
@@ -281,14 +280,14 @@
             };
             bullets = [];
             aliens = [];
-            alienSpeed = 1 + (level * 0.1);
+            alienSpeed = 1; // Velocidad constante para todos los niveles
             alienDirection = 1;
             gameOver = false;
             win = false;
             gameStarted = true;
 
-            // Initialize aliens según el nivel actual
-            const alienRows = Math.min(level, 6); // Máximo 6 filas
+            // Initialize aliens - ahora el número de filas es igual al nivel actual
+            const alienRows = level; // 1 fila en nivel 1, 2 en nivel 2, etc.
             const alienCols = 8;
             const alienWidth = 25;
             const alienHeight = 15;
@@ -540,8 +539,6 @@
                     if (!alien.alive) continue;
                     alien.y += 20;
                 }
-                // Increase speed slightly
-                alienSpeed = Math.min(alienSpeed + 0.1, 3 + (level * 0.2));
             }
         }
 
