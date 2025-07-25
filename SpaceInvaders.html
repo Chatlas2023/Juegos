@@ -316,39 +316,40 @@
             }
         }
 
-function resetGameAfterLifeLost() {
-    // Resetear posición del jugador
-    player.x = canvas.width / dpr / 2 - 25;
-    player.dx = 0;
-    
-    // Limpiar balas
-    bullets = [];
-    
-    // Resetear posición de aliens (todos vuelven arriba)
-    const aliveAliens = aliens.filter(alien => alien.alive);
-    aliens = [];
-    
-    const alienWidth = 25;
-    const alienHeight = 15;
-    const alienPadding = 8;
-    const startY = 40; // Posición inicial superior
-    
-    // Recrear solo los aliens que estaban vivos pero en la posición superior
-    aliveAliens.forEach(alien => {
-        aliens.push({
-        row: alien.row,
-        col: alien.col,
-        x: alien.col * (alienWidth + alienPadding) + 30,
-        y: startY + alien.row * (alienHeight + alienPadding),
-        width: alienWidth,
-        height: alienHeight,
-        alive: true,
-        points: alien.points
-});
-    
-    // Resetear dirección de movimiento
-    alienDirection = 1;
-}
+        function resetGameAfterLifeLost() {
+            // Resetear posición del jugador
+            player.x = canvas.width / dpr / 2 - 25;
+            player.dx = 0;
+            
+            // Limpiar balas
+            bullets = [];
+            
+            // Resetear posición de aliens (todos vuelven arriba)
+            const aliveAliens = aliens.filter(alien => alien.alive);
+            aliens = [];
+            
+            const alienWidth = 25;
+            const alienHeight = 15;
+            const alienPadding = 8;
+            const startY = 40; // Posición inicial superior
+            
+            // Recrear solo los aliens que estaban vivos pero en la posición superior
+            aliveAliens.forEach(alien => {
+                aliens.push({
+                    row: alien.row,
+                    col: alien.col,
+                    x: alien.col * (alienWidth + alienPadding) + 30,
+                    y: startY + alien.row * (alienHeight + alienPadding),
+                    width: alienWidth,
+                    height: alienHeight,
+                    alive: true,
+                    points: alien.points
+                });
+            });
+            
+            // Resetear dirección de movimiento
+            alienDirection = 1;
+        }
 
         function updateScoreDisplay() {
             scoreDisplay.textContent = score;
@@ -521,61 +522,61 @@ function resetGameAfterLifeLost() {
         }
 
         // Update aliens
-function updateAliens() {
-    let hitEdge = false;
-    let anyAlienAlive = false;
-    let alienReachedBottom = false;  // Nueva variable para controlar si algún alien llegó al fondo
-    
-    for (let alien of aliens) {
-        if (!alien.alive) continue;
-        
-        anyAlienAlive = true;
-        alien.x += alienSpeed * alienDirection;
-        
-        // Verificar si algún alien tocó el borde
-        if ((alien.x + alien.width > canvas.width / dpr - 5 && alienDirection > 0) || 
-            (alien.x < 5 && alienDirection < 0)) {
-            hitEdge = true;
+        function updateAliens() {
+            let hitEdge = false;
+            let anyAlienAlive = false;
+            let alienReachedBottom = false;
+            
+            for (let alien of aliens) {
+                if (!alien.alive) continue;
+                
+                anyAlienAlive = true;
+                alien.x += alienSpeed * alienDirection;
+                
+                // Verificar si algún alien tocó el borde
+                if ((alien.x + alien.width > canvas.width / dpr - 5 && alienDirection > 0) || 
+                    (alien.x < 5 && alienDirection < 0)) {
+                    hitEdge = true;
+                }
+                
+                // Verificar si algún alien llegó al fondo
+                if (alien.y + alien.height >= canvas.height / dpr - 50) {
+                    alienReachedBottom = true;
+                }
+            }
+            
+            // Manejar aliens que llegaron al fondo
+            if (alienReachedBottom) {
+                lives--;
+                updateScoreDisplay();
+                if (lives <= 0) {
+                    gameOver = true;
+                    saveScore();
+                } else {
+                    resetGameAfterLifeLost();
+                }
+            }
+            
+            // Avanzar al siguiente nivel si no quedan aliens vivos
+            if (!anyAlienAlive) {
+                win = true;
+                setTimeout(() => {
+                    level++;
+                    win = false;
+                    startGame();
+                }, 1000);
+                return;
+            }
+            
+            // Cambiar dirección si algún alien tocó el borde
+            if (hitEdge) {
+                alienDirection *= -1;
+                for (let alien of aliens) {
+                    if (!alien.alive) continue;
+                    alien.y += 20;
+                }
+            }
         }
-        
-        // Verificar si algún alien llegó al fondo (sin break para revisar todos)
-        if (alien.y + alien.height >= canvas.height / dpr - 50) {
-            alienReachedBottom = true;
-        }
-    }
-    
-    // Manejar aliens que llegaron al fondo (fuera del bucle)
-    if (alienReachedBottom) {
-        lives--;
-        updateScoreDisplay();
-        if (lives <= 0) {
-            gameOver = true;
-            saveScore();
-        } else {
-            resetGameAfterLifeLost(); // Los aliens vuelven arriba
-        }
-    }
-    
-    // Avanzar al siguiente nivel si no quedan aliens vivos
-    if (!anyAlienAlive) {
-        win = true;
-        setTimeout(() => {
-            level++;
-            win = false;
-            startGame();
-        }, 1000);
-        return;
-    }
-    
-    // Cambiar dirección si algún alien tocó el borde
-    if (hitEdge) {
-        alienDirection *= -1;
-        for (let alien of aliens) {
-            if (!alien.alive) continue;
-            alien.y += 20;  // Mover todos los aliens hacia abajo
-        }
-    }
-}
 
         // Draw everything
         function draw() {
