@@ -29,7 +29,7 @@
         }
         canvas {
             border: 2px solid #bb86fc;
-            background-color: #1e1e1e;
+            background-color: #4c7588;
             width: 100%;
             max-width: 100%;
             height: auto;
@@ -62,7 +62,7 @@
             flex: 2;
             background-color: rgba(51, 51, 51, 0.5);
             border-radius: 10px;
-            margin-right: 5px;
+            margin-right: 10px;
             position: relative;
             touch-action: none;
         }
@@ -99,6 +99,64 @@
         .start-btn:active {
             background-color: #27ae60;
         }
+        .score-display {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .score-box {
+            background-color: rgba(30, 30, 30, 0.7);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal h2 {
+            color: #bb86fc;
+            margin-bottom: 15px;
+        }
+        .modal table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        .modal th, .modal td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        .modal th {
+            color: #bb86fc;
+        }
+        .modal button {
+            background-color: #2ecc71;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
         @media (max-width: 600px) {
             h1 {
                 font-size: 20px;
@@ -112,6 +170,10 @@
             .shoot-btn {
                 font-size: 14px;
             }
+            .score-box {
+                font-size: 12px;
+                padding: 6px 8px;
+            }
         }
         @media (min-width: 601px) {
             .control-panel {
@@ -121,16 +183,51 @@
                 display: none;
             }
         }
+        /* Estilos para los botones del modal */
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    gap: 10px;
+}
+
+.modal button {
+    flex: 1;
+    background-color: #2ecc71;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.modal button:hover {
+    background-color: #27ae60;
+}
+
+#resetScoresBtn {
+    background-color: #e74c3c;
+}
+
+#resetScoresBtn:hover {
+    background-color: #c0392b;
+}
     </style>
 </head>
 <body>
     <div class="game-container">
-        <h1>Space Invaders</h1>
-        <p>¡Destruye a los invasores alienígenas antes de que lleguen al fondo!</p>
+        <h1>Space Invaders V2.3</h1>
+        <p>¡Destruye a los invasores alienígenas!</p>
+        <div class="score-display">
+            <div class="score-box">Puntos: <span id="score">0</span></div>
+            <div class="score-box">Nivel: <span id="level">1</span></div>
+            <div class="score-box">Vidas: <span id="lives">3</span></div>
+        </div>
         <canvas id="gameCanvas" width="400" height="360"></canvas>
         <div class="controls">
-            <p>Controles PC: Flechas Izquierda/Derecha para mover, Espacio para disparar</p>
-            <p>Controles Móvil: Desliza en el área izquierda para mover, toca el botón rojo para disparar</p>
+            <p>Desliza en el área izquierda y botón para disparar</p>
         </div>
         <button class="start-btn" id="startBtn">Iniciar Juego</button>
         <div class="control-panel">
@@ -138,16 +235,47 @@
             <button class="shoot-btn" id="shootBtn">DISPARAR</button>
         </div>
     </div>
+    <!-- Modal para Top Scores -->
+<!-- Modal para Top Scores -->
+<div class="modal" id="topScoresModal">
+    <div class="modal-content">
+        <h2>Top Scores</h2>
+        <table id="topScoresTable">
+            <thead>
+                <tr>
+                    <th>Posición</th>
+                    <th>Nombre</th>
+                    <th>Puntos</th>
+                    <th>Nivel</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Las filas se llenarán con JavaScript -->
+            </tbody>
+        </table>
+        <div class="modal-buttons">
+            <button id="resetScoresBtn">Resetear Puntajes</button>
+            <button id="closeModalBtn">Cerrar</button>
+        </div>
+    </div>
+</div>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const joystickArea = document.getElementById('joystickArea');
         const shootBtn = document.getElementById('shootBtn');
         const startBtn = document.getElementById('startBtn');
+        const scoreDisplay = document.getElementById('score');
+        const levelDisplay = document.getElementById('level');
+        const livesDisplay = document.getElementById('lives');
+        const topScoresModal = document.getElementById('topScoresModal');
+        const topScoresTable = document.getElementById('topScoresTable').getElementsByTagName('tbody')[0];
+        const closeModalBtn = document.getElementById('closeModalBtn');
         
         // Cargar la imagen de la nave
         const playerImg = new Image();
-        playerImg.src = 'nave.png';
+        playerImg.src = 'nave2.png'; // Usamos la imagen nave1.png
         
         // Variable para controlar si la imagen está cargada
         let imageLoaded = false;
@@ -169,6 +297,10 @@
         let isJoystickActive = false;
         let joystickStartX = 0;
         let joystickCurrentX = 0;
+        let score = 0;
+        let level = 1;
+        let lives = 3;
+        let topScores = JSON.parse(localStorage.getItem('spaceInvadersTopScores')) || [];
 
         // Initialize game state
         function startGame() {
@@ -182,29 +314,117 @@
             };
             bullets = [];
             aliens = [];
-            alienSpeed = 1;
+            alienSpeed = 1 + (level * 0.1); // La velocidad aumenta con el nivel
             alienDirection = 1;
             gameOver = false;
             win = false;
             gameStarted = true;
 
-            // Initialize aliens
-            const alienRows = 5;
-            const alienCols = 10;
-            const alienWidth = 20;
+            // Crear aliens para el nivel actual
+            createAliens();
+            updateScoreDisplay();
+        }
+
+        function createAliens() {
+            const alienRows = Math.min(level, 5); // Máximo 5 filas
+            const alienCols = 8;
+            const alienWidth = 25;
             const alienHeight = 15;
             const alienPadding = 8;
+            const startY = 40;
+            const verticalSpacing = alienHeight + alienPadding;
+            
             for (let row = 0; row < alienRows; row++) {
                 for (let col = 0; col < alienCols; col++) {
                     aliens.push({
+                        row,
+                        col,
                         x: col * (alienWidth + alienPadding) + 30,
-                        y: row * (alienHeight + alienPadding) + 40,
+                        y: startY + row * verticalSpacing,
                         width: alienWidth,
                         height: alienHeight,
-                        alive: true
+                        alive: true,
+                        points: (alienRows - row) * 10
                     });
                 }
             }
+        }
+
+        function resetGameAfterLifeLost() {
+            // Resetear posición del jugador
+            player.x = canvas.width / dpr / 2 - 25;
+            player.dx = 0;
+            
+            // Limpiar balas
+            bullets = [];
+            
+            // Resetear posición de aliens (todos vuelven arriba)
+            const aliveAliens = aliens.filter(alien => alien.alive);
+            aliens = [];
+            
+            const alienWidth = 25;
+            const alienHeight = 15;
+            const alienPadding = 8;
+            const startY = 40; // Posición inicial superior
+            
+            // Recrear solo los aliens que estaban vivos pero en la posición superior
+            aliveAliens.forEach(alien => {
+                aliens.push({
+                    row: alien.row,
+                    col: alien.col,
+                    x: alien.col * (alienWidth + alienPadding) + 30,
+                    y: startY + alien.row * (alienHeight + alienPadding),
+                    width: alienWidth,
+                    height: alienHeight,
+                    alive: true,
+                    points: alien.points
+                });
+            });
+            
+            // Resetear dirección de movimiento
+            alienDirection = 1;
+        }
+
+        function updateScoreDisplay() {
+            scoreDisplay.textContent = score;
+            levelDisplay.textContent = level;
+            livesDisplay.textContent = lives;
+        }
+
+        function showTopScores() {
+            const sortedScores = [...topScores].sort((a, b) => b.score - a.score);
+            topScoresTable.innerHTML = '';
+            
+            sortedScores.slice(0, 10).forEach((entry, index) => {
+                const row = topScoresTable.insertRow();
+                row.insertCell(0).textContent = index + 1;
+                row.insertCell(1).textContent = entry.name || 'Anónimo';
+                row.insertCell(2).textContent = entry.score;
+                row.insertCell(3).textContent = entry.level;
+            });
+            
+            topScoresModal.style.display = 'flex';
+        }
+                function resetScores() {
+            if (confirm('¿Estás seguro que quieres borrar todos los puntajes guardados?')) {
+                topScores = [];
+                localStorage.setItem('spaceInvadersTopScores', JSON.stringify(topScores));
+                showTopScores(); // Actualizar la tabla mostrada
+            }
+        }
+
+        function saveScore() {
+            const playerName = prompt('¡Juego terminado! Ingresa tu nombre:', '');
+            
+            topScores.push({
+                name: playerName || 'Anónimo',
+                score: score,
+                level: level,
+                date: new Date().toISOString()
+            });
+            
+            localStorage.setItem('spaceInvadersTopScores', JSON.stringify(topScores));
+            showTopScores();
         }
 
         // Disparar
@@ -214,7 +434,8 @@
                     x: player.x + player.width / 2 - 5 / 2,
                     y: player.y - 10,
                     width: 5,
-                    height: 10
+                    height: 10,
+                    speed: 7
                 });
             }
         }
@@ -226,7 +447,18 @@
             if (e.key === ' ' && gameStarted && !gameOver && !win) {
                 shoot();
             }
+            if (e.key === 'h' && !gameStarted) {
+                showTopScores();
+            }
         });
+                // Event listeners para los nuevos botones
+        closeModalBtn.addEventListener('click', () => {
+            topScoresModal.style.display = 'none';
+        });
+
+        // Agregar el event listener para el nuevo botón de reset
+        document.getElementById('resetScoresBtn').addEventListener('click', resetScores);
+
 
         document.addEventListener('keyup', (e) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
@@ -261,11 +493,10 @@
             const clientX = e.clientX || e.touches[0].clientX;
             joystickCurrentX = Math.max(0, Math.min(rect.width, clientX - rect.left));
             
-            // Calcular dirección y velocidad basada en la posición relativa
             const center = rect.width / 2;
             const relativeX = (joystickCurrentX - center) / center;
             
-            player.dx = relativeX * player.speed * 2; // Multiplicamos por 2 para mayor sensibilidad
+            player.dx = relativeX * player.speed * 2;
             e.preventDefault();
         }
 
@@ -279,24 +510,36 @@
         // Shoot button controls
         shootBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation(); // Evita que el evento llegue al joystick
             shoot();
-        });
-        shootBtn.addEventListener('mousedown', () => {
+        }, {passive: false});
+        
+        shootBtn.addEventListener('mousedown', (e) => {
+            e.stopPropagation(); // Para eventos de ratón también
             shoot();
-        });
+});
 
         // Start button
         startBtn.addEventListener('click', () => {
-            startGame();
+            if (!gameStarted || gameOver || win) {
+                score = 0;
+                level = 1;
+                lives = 3;
+                startGame();
+            }
         });
 
-        // También permitir disparar tocando la pantalla
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             shoot();
         });
         canvas.addEventListener('mousedown', () => {
             shoot();
+        });
+
+        // Cerrar modal
+        closeModalBtn.addEventListener('click', () => {
+            topScoresModal.style.display = 'none';
         });
 
         // Update player position
@@ -309,7 +552,7 @@
         // Update bullets
         function updateBullets() {
             for (let i = bullets.length - 1; i >= 0; i--) {
-                bullets[i].y -= 7;
+                bullets[i].y -= bullets[i].speed;
                 if (bullets[i].y < 0) {
                     bullets.splice(i, 1);
                     continue;
@@ -321,6 +564,8 @@
                         bullets[i].y < aliens[j].y + aliens[j].height &&
                         bullets[i].y + bullets[i].height > aliens[j].y) {
                         aliens[j].alive = false;
+                        score += aliens[j].points;
+                        updateScoreDisplay();
                         bullets.splice(i, 1);
                         break;
                     }
@@ -332,6 +577,7 @@
         function updateAliens() {
             let hitEdge = false;
             let anyAlienAlive = false;
+            let alienReachedBottom = false;
             
             for (let alien of aliens) {
                 if (!alien.alive) continue;
@@ -339,33 +585,48 @@
                 anyAlienAlive = true;
                 alien.x += alienSpeed * alienDirection;
                 
-                // Check if any alien has hit the edge
+                // Verificar si algún alien tocó el borde
                 if ((alien.x + alien.width > canvas.width / dpr - 5 && alienDirection > 0) || 
                     (alien.x < 5 && alienDirection < 0)) {
                     hitEdge = true;
                 }
                 
-                // Check if aliens have reached the bottom
+                // Verificar si algún alien llegó al fondo
                 if (alien.y + alien.height >= canvas.height / dpr - 50) {
-                    gameOver = true;
+                    alienReachedBottom = true;
                 }
             }
             
-            // If no aliens are alive, set win condition
+            // Manejar aliens que llegaron al fondo
+            if (alienReachedBottom) {
+                lives--;
+                updateScoreDisplay();
+                if (lives <= 0) {
+                    gameOver = true;
+                    saveScore();
+                } else {
+                    resetGameAfterLifeLost();
+                }
+            }
+            
+            // Avanzar al siguiente nivel si no quedan aliens vivos
             if (!anyAlienAlive) {
                 win = true;
+                setTimeout(() => {
+                    level++;
+                    win = false;
+                    startGame();
+                }, 1000);
                 return;
             }
             
+            // Cambiar dirección si algún alien tocó el borde
             if (hitEdge) {
                 alienDirection *= -1;
-                // Move all aliens down
                 for (let alien of aliens) {
                     if (!alien.alive) continue;
                     alien.y += 20;
                 }
-                // Increase speed slightly
-                alienSpeed = Math.min(alienSpeed + 0.1, 3);
             }
         }
 
@@ -374,11 +635,10 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             if (gameStarted) {
-                // Draw player (ahora con imagen)
+                // Draw player
                 if (imageLoaded) {
                     ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
                 } else {
-                    // Si la imagen no se ha cargado, dibuja un rectángulo como respaldo
                     ctx.fillStyle = '#bb86fc';
                     ctx.fillRect(player.x, player.y, player.width, player.height);
                 }
@@ -390,30 +650,38 @@
                 }
 
                 // Draw aliens
-                ctx.fillStyle = '#2ecc71';
                 for (let alien of aliens) {
                     if (alien.alive) {
+                        const rowColor = Math.floor((alien.y - 40) / (15 + 8));
+                        const colors = ['#2ecc71', '#3498db', '#9b59b6', '#e74c3c', '#f39c12', '#1abc9c'];
+                        ctx.fillStyle = colors[rowColor % colors.length];
                         ctx.fillRect(alien.x, alien.y, alien.width, alien.height);
                     }
                 }
             }
 
-            // Draw start or game over/win message
+            // Draw messages
             if (!gameStarted) {
                 ctx.fillStyle = '#bb86fc';
                 ctx.font = '24px Segoe UI';
                 ctx.textAlign = 'center';
                 ctx.fillText('Toca "Iniciar Juego"', canvas.width / dpr / 2, canvas.height / dpr / 2);
+
             } else if (gameOver) {
                 ctx.fillStyle = '#e74c3c';
                 ctx.font = '24px Segoe UI';
                 ctx.textAlign = 'center';
                 ctx.fillText('¡Game Over!', canvas.width / dpr / 2, canvas.height / dpr / 2);
+                ctx.font = '16px Segoe UI';
+                ctx.fillText(`Puntuación: ${score}`, canvas.width / dpr / 2, canvas.height / dpr / 2 + 30);
+                ctx.fillText(`Nivel alcanzado: ${level}`, canvas.width / dpr / 2, canvas.height / dpr / 2 + 60);
             } else if (win) {
                 ctx.fillStyle = '#2ecc71';
                 ctx.font = '24px Segoe UI';
                 ctx.textAlign = 'center';
-                ctx.fillText('¡Ganaste!', canvas.width / dpr / 2, canvas.height / dpr / 2);
+                ctx.fillText(`¡Nivel ${level} completado!`, canvas.width / dpr / 2, canvas.height / dpr / 2);
+                ctx.font = '16px Segoe UI';
+                ctx.fillText(`Preparando nivel ${level+1}...`, canvas.width / dpr / 2, canvas.height / dpr / 2 + 30);
             }
         }
 
