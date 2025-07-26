@@ -1,1 +1,211 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego del Dinosaurio</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f7f7f7;
+            font-family: Arial, sans-serif;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 300px;
+            margin: 50px auto;
+            background-color: white;
+            border: 1px solid #ccc;
+            overflow: hidden;
+        }
+        
+        #dino {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            bottom: 0;
+            left: 50px;
+            background-color: #555;
+        }
+        
+        #obstacle {
+            position: absolute;
+            width: 30px;
+            height: 50px;
+            bottom: 0;
+            left: 800px;
+            background-color: #333;
+        }
+        
+        #ground {
+            position: absolute;
+            width: 100%;
+            height: 20px;
+            bottom: 0;
+            background-color: #888;
+        }
+        
+        #score {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+        }
+        
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+            color: red;
+            display: none;
+        }
+        
+        #instructions {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 16px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="dino"></div>
+        <div id="obstacle"></div>
+        <div id="ground"></div>
+        <div id="score">0</div>
+        <div id="game-over">GAME OVER<br><span style="font-size: 16px;">Presiona ESPACIO para reiniciar</span></div>
+        <div id="instructions">Presiona ESPACIO para saltar</div>
+    </div>
+
+    <script>
+        const dino = document.getElementById('dino');
+        const obstacle = document.getElementById('obstacle');
+        const gameContainer = document.getElementById('game-container');
+        const scoreElement = document.getElementById('score');
+        const gameOverElement = document.getElementById('game-over');
+        
+        let isJumping = false;
+        let isGameOver = false;
+        let score = 0;
+        let gameSpeed = 5;
+        let obstacleInterval;
+        
+        function jump() {
+            if (isJumping || isGameOver) return;
+            
+            isJumping = true;
+            let jumpHeight = 0;
+            const jumpUp = setInterval(() => {
+                jumpHeight += 5;
+                dino.style.bottom = jumpHeight + 'px';
+                
+                if (jumpHeight >= 120) {
+                    clearInterval(jumpUp);
+                    const jumpDown = setInterval(() => {
+                        jumpHeight -= 5;
+                        dino.style.bottom = jumpHeight + 'px';
+                        
+                        if (jumpHeight <= 0) {
+                            clearInterval(jumpDown);
+                            isJumping = false;
+                            dino.style.bottom = '0';
+                        }
+                    }, 20);
+                }
+            }, 20);
+        }
+        
+        function startGame() {
+            isGameOver = false;
+            score = 0;
+            gameSpeed = 5;
+            obstacle.style.left = '800px';
+            gameOverElement.style.display = 'none';
+            scoreElement.textContent = '0';
+            
+            clearInterval(obstacleInterval);
+            obstacleInterval = setInterval(moveObstacle, 20);
+            
+            // Actualizar puntuación
+            setInterval(() => {
+                if (!isGameOver) {
+                    score++;
+                    scoreElement.textContent = score;
+                    
+                    // Aumentar dificultad
+                    if (score % 100 === 0) {
+                        gameSpeed += 0.5;
+                    }
+                }
+            }, 100);
+        }
+        
+        function moveObstacle() {
+            if (isGameOver) return;
+            
+            const obstacleLeft = parseInt(window.getComputedStyle(obstacle).getPropertyValue('left'));
+            const newPosition = obstacleLeft - gameSpeed;
+            
+            if (newPosition < -30) {
+                // Obstáculo salió de pantalla, reposicionar
+                obstacle.style.left = '800px';
+                // Altura aleatoria para cactus más altos
+                obstacle.style.height = Math.random() > 0.5 ? '50px' : '30px';
+            } else {
+                obstacle.style.left = newPosition + 'px';
+            }
+            
+            // Detectar colisión
+            const dinoRect = dino.getBoundingClientRect();
+            const obstacleRect = obstacle.getBoundingClientRect();
+            
+            if (
+                dinoRect.right > obstacleRect.left &&
+                dinoRect.left < obstacleRect.right &&
+                dinoRect.bottom > obstacleRect.top
+            ) {
+                gameOver();
+            }
+        }
+        
+        function gameOver() {
+            isGameOver = true;
+            gameOverElement.style.display = 'block';
+            clearInterval(obstacleInterval);
+        }
+        
+        // Event listeners
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                if (isGameOver) {
+                    startGame();
+                } else {
+                    jump();
+                }
+                e.preventDefault(); // Evitar scroll con espacio
+            }
+        });
+        
+        // También permitir clic/touch para móviles
+        gameContainer.addEventListener('click', () => {
+            if (isGameOver) {
+                startGame();
+            } else {
+                jump();
+            }
+        });
+        
+        // Iniciar juego al cargar
+        startGame();
+    </script>
+</body>
+</html>
