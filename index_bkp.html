@@ -20,7 +20,7 @@
         }
         
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -38,54 +38,58 @@
         
         .games-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 15px;
+            justify-items: center;
         }
         
-        .game-card {
+        .game-icon {
             background-color: #1e1e1e;
-            border-radius: 8px;
+            border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease;
             text-decoration: none;
-            display: block;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             color: inherit;
-            height: 160px;
+            width: 100px;
+            height: 120px;
             border: 1px solid #333;
+            padding: 10px;
+            text-align: center;
         }
         
-        .game-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4);
+        .game-icon:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
         }
         
-        .game-image {
-            height: 70px;
-            background-color: #3498db;
+        .game-symbol {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 16px;
+            margin-bottom: 8px;
+            font-size: 20px;
             font-weight: bold;
+            color: white;
         }
         
-        .game-info {
-            padding: 10px;
-        }
-        
-        .game-info h2 {
-            margin-bottom: 6px;
-            color: #bb86fc;
-            font-size: 15px;
-        }
-        
-        .game-info p {
-            color: #a0a0a0;
-            margin-bottom: 6px;
+        .game-name {
             font-size: 12px;
-            line-height: 1.4;
+            color: #bb86fc;
+            font-weight: 500;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            height: 28px;
         }
         
         footer {
@@ -97,16 +101,25 @@
         
         @media (max-width: 600px) {
             .games-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                gap: 10px;
             }
             
-            .game-card {
-                margin-bottom: 15px;
-                height: 150px;
+            .game-icon {
+                width: 80px;
+                height: 100px;
+                padding: 8px;
             }
             
-            .game-image {
-                height: 65px;
+            .game-symbol {
+                width: 50px;
+                height: 50px;
+                font-size: 16px;
+            }
+            
+            .game-name {
+                font-size: 10px;
+                height: 24px;
             }
         }
     </style>
@@ -114,156 +127,119 @@
 <body>
     <div class="container">
         <header>
-            <h1>Juegos</h1>
-            <p>Elige uno de nuestros juegos temáticos</p>
+            <h1>Colección de Juegos</h1>
+            <p>Elige un juego para comenzar</p>
         </header>
         
         <div class="games-grid">
             <!-- Juego 1 -->
-            <a href="Descubre_Calles.html" class="game-card">
-                <div class="game-image" style="background-color: #f39c12;">
-                    CALLES CF
+            <a href="Descubre_Calles.html" class="game-icon">
+                <div class="game-symbol" style="background-color: #f39c12;">
+                    CF
                 </div>
-                <div class="game-info">
-                    <h2>Calles de Capital Federal</h2>
-                    <p>Adivina los nombres de las calles más famosas de Buenos Aires.</p>
-                </div>
+                <div class="game-name">Calles de Capital Federal</div>
             </a>
                      
             <!-- Juego 2 -->
-            <a href="Snake2.html" class="game-card">
-                <div class="game-image" style="background-color: #3498db;">
-                    SNAKE 
+            <a href="Snake2.html" class="game-icon">
+                <div class="game-symbol" style="background-color: #3498db;">
+                    🐍
                 </div>
-                <div class="game-info">
-                    <h2>Juego de Snake</h2>
-                    <p>Demuestra tu habilidad con este nuevo desafío.</p>
-                </div>
+                <div class="game-name">Juego de Snake</div>
             </a>
             
             <!-- Juego 3 -->
-            <a href="Encuentra_el_5.html" class="game-card">
-                <div class="game-image" style="background-color: #9b59b6;">
-                    ENCUENTRA EL 5
+            <a href="Encuentra_el_5.html" class="game-icon">
+                <div class="game-symbol" style="background-color: #9b59b6;">
+                    5
                 </div>
-                <div class="game-info">
-                    <h2>Velocidad Visual</h2>
-                    <p>Marca la casilla con el "5".</p>
-                </div>
+                <div class="game-name">Encuentra el 5</div>
             </a>
             
-            <!-- Juego 4 - Tetris -->
-            <a href="tetris.html" class="game-card">
-                <div class="game-image" style="background-color: #f39c12;">
-                    TETRIS
+            <!-- Juego 4 -->
+            <a href="tetris.html" class="game-icon">
+                <div class="game-symbol" style="background-color: #f39c12;">
+                    ⎕
                 </div>
-                <div class="game-info">
-                    <h2>Tetris Clásico</h2>
-                    <p>El famoso juego de puzzle con piezas que caen.</p>
-                </div>
+                <div class="game-name">Tetris Clásico</div>
             </a>
             
-            <!-- Juego 5 - PONG -->
-            <a href="pong.html" class="game-card">
-                <div class="game-image" style="background-color: #2ecc71;">
-                    PONG
+            <!-- Juego 5 -->
+            <a href="pong.html" class="game-icon">
+                <div class="game-symbol" style="background-color: #2ecc71;">
+                    🏓
                 </div>
-                <div class="game-info">
-                    <h2>Pong Clásico</h2>
-                    <p>El legendario juego de ping pong digital. ¡Demuestra tus reflejos!</p>
-                </div>
+                <div class="game-name">Pong Clásico</div>
             </a>
             
-            <!-- Juego 6 - Arkanoid -->
-            <a href="arkanoid.html" class="game-card">
-                <div class="game-image" style="background-color: #e67e22;">
-                    ARKANOID
+            <!-- Juego 6 -->
+            <a href="arkanoid.html" class="game-icon">
+                <div class="game-symbol" style="background-color: #e67e22;">
+                    🧱
                 </div>
-                <div class="game-info">
-                    <h2>Arkanoid Clásico</h2>
-                    <p>Rompe los bloques con tu paleta en este juego arcade legendario.</p>
-                </div>
+                <div class="game-name">Arkanoid</div>
             </a>
             
-            <!-- Juego 7 - Simon -->
-            <a href="Simon.html" class="game-card">
-                <div class="game-image" style="background-color: #1abc9c;">
-                    SIMON
+            <!-- Juego 7 -->
+            <a href="Simon.html" class="game-icon">
+                <div class="game-symbol" style="background-color: #1abc9c;">
+                    🟢
                 </div>
-                <div class="game-info">
-                    <h2>Simon Clásico</h2>
-                    <p>Memoriza y repite la secuencia de colores en este desafío de memoria.</p>
-                </div>
+                <div class="game-name">Simon</div>
             </a>
             
-            <!-- Juego 8 - Driver -->
-            <a href="Driver.html" class="game-card">
-                <div class="game-image" style="background-color: #e67e22;">
-                    DRIVER
+            <!-- Juego 8 -->
+            <a href="Driver.html" class="game-icon">
+                <div class="game-symbol" style="background-color: #e67e22;">
+                    🚗
                 </div>
-                <div class="game-info">
-                    <h2>Night Driver</h2>
-                    <p>Conduce por este camino nocturno.</p>
-                </div>
-            </a> 
-<a href="juegodel15.html" class="game-card">
-                <div class="game-image" style="background-color: #9b59b6;">
-                    JUEGO DEL 15
-                </div>
-                <div class="game-info">
-                    <h2> JUEGO DEL 15</h2>
-                   <p> ORDENA LA GRILLA.</p>
-                </div>
+                <div class="game-name">Night Driver</div>
             </a>
             
-            <!-- Juego 9 - Cuatro -->
-            <a href="cuatro.html" class="game-card">
-                <div class="game-image" style="background-color: #c0392b;">
-                    CUATRO Colores
+            <!-- Juego 9 -->
+            <a href="juegodel15.html" class="game-icon">
+                <div class="game-symbol" style="background-color: #9b59b6;">
+                    15
                 </div>
-                <div class="game-info">
-                    <h2>Juego del cuatro</h2>
-                    <p>Adivina la secuencia de cuatro colores.</p>
+                <div class="game-name">Juego del 15</div>
+            </a>
+            
+            <!-- Juego 10 -->
+            <a href="cuatro.html" class="game-icon">
+                <div class="game-symbol" style="background-color: #c0392b;">
+                    🎨
                 </div>
+                <div class="game-name">Cuatro Colores</div>
             </a>
 
-                        <!-- Juego 10 - Memorama -->
-            <a href="Memorama.html" class="game-card">
-                <div class="game-image" style="background-color: #9b59b6;">
-                    Memorama 
+            <!-- Juego 11 -->
+            <a href="Memorama.html" class="game-icon">
+                <div class="game-symbol" style="background-color: #9b59b6;">
+                    🃏
                 </div>
-                <div class="game-info">
-                    <h2>Juego Memorama</h2>
-                    <p>Encuentra los pares entre las imágenes.</p>
-                </div>
+                <div class="game-name">Memorama</div>
             </a>
 
-            <!-- Juego 11 - Space Invaders -->
-            <a href="SpaceInvaders.html" class="game-card">
-                <div class="game-image" style="background-color: #34495e;">
-                    SPACE INVADERS
+            <!-- Juego 12 -->
+            <a href="SpaceInvaders.html" class="game-icon">
+                <div class="game-symbol" style="background-color: #34495e;">
+                    👾
                 </div>
-                <div class="game-info">
-                    <h2>Space Invaders Clásico</h2>
-                    <p>Defiende la Tierra disparando a los invasores alienígenas.</p>
-                </div>
+                <div class="game-name">Space Invaders</div>
             </a>
             
-            <!-- Juego 12 - Cuatro Numerico -->
-            <a href="cuatro_num.html" class="game-card">
-                <div class="game-image" style="background-color: #2ecc71;">
-                    CUATRO Números
+            <!-- Juego 13 -->
+            <a href="cuatro_num.html" class="game-icon">
+                <div class="game-symbol" style="background-color: #2ecc71;">
+                    1234
                 </div>
-                <div class="game-info">
-                    <h2>Juego del cuatro numérico</h2>
-                    <p>Adivina la secuencia de cuatro números</p>
-                </div>
+                <div class="game-name">Cuatro Números</div>
             </a>
-        </div> <!-- Cierre correcto de games-grid -->
+        </div>
         
         <footer>
             <p>© 2025 Juegos de Chatlas | Todos los derechos reservados</p>
         </footer>
-    </div> <!-- Cierre de container -->
+    </div>
 </body>
 </html>
