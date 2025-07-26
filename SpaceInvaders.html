@@ -184,36 +184,36 @@
             }
         }
         /* Estilos para los botones del modal */
-.modal-buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 15px;
-    gap: 10px;
-}
+        .modal-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            gap: 10px;
+        }
 
-.modal button {
-    flex: 1;
-    background-color: #2ecc71;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 15px;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
+        .modal button {
+            flex: 1;
+            background-color: #2ecc71;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
 
-.modal button:hover {
-    background-color: #27ae60;
-}
+        .modal button:hover {
+            background-color: #27ae60;
+        }
 
-#resetScoresBtn {
-    background-color: #e74c3c;
-}
+        #resetScoresBtn {
+            background-color: #e74c3c;
+        }
 
-#resetScoresBtn:hover {
-    background-color: #c0392b;
-}
+        #resetScoresBtn:hover {
+            background-color: #c0392b;
+        }
     </style>
 </head>
 <body>
@@ -235,30 +235,30 @@
             <button class="shoot-btn" id="shootBtn">DISPARAR</button>
         </div>
     </div>
+
     <!-- Modal para Top Scores -->
-<!-- Modal para Top Scores -->
-<div class="modal" id="topScoresModal">
-    <div class="modal-content">
-        <h2>Top Scores</h2>
-        <table id="topScoresTable">
-            <thead>
-                <tr>
-                    <th>Posición</th>
-                    <th>Nombre</th>
-                    <th>Puntos</th>
-                    <th>Nivel</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Las filas se llenarán con JavaScript -->
-            </tbody>
-        </table>
-        <div class="modal-buttons">
-            <button id="resetScoresBtn">Resetear Puntajes</button>
-            <button id="closeModalBtn">Cerrar</button>
+    <div class="modal" id="topScoresModal">
+        <div class="modal-content">
+            <h2>Top Scores</h2>
+            <table id="topScoresTable">
+                <thead>
+                    <tr>
+                        <th>Posición</th>
+                        <th>Nombre</th>
+                        <th>Puntos</th>
+                        <th>Nivel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Las filas se llenarán con JavaScript -->
+                </tbody>
+            </table>
+            <div class="modal-buttons">
+                <button id="resetScoresBtn">Resetear Puntajes</button>
+                <button id="closeModalBtn">Cerrar</button>
+            </div>
         </div>
     </div>
-</div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -273,15 +273,33 @@
         const topScoresTable = document.getElementById('topScoresTable').getElementsByTagName('tbody')[0];
         const closeModalBtn = document.getElementById('closeModalBtn');
         
-        // Cargar la imagen de la nave
+        // Cargar imágenes
         const playerImg = new Image();
-        playerImg.src = 'nave2.png'; // Usamos la imagen nave1.png
-        
-        // Variable para controlar si la imagen está cargada
-        let imageLoaded = false;
+        playerImg.src = 'nave2.png';
+        let playerImageLoaded = false;
         playerImg.onload = function() {
-            imageLoaded = true;
+            playerImageLoaded = true;
         };
+
+        // Cargar imágenes de aliens
+        const alienImages = [
+            new Image(), new Image(), new Image(), new Image()
+        ];
+        alienImages[0].src = 'alien1.png';
+        alienImages[1].src = 'alien2.png';
+        alienImages[2].src = 'alien3.png';
+        alienImages[3].src = 'alien4.png';
+        let alienImagesLoaded = false;
+        let loadedImagesCount = 0;
+        
+        alienImages.forEach(img => {
+            img.onload = function() {
+                loadedImagesCount++;
+                if (loadedImagesCount === alienImages.length) {
+                    alienImagesLoaded = true;
+                }
+            };
+        });
 
         // Adjust canvas for high-DPI displays
         const dpr = window.devicePixelRatio || 1;
@@ -314,22 +332,21 @@
             };
             bullets = [];
             aliens = [];
-            alienSpeed = 1 + (level * 0.1); // La velocidad aumenta con el nivel
+            alienSpeed = 1 + (level * 0.1);
             alienDirection = 1;
             gameOver = false;
             win = false;
             gameStarted = true;
 
-            // Crear aliens para el nivel actual
             createAliens();
             updateScoreDisplay();
         }
 
         function createAliens() {
-            const alienRows = Math.min(level, 5); // Máximo 5 filas
+            const alienRows = Math.min(level, 5);
             const alienCols = 8;
-            const alienWidth = 25;
-            const alienHeight = 15;
+            const alienWidth = 30;
+            const alienHeight = 20;
             const alienPadding = 8;
             const startY = 40;
             const verticalSpacing = alienHeight + alienPadding;
@@ -344,30 +361,26 @@
                         width: alienWidth,
                         height: alienHeight,
                         alive: true,
-                        points: (alienRows - row) * 10
+                        points: (alienRows - row) * 10,
+                        img: alienImages[row % alienImages.length] // Asignar imagen diferente por fila
                     });
                 }
             }
         }
 
         function resetGameAfterLifeLost() {
-            // Resetear posición del jugador
             player.x = canvas.width / dpr / 2 - 25;
             player.dx = 0;
-            
-            // Limpiar balas
             bullets = [];
             
-            // Resetear posición de aliens (todos vuelven arriba)
             const aliveAliens = aliens.filter(alien => alien.alive);
             aliens = [];
             
-            const alienWidth = 25;
-            const alienHeight = 15;
+            const alienWidth = 30;
+            const alienHeight = 20;
             const alienPadding = 8;
-            const startY = 40; // Posición inicial superior
+            const startY = 40;
             
-            // Recrear solo los aliens que estaban vivos pero en la posición superior
             aliveAliens.forEach(alien => {
                 aliens.push({
                     row: alien.row,
@@ -377,11 +390,11 @@
                     width: alienWidth,
                     height: alienHeight,
                     alive: true,
-                    points: alien.points
+                    points: alien.points,
+                    img: alien.img // Mantener la misma imagen que tenía
                 });
             });
             
-            // Resetear dirección de movimiento
             alienDirection = 1;
         }
 
@@ -405,11 +418,12 @@
             
             topScoresModal.style.display = 'flex';
         }
-                function resetScores() {
+
+        function resetScores() {
             if (confirm('¿Estás seguro que quieres borrar todos los puntajes guardados?')) {
                 topScores = [];
                 localStorage.setItem('spaceInvadersTopScores', JSON.stringify(topScores));
-                showTopScores(); // Actualizar la tabla mostrada
+                showTopScores();
             }
         }
 
@@ -427,7 +441,6 @@
             showTopScores();
         }
 
-        // Disparar
         function shoot() {
             if (gameStarted && !gameOver && !win) {
                 bullets.push({
@@ -440,7 +453,7 @@
             }
         }
 
-        // Keyboard controls (para PC)
+        // Keyboard controls
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') player.dx = -player.speed;
             if (e.key === 'ArrowRight') player.dx = player.speed;
@@ -451,14 +464,6 @@
                 showTopScores();
             }
         });
-                // Event listeners para los nuevos botones
-        closeModalBtn.addEventListener('click', () => {
-            topScoresModal.style.display = 'none';
-        });
-
-        // Agregar el event listener para el nuevo botón de reset
-        document.getElementById('resetScoresBtn').addEventListener('click', resetScores);
-
 
         document.addEventListener('keyup', (e) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
@@ -510,14 +515,14 @@
         // Shoot button controls
         shootBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            e.stopPropagation(); // Evita que el evento llegue al joystick
+            e.stopPropagation();
             shoot();
         }, {passive: false});
         
         shootBtn.addEventListener('mousedown', (e) => {
-            e.stopPropagation(); // Para eventos de ratón también
+            e.stopPropagation();
             shoot();
-});
+        });
 
         // Start button
         startBtn.addEventListener('click', () => {
@@ -537,10 +542,13 @@
             shoot();
         });
 
-        // Cerrar modal
+        // Close modal
         closeModalBtn.addEventListener('click', () => {
             topScoresModal.style.display = 'none';
         });
+
+        // Reset scores button
+        document.getElementById('resetScoresBtn').addEventListener('click', resetScores);
 
         // Update player position
         function updatePlayer() {
@@ -585,19 +593,16 @@
                 anyAlienAlive = true;
                 alien.x += alienSpeed * alienDirection;
                 
-                // Verificar si algún alien tocó el borde
                 if ((alien.x + alien.width > canvas.width / dpr - 5 && alienDirection > 0) || 
                     (alien.x < 5 && alienDirection < 0)) {
                     hitEdge = true;
                 }
                 
-                // Verificar si algún alien llegó al fondo
                 if (alien.y + alien.height >= canvas.height / dpr - 50) {
                     alienReachedBottom = true;
                 }
             }
             
-            // Manejar aliens que llegaron al fondo
             if (alienReachedBottom) {
                 lives--;
                 updateScoreDisplay();
@@ -609,7 +614,6 @@
                 }
             }
             
-            // Avanzar al siguiente nivel si no quedan aliens vivos
             if (!anyAlienAlive) {
                 win = true;
                 setTimeout(() => {
@@ -620,7 +624,6 @@
                 return;
             }
             
-            // Cambiar dirección si algún alien tocó el borde
             if (hitEdge) {
                 alienDirection *= -1;
                 for (let alien of aliens) {
@@ -636,7 +639,7 @@
 
             if (gameStarted) {
                 // Draw player
-                if (imageLoaded) {
+                if (playerImageLoaded) {
                     ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
                 } else {
                     ctx.fillStyle = '#bb86fc';
@@ -652,10 +655,14 @@
                 // Draw aliens
                 for (let alien of aliens) {
                     if (alien.alive) {
-                        const rowColor = Math.floor((alien.y - 40) / (15 + 8));
-                        const colors = ['#2ecc71', '#3498db', '#9b59b6', '#e74c3c', '#f39c12', '#1abc9c'];
-                        ctx.fillStyle = colors[rowColor % colors.length];
-                        ctx.fillRect(alien.x, alien.y, alien.width, alien.height);
+                        if (alienImagesLoaded) {
+                            ctx.drawImage(alien.img, alien.x, alien.y, alien.width, alien.height);
+                        } else {
+                            const rowColor = Math.floor((alien.y - 40) / (15 + 8));
+                            const colors = ['#2ecc71', '#3498db', '#9b59b6', '#e74c3c', '#f39c12', '#1abc9c'];
+                            ctx.fillStyle = colors[rowColor % colors.length];
+                            ctx.fillRect(alien.x, alien.y, alien.width, alien.height);
+                        }
                     }
                 }
             }
@@ -666,7 +673,6 @@
                 ctx.font = '24px Segoe UI';
                 ctx.textAlign = 'center';
                 ctx.fillText('Toca "Iniciar Juego"', canvas.width / dpr / 2, canvas.height / dpr / 2);
-
             } else if (gameOver) {
                 ctx.fillStyle = '#e74c3c';
                 ctx.font = '24px Segoe UI';
