@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dino Game con SVG Personalizado</title>
+    <title>Dino Game - SVG Grande</title>
     <style>
         * {
             margin: 0;
@@ -26,7 +26,7 @@
         #game-container {
             position: relative;
             width: 100%;
-            height: 200px;
+            height: 300px; /* Aumenté la altura para el dinosaurio más grande */
             max-width: 600px;
             margin: 0 auto;
             overflow: hidden;
@@ -43,10 +43,10 @@
         
         #dino {
             position: absolute;
-            width: 44px;
-            height: 47px;
+            width: 80px; /* Tamaño aumentado */
+            height: 85px; /* Tamaño aumentado */
             bottom: 0;
-            left: 20px;
+            left: 30px;
             z-index: 2;
             transform-origin: bottom left;
         }
@@ -54,31 +54,32 @@
         #dino svg {
             width: 100%;
             height: 100%;
-            transform: scale(0.15) translate(-50%, -50%);
+            transform: scale(0.6) translate(-30%, -30%); /* Ajuste de escala */
         }
         
         #dino.duck svg {
-            transform: scale(0.15) translate(-60%, -40%) rotate(5deg);
+            transform: scale(0.6) translate(-35%, -25%) rotate(5deg);
         }
         
         .cactus {
             position: absolute;
             bottom: 0;
-            width: 24px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 50"><path d="M6 50 L6 20 L2 20 L2 15 L6 15 L6 10 L10 10 L10 5 L14 5 L14 10 L18 10 L18 15 L22 15 L22 20 L18 20 L18 50 Z" fill="%23222222"/><path d="M10 20 L10 15 L14 15 L14 20 Z" fill="%23585858"/></svg>');
+            width: 30px; /* Cactus más grande para coincidir */
+            height: 60px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 60"><path d="M8 60 L8 25 L3 25 L3 18 L8 18 L8 12 L13 12 L13 6 L18 6 L18 12 L23 12 L23 18 L28 18 L28 25 L23 25 L23 60 Z" fill="%23222222"/><path d="M13 25 L13 18 L18 18 L18 25 Z" fill="%23585858"/></svg>');
             background-repeat: no-repeat;
             z-index: 1;
         }
         
-        .cactus.tall { height: 50px; }
-        .cactus.medium { height: 35px; }
-        .cactus.small { height: 25px; }
+        .cactus.tall { height: 70px; }
+        .cactus.medium { height: 50px; }
+        .cactus.small { height: 40px; }
         
         #score {
             position: absolute;
             top: 10px;
             right: 10px;
-            font-size: 14px;
+            font-size: 16px;
             color: #535353;
         }
         
@@ -88,39 +89,39 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            font-size: 24px;
+            font-size: 28px;
             color: #535353;
             display: none;
             background-color: rgba(255, 255, 255, 0.9);
-            padding: 15px 25px;
+            padding: 20px 30px;
             border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
         }
         
         #restart {
-            margin-top: 15px;
-            padding: 8px 15px;
+            margin-top: 20px;
+            padding: 10px 20px;
             background-color: #535353;
             color: white;
             border: none;
-            border-radius: 3px;
-            font-size: 16px;
+            border-radius: 5px;
+            font-size: 18px;
         }
         
         #instructions {
             position: absolute;
             top: 10px;
             left: 10px;
-            font-size: 12px;
+            font-size: 14px;
             color: #535353;
         }
         
         .cloud {
             position: absolute;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 20"><path d="M55 10 Q50 20 40 15 Q35 25 25 10 Q15 20 5 10 Q0 5 5 5 Q10 0 15 5 Q20 0 30 0 Q40 0 45 5 Q50 0 55 5 Z" fill="%23f0f0f0"/></svg>');
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 30"><path d="M75 15 Q70 30 55 22 Q50 35 35 15 Q25 30 10 15 Q5 10 10 10 Q15 5 20 10 Q25 5 40 5 Q55 5 60 10 Q65 5 75 10 Z" fill="%23f0f0f0"/></svg>');
             background-repeat: no-repeat;
-            width: 60px;
-            height: 20px;
+            width: 80px;
+            height: 30px;
             z-index: 0;
         }
     </style>
@@ -129,8 +130,8 @@
     <div id="game-container">
         <div id="ground"></div>
         <div id="dino">
-            <!-- TU SVG PERSONALIZADO -->
-            <svg height="2500" viewBox="13.848000000000003 0 283.6449999999999 305.4" width="2328" xmlns="http://www.w3.org/2000/svg">
+            <!-- SVG original pero con mejor escala -->
+            <svg viewBox="13.848000000000003 0 283.6449999999999 305.4" xmlns="http://www.w3.org/2000/svg">
                 <g fill="none" fill-rule="evenodd">
                     <path d="M269.352 91.664h-42.436V80.04h70.577v-65.73h-14.294V0H168.4v14.309h-13.848v91.664H140.26v13.861h-20.994v14.309H98.271v14.308H83.977v13.862H58.069v-14.309H44.222v-13.861H29.928v-28.17h-16.08v86.746h13.847v14.308h14.293v13.862h13.848v14.308H70.13v13.862h13.847v56.34h30.375V289.3h-13.848V277.23h13.848v-13.862h14.294V249.06h11.613v14.308h14.294V305.4h30.375V289.3h-14.294v-54.104h14.294V220.89h13.847v-21.016h14.294v-49.186h11.614v13.862h16.527v-30.406h-28.14v-25.934h56.282z" fill="#666"/>
                     <path d="M182.248 20.569h16.974V37.56h-16.974z" fill="#fff"/>
@@ -142,7 +143,7 @@
             GAME OVER
             <button id="restart">Reiniciar</button>
         </div>
-        <div id="instructions">Toca para saltar</div>
+        <div id="instructions">Toca arriba para saltar, abajo para agacharte</div>
     </div>
 
     <script>
@@ -156,14 +157,16 @@
         let isDucking = false;
         let isGameOver = false;
         let score = 0;
-        let gameSpeed = 5;
+        let gameSpeed = 6; // Velocidad un poco mayor para el dinosaurio más grande
         let obstacleInterval;
         let cloudInterval;
         let jumpHeight = 0;
         
-        // Tamaño del contenedor
+        // Tamaños ajustados
         const containerWidth = gameContainer.offsetWidth;
         const containerHeight = gameContainer.offsetHeight;
+        const dinoWidth = 80;
+        const dinoHeight = 85;
         
         function jump() {
             if (isJumping || isGameOver) return;
@@ -174,15 +177,17 @@
             dino.classList.remove('duck');
             isDucking = false;
             
-            // Salto hacia arriba
+            // Salto más alto para compensar el tamaño
+            const jumpHeightMax = 120;
+            
             const jumpUp = () => {
-                jumpHeight += 4;
+                jumpHeight += 5;
                 dino.style.transform = `translateY(-${jumpHeight}px) scaleX(1)`;
                 
-                if (jumpHeight >= 100) {
+                if (jumpHeight >= jumpHeightMax) {
                     // Caída
                     const fallDown = () => {
-                        jumpHeight -= 4;
+                        jumpHeight -= 5;
                         dino.style.transform = `translateY(-${jumpHeight}px) scaleX(1)`;
                         
                         if (jumpHeight <= 0) {
@@ -226,9 +231,9 @@
         function createCloud() {
             const cloud = document.createElement('div');
             cloud.className = 'cloud';
-            cloud.style.top = (Math.random() * 60 + 10) + 'px';
+            cloud.style.top = (Math.random() * 80 + 20) + 'px';
             cloud.style.left = containerWidth + 'px';
-            cloud.style.transform = `scale(${0.5 + Math.random() * 0.7})`;
+            cloud.style.transform = `scale(${0.6 + Math.random() * 0.8})`;
             gameContainer.appendChild(cloud);
             return cloud;
         }
@@ -238,19 +243,19 @@
                 const cactusLeft = parseInt(cactus.style.left);
                 const newPos = cactusLeft - gameSpeed;
                 
-                if (newPos < -30) {
+                if (newPos < -40) {
                     cactus.remove();
                 } else {
                     cactus.style.left = newPos + 'px';
                     
-                    // Detectar colisión
+                    // Detectar colisión con margen para el dinosaurio grande
                     if (!isGameOver) {
                         const dinoRect = dino.getBoundingClientRect();
                         const cactusRect = cactus.getBoundingClientRect();
                         
-                        if (dinoRect.right > cactusRect.left + 10 &&
-                            dinoRect.left < cactusRect.right - 10 &&
-                            dinoRect.bottom > cactusRect.top) {
+                        if (dinoRect.right > cactusRect.left + 15 &&
+                            dinoRect.left + 15 < cactusRect.right &&
+                            dinoRect.bottom > cactusRect.top + 10) {
                             gameOver();
                         }
                     }
@@ -260,7 +265,7 @@
             document.querySelectorAll('.cloud').forEach(cloud => {
                 const cloudLeft = parseInt(cloud.style.left);
                 cloud.style.left = (cloudLeft - gameSpeed * 0.5) + 'px';
-                if (cloudLeft < -60) cloud.remove();
+                if (cloudLeft < -80) cloud.remove();
             });
         }
         
@@ -270,16 +275,18 @@
             clearInterval(obstacleInterval);
             clearInterval(cloudInterval);
             
-            // Animación de muerte
-            dino.style.transform = 'translateY(0) rotate(-30deg)';
+            // Animación de muerte más pronunciada
+            dino.style.transform = 'translateY(0) rotate(-45deg)';
+            dino.style.filter = 'brightness(0.8)';
         }
         
         function startGame() {
             isGameOver = false;
             score = 0;
-            gameSpeed = 5;
+            gameSpeed = 6;
             gameOverElement.style.display = 'none';
             scoreElement.textContent = '0';
+            dino.style.filter = 'none';
             
             // Limpiar elementos
             document.querySelectorAll('.cactus, .cloud').forEach(el => el.remove());
@@ -293,13 +300,13 @@
             clearInterval(obstacleInterval);
             obstacleInterval = setInterval(() => {
                 if (!isGameOver && Math.random() > 0.7) createCactus();
-            }, 1500);
+            }, 1200); // Intervalo más corto para mayor dificultad
             
             // Generar nubes
             clearInterval(cloudInterval);
             cloudInterval = setInterval(() => {
                 if (!isGameOver && Math.random() > 0.8) createCloud();
-            }, 3000);
+            }, 2500);
             
             // Bucle del juego
             function gameLoop() {
@@ -307,19 +314,39 @@
                     moveObstacles();
                     score++;
                     scoreElement.textContent = Math.floor(score / 5);
-                    if (score % 500 === 0) gameSpeed += 0.3;
+                    if (score % 400 === 0) gameSpeed += 0.4;
                     requestAnimationFrame(gameLoop);
                 }
             }
             requestAnimationFrame(gameLoop);
         }
         
-        // Controles
+        // Controles mejorados para móvil
         gameContainer.addEventListener('touchstart', (e) => {
             const touchY = e.touches[0].clientY;
             const containerRect = gameContainer.getBoundingClientRect();
+            const relativeY = touchY - containerRect.top;
             
-            if (touchY - containerRect.top > containerHeight * 0.7) {
+            if (relativeY > containerHeight * 0.7) {
+                if (!isGameOver) duck();
+            } else {
+                if (isGameOver) startGame();
+                else jump();
+            }
+            e.preventDefault();
+        });
+        
+        gameContainer.addEventListener('touchend', () => {
+            if (isDucking) stand();
+        });
+        
+        // También funciona con clic/mouse
+        gameContainer.addEventListener('mousedown', (e) => {
+            const clickY = e.clientY;
+            const containerRect = gameContainer.getBoundingClientRect();
+            const relativeY = clickY - containerRect.top;
+            
+            if (relativeY > containerHeight * 0.7) {
                 if (!isGameOver) duck();
             } else {
                 if (isGameOver) startGame();
@@ -327,7 +354,7 @@
             }
         });
         
-        gameContainer.addEventListener('touchend', () => {
+        gameContainer.addEventListener('mouseup', () => {
             if (isDucking) stand();
         });
         
