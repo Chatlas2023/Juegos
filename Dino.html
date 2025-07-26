@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dino Game Chrome</title>
+    <title>Dino Game con SVG Personalizado</title>
     <style>
         * {
             margin: 0;
@@ -16,11 +16,11 @@
             overflow: hidden;
             touch-action: manipulation;
             background-color: #f7f7f7;
-            font-family: 'Arial', sans-serif;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            font-family: 'Courier New', monospace;
         }
         
         #game-container {
@@ -47,17 +47,18 @@
             height: 47px;
             bottom: 0;
             left: 20px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 47"><path d="M6 47 L6 30 L10 30 L10 27 L14 27 L14 24 L18 24 L18 21 L22 21 L22 18 L26 18 L26 21 L30 21 L30 24 L34 24 L34 30 L38 30 L38 47 L42 47 L42 15 L38 15 L38 12 L34 12 L34 9 L30 9 L30 6 L26 6 L26 3 L22 3 L18 3 L18 6 L14 6 L14 9 L10 9 L10 12 L6 12 L6 15 L2 15 L2 47 Z" fill="%23222222"/><rect x="18" y="36" width="4" height="4" fill="white"/><rect x="30" y="36" width="4" height="4" fill="white"/><rect x="26" y="40" width="4" height="4" fill="%23222222"/></svg>');
-            background-repeat: no-repeat;
             z-index: 2;
-            transition: transform 0.1s;
+            transform-origin: bottom left;
         }
-
-        /* Versión agachado */
-        #dino.duck {
-            width: 60px;
-            height: 30px;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30"><path d="M10 30 L15 30 L15 15 L20 15 L20 10 L25 10 L25 15 L30 15 L30 30 L35 30 L35 15 L40 15 L40 10 L45 10 L45 15 L50 15 L50 30 L55 30 L55 5 L50 5 L50 0 L45 0 L45 5 L40 5 L40 0 L35 0 L35 5 L30 5 L30 0 L25 0 L25 5 L20 5 L20 0 L15 0 L15 5 L10 5 L10 30 Z" fill="%23222222"/><rect x="20" y="20" width="5" height="5" fill="white"/><rect x="40" y="20" width="5" height="5" fill="white"/></svg>');
+        
+        #dino svg {
+            width: 100%;
+            height: 100%;
+            transform: scale(0.15) translate(-50%, -50%);
+        }
+        
+        #dino.duck svg {
+            transform: scale(0.15) translate(-60%, -40%) rotate(5deg);
         }
         
         .cactus {
@@ -69,17 +70,9 @@
             z-index: 1;
         }
         
-        .cactus.tall {
-            height: 50px;
-        }
-        
-        .cactus.medium {
-            height: 35px;
-        }
-        
-        .cactus.small {
-            height: 25px;
-        }
+        .cactus.tall { height: 50px; }
+        .cactus.medium { height: 35px; }
+        .cactus.small { height: 25px; }
         
         #score {
             position: absolute;
@@ -87,7 +80,6 @@
             right: 10px;
             font-size: 14px;
             color: #535353;
-            font-family: 'Courier New', monospace;
         }
         
         #game-over {
@@ -102,7 +94,6 @@
             background-color: rgba(255, 255, 255, 0.9);
             padding: 15px 25px;
             border-radius: 5px;
-            font-family: 'Courier New', monospace;
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
         }
         
@@ -114,7 +105,6 @@
             border: none;
             border-radius: 3px;
             font-size: 16px;
-            font-family: 'Courier New', monospace;
         }
         
         #instructions {
@@ -123,7 +113,6 @@
             left: 10px;
             font-size: 12px;
             color: #535353;
-            font-family: 'Courier New', monospace;
         }
         
         .cloud {
@@ -139,13 +128,21 @@
 <body>
     <div id="game-container">
         <div id="ground"></div>
-        <div id="dino"></div>
+        <div id="dino">
+            <!-- TU SVG PERSONALIZADO -->
+            <svg height="2500" viewBox="13.848000000000003 0 283.6449999999999 305.4" width="2328" xmlns="http://www.w3.org/2000/svg">
+                <g fill="none" fill-rule="evenodd">
+                    <path d="M269.352 91.664h-42.436V80.04h70.577v-65.73h-14.294V0H168.4v14.309h-13.848v91.664H140.26v13.861h-20.994v14.309H98.271v14.308H83.977v13.862H58.069v-14.309H44.222v-13.861H29.928v-28.17h-16.08v86.746h13.847v14.308h14.293v13.862h13.848v14.308H70.13v13.862h13.847v56.34h30.375V289.3h-13.848V277.23h13.848v-13.862h14.294V249.06h11.613v14.308h14.294V305.4h30.375V289.3h-14.294v-54.104h14.294V220.89h13.847v-21.016h14.294v-49.186h11.614v13.862h16.527v-30.406h-28.14v-25.934h56.282z" fill="#666"/>
+                    <path d="M182.248 20.569h16.974V37.56h-16.974z" fill="#fff"/>
+                </g>
+            </svg>
+        </div>
         <div id="score">0</div>
         <div id="game-over">
             GAME OVER
             <button id="restart">Reiniciar</button>
         </div>
-        <div id="instructions">Toca arriba para saltar, abajo para agacharte</div>
+        <div id="instructions">Toca para saltar</div>
     </div>
 
     <script>
@@ -162,58 +159,49 @@
         let gameSpeed = 5;
         let obstacleInterval;
         let cloudInterval;
-        let gravity;
         let jumpHeight = 0;
-        let jumpUpInterval;
-        let jumpDownInterval;
         
-        // Tamaño del contenedor de juego
+        // Tamaño del contenedor
         const containerWidth = gameContainer.offsetWidth;
         const containerHeight = gameContainer.offsetHeight;
-        
-        // Posición inicial del dinosaurio
-        dino.style.bottom = '0';
-        dino.style.left = '20px';
         
         function jump() {
             if (isJumping || isGameOver) return;
             
             isJumping = true;
             jumpHeight = 0;
-            dino.style.transform = 'translateY(0)';
+            dino.style.transform = 'translateY(0) scaleX(1)';
             dino.classList.remove('duck');
             isDucking = false;
             
-            // Limpiar intervalos anteriores si existen
-            clearInterval(jumpUpInterval);
-            clearInterval(jumpDownInterval);
-            
             // Salto hacia arriba
-            jumpUpInterval = setInterval(() => {
+            const jumpUp = () => {
                 jumpHeight += 4;
-                dino.style.transform = `translateY(-${jumpHeight}px)`;
+                dino.style.transform = `translateY(-${jumpHeight}px) scaleX(1)`;
                 
-                if (jumpHeight >= 80) {
-                    clearInterval(jumpUpInterval);
-                    
+                if (jumpHeight >= 100) {
                     // Caída
-                    jumpDownInterval = setInterval(() => {
+                    const fallDown = () => {
                         jumpHeight -= 4;
-                        dino.style.transform = `translateY(-${jumpHeight}px)`;
+                        dino.style.transform = `translateY(-${jumpHeight}px) scaleX(1)`;
                         
                         if (jumpHeight <= 0) {
-                            clearInterval(jumpDownInterval);
+                            dino.style.transform = 'translateY(0) scaleX(1)';
                             isJumping = false;
-                            dino.style.transform = 'translateY(0)';
+                            return;
                         }
-                    }, 20);
+                        requestAnimationFrame(fallDown);
+                    };
+                    requestAnimationFrame(fallDown);
+                    return;
                 }
-            }, 20);
+                requestAnimationFrame(jumpUp);
+            };
+            requestAnimationFrame(jumpUp);
         }
         
         function duck() {
             if (isJumping || isGameOver) return;
-            
             isDucking = true;
             dino.classList.add('duck');
         }
@@ -227,14 +215,10 @@
             const cactus = document.createElement('div');
             cactus.className = 'cactus';
             
-            // Tipo de cactus aleatorio
-            const cactusTypes = ['small', 'medium', 'tall'];
-            const randomType = cactusTypes[Math.floor(Math.random() * cactusTypes.length)];
-            cactus.classList.add(randomType);
+            const types = ['small', 'medium', 'tall'];
+            cactus.classList.add(types[Math.floor(Math.random() * types.length)]);
             
-            // Posición inicial a la derecha
             cactus.style.left = containerWidth + 'px';
-            
             gameContainer.appendChild(cactus);
             return cactus;
         }
@@ -242,119 +226,42 @@
         function createCloud() {
             const cloud = document.createElement('div');
             cloud.className = 'cloud';
-            
-            // Posición vertical aleatoria
-            const topPos = Math.floor(Math.random() * 60) + 10;
-            cloud.style.top = topPos + 'px';
+            cloud.style.top = (Math.random() * 60 + 10) + 'px';
             cloud.style.left = containerWidth + 'px';
-            
-            // Tamaño aleatorio
-            const scale = 0.5 + Math.random() * 0.7;
-            cloud.style.transform = `scale(${scale})`;
-            cloud.style.opacity = 0.7 + Math.random() * 0.3;
-            
+            cloud.style.transform = `scale(${0.5 + Math.random() * 0.7})`;
             gameContainer.appendChild(cloud);
             return cloud;
         }
         
         function moveObstacles() {
-            const cacti = document.querySelectorAll('.cactus');
-            const clouds = document.querySelectorAll('.cloud');
-            
-            cacti.forEach(cactus => {
+            document.querySelectorAll('.cactus').forEach(cactus => {
                 const cactusLeft = parseInt(cactus.style.left);
-                const newPosition = cactusLeft - gameSpeed;
+                const newPos = cactusLeft - gameSpeed;
                 
-                if (newPosition < -24) {
+                if (newPos < -30) {
                     cactus.remove();
                 } else {
-                    cactus.style.left = newPosition + 'px';
-                }
-                
-                // Detectar colisión
-                if (!isGameOver) {
-                    const dinoRect = dino.getBoundingClientRect();
-                    const cactusRect = cactus.getBoundingClientRect();
+                    cactus.style.left = newPos + 'px';
                     
-                    // Ajustar detección de colisión si está agachado
-                    const dinoBottomAdjust = isDucking ? 15 : 0;
-                    
-                    if (
-                        dinoRect.right > cactusRect.left + 5 &&
-                        dinoRect.left + 5 < cactusRect.right &&
-                        dinoRect.bottom - dinoBottomAdjust > cactusRect.top
-                    ) {
-                        gameOver();
+                    // Detectar colisión
+                    if (!isGameOver) {
+                        const dinoRect = dino.getBoundingClientRect();
+                        const cactusRect = cactus.getBoundingClientRect();
+                        
+                        if (dinoRect.right > cactusRect.left + 10 &&
+                            dinoRect.left < cactusRect.right - 10 &&
+                            dinoRect.bottom > cactusRect.top) {
+                            gameOver();
+                        }
                     }
                 }
             });
             
-            clouds.forEach(cloud => {
+            document.querySelectorAll('.cloud').forEach(cloud => {
                 const cloudLeft = parseInt(cloud.style.left);
-                const newPosition = cloudLeft - (gameSpeed * 0.5);
-                
-                if (newPosition < -60) {
-                    cloud.remove();
-                } else {
-                    cloud.style.left = newPosition + 'px';
-                }
+                cloud.style.left = (cloudLeft - gameSpeed * 0.5) + 'px';
+                if (cloudLeft < -60) cloud.remove();
             });
-        }
-        
-        function startGame() {
-            // Limpiar estado anterior
-            isGameOver = false;
-            score = 0;
-            gameSpeed = 5;
-            gameOverElement.style.display = 'none';
-            scoreElement.textContent = '0';
-            
-            // Eliminar elementos anteriores
-            document.querySelectorAll('.cactus, .cloud').forEach(el => el.remove());
-            
-            // Restablecer posición del dinosaurio
-            stand();
-            dino.style.transform = 'translateY(0)';
-            isJumping = false;
-            isDucking = false;
-            clearInterval(jumpUpInterval);
-            clearInterval(jumpDownInterval);
-            
-            // Iniciar generación de cactus
-            clearInterval(obstacleInterval);
-            obstacleInterval = setInterval(() => {
-                if (!isGameOver && Math.random() > 0.7) {
-                    createCactus();
-                }
-            }, 1500);
-            
-            // Iniciar generación de nubes
-            clearInterval(cloudInterval);
-            cloudInterval = setInterval(() => {
-                if (!isGameOver && Math.random() > 0.8) {
-                    createCloud();
-                }
-            }, 3000);
-            
-            // Iniciar actualización del juego
-            requestAnimationFrame(updateGame);
-        }
-        
-        function updateGame() {
-            if (!isGameOver) {
-                moveObstacles();
-                
-                // Actualizar puntuación
-                score++;
-                scoreElement.textContent = Math.floor(score / 5);
-                
-                // Aumentar dificultad
-                if (score % 500 === 0) {
-                    gameSpeed += 0.3;
-                }
-                
-                requestAnimationFrame(updateGame);
-            }
         }
         
         function gameOver() {
@@ -364,90 +271,69 @@
             clearInterval(cloudInterval);
             
             // Animación de muerte
-            dino.style.backgroundImage = 'url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 47"><path d="M6 47 L6 30 L10 30 L10 27 L14 27 L14 24 L18 24 L18 21 L22 21 L22 18 L26 18 L26 21 L30 21 L30 24 L34 24 L34 30 L38 30 L38 47 L42 47 L42 15 L38 15 L38 12 L34 12 L34 9 L30 9 L30 6 L26 6 L26 3 L22 3 L18 3 L18 6 L14 6 L14 9 L10 9 L10 12 L6 12 L6 15 L2 15 L2 47 Z" fill="%23222222"/><rect x="18" y="36" width="4" height="4" fill="white" transform="rotate(15 20 38)"/><rect x="30" y="36" width="4" height="4" fill="white" transform="rotate(-15 30 38)"/><rect x="26" y="40" width="4" height="4" fill="%23222222" transform="rotate(10 28 42)"/></svg>\')';
+            dino.style.transform = 'translateY(0) rotate(-30deg)';
         }
         
-        // Event listeners
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                if (isGameOver) {
-                    startGame();
-                } else {
-                    jump();
-                }
-                e.preventDefault();
-            } else if (e.code === 'ArrowDown') {
-                if (!isGameOver && !isJumping) {
-                    duck();
+        function startGame() {
+            isGameOver = false;
+            score = 0;
+            gameSpeed = 5;
+            gameOverElement.style.display = 'none';
+            scoreElement.textContent = '0';
+            
+            // Limpiar elementos
+            document.querySelectorAll('.cactus, .cloud').forEach(el => el.remove());
+            
+            // Resetear dinosaurio
+            stand();
+            dino.style.transform = 'translateY(0) rotate(0)';
+            isJumping = false;
+            
+            // Generar obstáculos
+            clearInterval(obstacleInterval);
+            obstacleInterval = setInterval(() => {
+                if (!isGameOver && Math.random() > 0.7) createCactus();
+            }, 1500);
+            
+            // Generar nubes
+            clearInterval(cloudInterval);
+            cloudInterval = setInterval(() => {
+                if (!isGameOver && Math.random() > 0.8) createCloud();
+            }, 3000);
+            
+            // Bucle del juego
+            function gameLoop() {
+                if (!isGameOver) {
+                    moveObstacles();
+                    score++;
+                    scoreElement.textContent = Math.floor(score / 5);
+                    if (score % 500 === 0) gameSpeed += 0.3;
+                    requestAnimationFrame(gameLoop);
                 }
             }
-        });
+            requestAnimationFrame(gameLoop);
+        }
         
-        document.addEventListener('keyup', (e) => {
-            if (e.code === 'ArrowDown') {
-                if (!isGameOver && isDucking) {
-                    stand();
-                }
-            }
-        });
-        
-        // Control táctil para móviles
+        // Controles
         gameContainer.addEventListener('touchstart', (e) => {
-            if (isGameOver) {
-                startGame();
+            const touchY = e.touches[0].clientY;
+            const containerRect = gameContainer.getBoundingClientRect();
+            
+            if (touchY - containerRect.top > containerHeight * 0.7) {
+                if (!isGameOver) duck();
             } else {
-                // Si el toque es en la parte inferior de la pantalla, agacharse
-                const touchY = e.touches[0].clientY;
-                const containerRect = gameContainer.getBoundingClientRect();
-                const relativeY = touchY - containerRect.top;
-                
-                if (relativeY > containerHeight * 0.6) {
-                    if (!isDucking) {
-                        duck();
-                    }
-                } else {
-                    jump();
-                }
-            }
-            e.preventDefault();
-        });
-        
-        gameContainer.addEventListener('touchend', (e) => {
-            if (isDucking) {
-                stand();
+                if (isGameOver) startGame();
+                else jump();
             }
         });
         
-        // También permitir clic para mayor compatibilidad
-        gameContainer.addEventListener('mousedown', (e) => {
-            if (isGameOver) {
-                startGame();
-            } else {
-                // Si el clic es en la parte inferior de la pantalla, agacharse
-                const clickY = e.clientY;
-                const containerRect = gameContainer.getBoundingClientRect();
-                const relativeY = clickY - containerRect.top;
-                
-                if (relativeY > containerHeight * 0.6) {
-                    if (!isDucking) {
-                        duck();
-                    }
-                } else {
-                    jump();
-                }
-            }
+        gameContainer.addEventListener('touchend', () => {
+            if (isDucking) stand();
         });
         
-        gameContainer.addEventListener('mouseup', (e) => {
-            if (isDucking) {
-                stand();
-            }
-        });
-        
-        // Botón de reinicio
         restartButton.addEventListener('click', startGame);
         
-        // Iniciar juego al cargar
+        // Iniciar juego
         startGame();
     </script>
 </body>
