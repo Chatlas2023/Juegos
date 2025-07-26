@@ -29,7 +29,7 @@
         }
         canvas {
             border: 2px solid #bb86fc;
-            background-color: #4c7588;
+            background-color: #000000;
             width: 100%;
             max-width: 100%;
             height: auto;
@@ -218,7 +218,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Space Invaders V2.4</h1>
+        <h1>Space Invaders V2.5</h1>
         <p>¡Destruye a los invasores alienígenas!</p>
         <div class="score-display">
             <div class="score-box">Puntos: <span id="score">0</span></div>
@@ -635,7 +635,8 @@
 
         // Draw everything
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             if (gameStarted) {
                 // Draw player
