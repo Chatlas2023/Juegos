@@ -1,60 +1,73 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego del Dinosaurio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dino Game</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
             overflow: hidden;
+            touch-action: manipulation;
             background-color: #f7f7f7;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
         #game-container {
             position: relative;
-            width: 800px;
-            height: 300px;
-            margin: 50px auto;
-            background-color: white;
-            border: 1px solid #ccc;
+            width: 100%;
+            height: 200px;
+            max-width: 600px;
+            margin: 0 auto;
             overflow: hidden;
-        }
-        
-        #dino {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            bottom: 0;
-            left: 50px;
-            background-color: #555;
-        }
-        
-        #obstacle {
-            position: absolute;
-            width: 30px;
-            height: 50px;
-            bottom: 0;
-            left: 800px;
-            background-color: #333;
+            background-color: white;
         }
         
         #ground {
             position: absolute;
-            width: 100%;
-            height: 20px;
             bottom: 0;
-            background-color: #888;
+            width: 100%;
+            height: 2px;
+            background-color: #535353;
+        }
+        
+        #dino {
+            position: absolute;
+            width: 40px;
+            height: 45px;
+            bottom: 0;
+            left: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 45"><path d="M10 45 L15 45 L15 30 L20 30 L20 25 L25 25 L25 30 L30 30 L30 45 L35 45 L35 20 L30 20 L30 15 L25 15 L25 10 L20 10 L20 5 L15 5 L15 10 L10 10 L10 20 L5 20 L5 45 Z" fill="%23535353"/><rect x="15" y="35" width="5" height="5" fill="white"/><rect x="25" y="35" width="5" height="5" fill="white"/></svg>');
+            background-repeat: no-repeat;
+            z-index: 2;
+        }
+        
+        .cactus {
+            position: absolute;
+            bottom: 0;
+            width: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 45"><path d="M5 45 L5 15 L0 15 L0 10 L5 10 L5 5 L10 5 L10 45 Z" fill="%23535353"/><path d="M15 45 L15 20 L20 20 L20 15 L15 15 L15 45 Z" fill="%23535353"/></svg>');
+            background-repeat: no-repeat;
+            z-index: 1;
         }
         
         #score {
             position: absolute;
             top: 10px;
             right: 10px;
-            font-size: 20px;
+            font-size: 14px;
+            color: #535353;
+            font-family: 'Arial', sans-serif;
         }
         
         #game-over {
@@ -62,60 +75,96 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 30px;
-            color: red;
+            text-align: center;
+            font-size: 24px;
+            color: #535353;
             display: none;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+        
+        #restart {
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #535353;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 16px;
         }
         
         #instructions {
             position: absolute;
             top: 10px;
             left: 10px;
-            font-size: 16px;
-            color: #555;
+            font-size: 12px;
+            color: #535353;
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <div id="dino"></div>
-        <div id="obstacle"></div>
         <div id="ground"></div>
+        <div id="dino"></div>
         <div id="score">0</div>
-        <div id="game-over">GAME OVER<br><span style="font-size: 16px;">Presiona ESPACIO para reiniciar</span></div>
-        <div id="instructions">Presiona ESPACIO para saltar</div>
+        <div id="game-over">
+            GAME OVER
+            <button id="restart">Reiniciar</button>
+        </div>
+        <div id="instructions">Toca la pantalla para saltar</div>
     </div>
 
     <script>
         const dino = document.getElementById('dino');
-        const obstacle = document.getElementById('obstacle');
         const gameContainer = document.getElementById('game-container');
         const scoreElement = document.getElementById('score');
         const gameOverElement = document.getElementById('game-over');
+        const restartButton = document.getElementById('restart');
         
         let isJumping = false;
         let isGameOver = false;
         let score = 0;
         let gameSpeed = 5;
         let obstacleInterval;
+        let gravity;
+        let jumpHeight = 0;
+        let jumpUpInterval;
+        let jumpDownInterval;
+        
+        // Tamaño del contenedor de juego
+        const containerWidth = gameContainer.offsetWidth;
+        const containerHeight = gameContainer.offsetHeight;
+        
+        // Posición inicial del dinosaurio
+        dino.style.bottom = '0';
+        dino.style.left = '20px';
         
         function jump() {
             if (isJumping || isGameOver) return;
             
             isJumping = true;
-            let jumpHeight = 0;
-            const jumpUp = setInterval(() => {
-                jumpHeight += 5;
+            jumpHeight = 0;
+            
+            // Limpiar intervalos anteriores si existen
+            clearInterval(jumpUpInterval);
+            clearInterval(jumpDownInterval);
+            
+            // Salto hacia arriba
+            jumpUpInterval = setInterval(() => {
+                jumpHeight += 4;
                 dino.style.bottom = jumpHeight + 'px';
                 
-                if (jumpHeight >= 120) {
-                    clearInterval(jumpUp);
-                    const jumpDown = setInterval(() => {
-                        jumpHeight -= 5;
+                if (jumpHeight >= 80) {
+                    clearInterval(jumpUpInterval);
+                    
+                    // Caída
+                    jumpDownInterval = setInterval(() => {
+                        jumpHeight -= 4;
                         dino.style.bottom = jumpHeight + 'px';
                         
                         if (jumpHeight <= 0) {
-                            clearInterval(jumpDown);
+                            clearInterval(jumpDownInterval);
                             isJumping = false;
                             dino.style.bottom = '0';
                         }
@@ -124,56 +173,94 @@
             }, 20);
         }
         
+        function createCactus() {
+            const cactus = document.createElement('div');
+            cactus.className = 'cactus';
+            
+            // Altura aleatoria del cactus (1, 2 o 3 partes)
+            const cactusHeight = Math.floor(Math.random() * 3) + 1;
+            cactus.style.height = (cactusHeight * 15) + 'px';
+            
+            // Posición inicial a la derecha
+            cactus.style.left = containerWidth + 'px';
+            
+            gameContainer.appendChild(cactus);
+            return cactus;
+        }
+        
+        function moveObstacles() {
+            const cacti = document.querySelectorAll('.cactus');
+            
+            cacti.forEach(cactus => {
+                const cactusLeft = parseInt(cactus.style.left);
+                const newPosition = cactusLeft - gameSpeed;
+                
+                if (newPosition < -20) {
+                    // Eliminar cactus cuando sale de la pantalla
+                    cactus.remove();
+                } else {
+                    cactus.style.left = newPosition + 'px';
+                }
+                
+                // Detectar colisión
+                if (!isGameOver) {
+                    const dinoRect = dino.getBoundingClientRect();
+                    const cactusRect = cactus.getBoundingClientRect();
+                    
+                    if (
+                        dinoRect.right > cactusRect.left &&
+                        dinoRect.left < cactusRect.right &&
+                        dinoRect.bottom > cactusRect.top
+                    ) {
+                        gameOver();
+                    }
+                }
+            });
+        }
+        
         function startGame() {
+            // Limpiar estado anterior
             isGameOver = false;
             score = 0;
             gameSpeed = 5;
-            obstacle.style.left = '800px';
             gameOverElement.style.display = 'none';
             scoreElement.textContent = '0';
             
-            clearInterval(obstacleInterval);
-            obstacleInterval = setInterval(moveObstacle, 20);
+            // Eliminar cactus anteriores
+            document.querySelectorAll('.cactus').forEach(c => c.remove());
             
-            // Actualizar puntuación
-            setInterval(() => {
-                if (!isGameOver) {
-                    score++;
-                    scoreElement.textContent = score;
-                    
-                    // Aumentar dificultad
-                    if (score % 100 === 0) {
-                        gameSpeed += 0.5;
-                    }
+            // Restablecer posición del dinosaurio
+            dino.style.bottom = '0';
+            isJumping = false;
+            clearInterval(jumpUpInterval);
+            clearInterval(jumpDownInterval);
+            
+            // Iniciar generación de cactus
+            clearInterval(obstacleInterval);
+            obstacleInterval = setInterval(() => {
+                if (!isGameOver && Math.random() > 0.7) {
+                    createCactus();
                 }
-            }, 100);
+            }, 1500);
+            
+            // Iniciar actualización del juego
+            requestAnimationFrame(updateGame);
         }
         
-        function moveObstacle() {
-            if (isGameOver) return;
-            
-            const obstacleLeft = parseInt(window.getComputedStyle(obstacle).getPropertyValue('left'));
-            const newPosition = obstacleLeft - gameSpeed;
-            
-            if (newPosition < -30) {
-                // Obstáculo salió de pantalla, reposicionar
-                obstacle.style.left = '800px';
-                // Altura aleatoria para cactus más altos
-                obstacle.style.height = Math.random() > 0.5 ? '50px' : '30px';
-            } else {
-                obstacle.style.left = newPosition + 'px';
-            }
-            
-            // Detectar colisión
-            const dinoRect = dino.getBoundingClientRect();
-            const obstacleRect = obstacle.getBoundingClientRect();
-            
-            if (
-                dinoRect.right > obstacleRect.left &&
-                dinoRect.left < obstacleRect.right &&
-                dinoRect.bottom > obstacleRect.top
-            ) {
-                gameOver();
+        function updateGame() {
+            if (!isGameOver) {
+                moveObstacles();
+                
+                // Actualizar puntuación
+                score++;
+                scoreElement.textContent = Math.floor(score / 5);
+                
+                // Aumentar dificultad
+                if (score % 500 === 0) {
+                    gameSpeed += 0.5;
+                }
+                
+                requestAnimationFrame(updateGame);
             }
         }
         
@@ -191,11 +278,21 @@
                 } else {
                     jump();
                 }
-                e.preventDefault(); // Evitar scroll con espacio
+                e.preventDefault();
             }
         });
         
-        // También permitir clic/touch para móviles
+        // Control táctil para móviles
+        gameContainer.addEventListener('touchstart', (e) => {
+            if (isGameOver) {
+                startGame();
+            } else {
+                jump();
+            }
+            e.preventDefault();
+        });
+        
+        // También permitir clic para mayor compatibilidad
         gameContainer.addEventListener('click', () => {
             if (isGameOver) {
                 startGame();
@@ -203,6 +300,9 @@
                 jump();
             }
         });
+        
+        // Botón de reinicio
+        restartButton.addEventListener('click', startGame);
         
         // Iniciar juego al cargar
         startGame();
