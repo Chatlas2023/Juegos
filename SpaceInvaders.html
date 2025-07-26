@@ -218,7 +218,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Space Invaders V2.8</h1>
+        <h1>Space Invaders V2.9</h1>
         <p>¡Destruye a los invasores alienígenas!</p>
         <div class="score-display">
             <div class="score-box">Puntos: <span id="score">0</span></div>
@@ -345,7 +345,7 @@
         function createAliens() {
             const alienRows = Math.min(level, 5);
             const alienCols = 8;
-            const alienWidth = 40;
+            const alienWidth = 38;
             const alienHeight = 26;
             const alienPadding = 2;
             const startY = 40;
@@ -376,8 +376,8 @@
             const aliveAliens = aliens.filter(alien => alien.alive);
             aliens = [];
             
-            const alienWidth = 30;
-            const alienHeight = 20;
+            const alienWidth = 38;
+            const alienHeight = 26;
             const alienPadding = 2;
             const startY = 40;
             
