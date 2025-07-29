@@ -444,13 +444,14 @@
                 draggedElement = e.target;
             }
             
-            e.target.classList.add('dragging');
             e.dataTransfer.setData('text/plain', draggedNumber);
             e.dataTransfer.effectAllowed = 'copy';
         }
         
         function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
+            if (e.target.classList.contains('number-option')) {
+                e.target.classList.remove('dragging');
+            }
             draggedNumber = null;
             draggedElement = null;
         }
@@ -462,9 +463,7 @@
         
         function handleDragEnter(e) {
             e.preventDefault();
-            if (!e.target.classList.contains('filled')) {
-                e.target.classList.add('highlight');
-            }
+            e.target.classList.add('highlight');
         }
         
         function handleDragLeave(e) {
@@ -478,12 +477,6 @@
             if (gameOver || !draggedNumber) return;
             
             if (e.target.closest('.guess-row') !== currentRow) return;
-            
-            if (e.target.classList.contains('filled')) return;
-            
-            e.target.className = 'guess-slot';
-            e.target.innerText = '';
-            e.target.dataset.number = '';
             
             const number = NUMBERS.find(n => n.id === draggedNumber);
             if (number) {
@@ -542,8 +535,6 @@
                 document.body.appendChild(draggingClone);
                 
                 updateClonePosition(touch);
-                
-                slot.classList.add('dragging');
             }
         }
 
@@ -638,8 +629,7 @@
             
             const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
             if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
-                if (!elementUnderTouch.classList.contains('filled') && 
-                    elementUnderTouch.closest('.guess-row') === currentRow) {
+                if (elementUnderTouch.closest('.guess-row') === currentRow) {
                     elementUnderTouch.classList.add('highlight');
                 }
             }
@@ -647,12 +637,6 @@
 
         function placeNumberInSlot(slot) {
             if (gameOver || !draggedNumber || slot.closest('.guess-row') !== currentRow) return;
-            
-            if (slot.classList.contains('filled')) return;
-            
-            slot.className = 'guess-slot';
-            slot.innerText = '';
-            slot.dataset.number = '';
             
             const number = NUMBERS.find(n => n.id === draggedNumber);
             if (number) {
@@ -677,7 +661,7 @@
                 slot.classList.remove('highlight');
             });
             
-            document.querySelectorAll('.dragging').forEach(el => {
+            document.querySelectorAll('.number-option.dragging').forEach(el => {
                 el.classList.remove('dragging');
             });
             
