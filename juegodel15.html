@@ -203,6 +203,7 @@
             }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 </head>
 <body>
     <h1>Juego del 15</h1>
@@ -247,6 +248,31 @@
         const highScoresModal = document.getElementById('high-scores-modal');
         const highScoresList = document.getElementById('high-scores-list');
         const closeHighScores = document.getElementById('close-high-scores');
+        
+        // Función para lanzar confetti
+        function launchConfetti() {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff']
+            });
+            
+            // Lanzar confetti adicional en diferentes ángulos
+            setTimeout(() => confetti({
+                particleCount: 100,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 }
+            }), 250);
+            
+            setTimeout(() => confetti({
+                particleCount: 100,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 }
+            }), 400);
+        }
         
         // Inicializar el juego
         function initialize() {
@@ -372,6 +398,7 @@
             isGameWon = true;
             message.textContent = '¡Felicidades! Has ganado.';
             updateHighScores(moves);
+            launchConfetti();
         }
         
         // Actualizar las mejores puntuaciones
