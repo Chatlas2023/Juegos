@@ -281,9 +281,9 @@
                     cell.classList.add('correct');
                 }
                 
-                // Solo las celdas adyacentes al espacio vacío son clickeables
-                if (num !== 0 && isAdjacent(index, emptyPos)) {
-                    cell.addEventListener('click', () => moveTile(index));
+                // Solo las celdas en la misma fila o columna que el espacio vacío son clickeables
+                if (num !== 0 && (isInSameRow(index, emptyPos) || isInSameCol(index, emptyPos))) {
+                    cell.addEventListener('click', () => moveTiles(index));
                 } else if (num !== 0) {
                     cell.style.cursor = 'not-allowed';
                 }
@@ -295,27 +295,68 @@
             checkWin();
         }
         
-        // Verificar si una celda es adyacente al espacio vacío (CORREGIDO)
-        function isAdjacent(pos1, pos2) {
-            const row1 = Math.floor(pos1 / 4);
-            const col1 = pos1 % 4;
-            const row2 = Math.floor(pos2 / 4);
-            const col2 = pos2 % 4;
-            
-            // Verificar si son adyacentes horizontal o verticalmente
-            return (Math.abs(row1 - row2) === 1 && col1 === col2) || 
-                   (Math.abs(col1 - col2) === 1 && row1 === row2);
+        // Verificar si dos posiciones están en la misma fila
+        function isInSameRow(pos1, pos2) {
+            return Math.floor(pos1 / 4) === Math.floor(pos2 / 4);
         }
         
-        // Mover una ficha al espacio vacío (CORREGIDO)
-        function moveTile(pos) {
-            if (isGameWon || !isAdjacent(pos, emptyPos)) return;
+        // Verificar si dos posiciones están en la misma columna
+        function isInSameCol(pos1, pos2) {
+            return pos1 % 4 === pos2 % 4;
+        }
+        
+        // Mover fichas en bloque hacia el espacio vacío
+        function moveTiles(pos) {
+            if (isGameWon) return;
             
-            // Intercambiar posiciones
-            [board[pos], board[emptyPos]] = [board[emptyPos], board[pos]];
-            emptyPos = pos;
+            const emptyRow = Math.floor(emptyPos / 4);
+            const emptyCol = emptyPos % 4;
+            const posRow = Math.floor(pos / 4);
+            const posCol = pos % 4;
+            
+            if (isInSameRow(pos, emptyPos)) {
+                // Movimiento horizontal
+                const rowStart = emptyRow * 4;
+                const rowEnd = rowStart + 4;
+                const row = board.slice(rowStart, rowEnd);
+                
+                if (posCol < emptyCol) {
+                    // Mover hacia la derecha (desde la izquierda del vacío)
+                    for (let i = emptyCol; i > posCol; i--) {
+                        [board[rowStart + i], board[rowStart + i - 1]] = [board[rowStart + i - 1], board[rowStart + i]];
+                    }
+                } else {
+                    // Mover hacia la izquierda (desde la derecha del vacío)
+                    for (let i = emptyCol; i < posCol; i++) {
+                        [board[rowStart + i], board[rowStart + i + 1]] = [board[rowStart + i + 1], board[rowStart + i]];
+                    }
+                }
+                
+                emptyPos = rowStart + posCol;
+            } else if (isInSameCol(pos, emptyPos)) {
+                // Movimiento vertical
+                if (posRow < emptyRow) {
+                    // Mover hacia abajo (desde arriba del vacío)
+                    for (let i = emptyRow; i > posRow; i--) {
+                        const currentPos = i * 4 + emptyCol;
+                        const newPos = (i - 1) * 4 + emptyCol;
+                        [board[currentPos], board[newPos]] = [board[newPos], board[currentPos]];
+                    }
+                } else {
+                    // Mover hacia arriba (desde abajo del vacío)
+                    for (let i = emptyRow; i < posRow; i++) {
+                        const currentPos = i * 4 + emptyCol;
+                        const newPos = (i + 1) * 4 + emptyCol;
+                        [board[currentPos], board[newPos]] = [board[newPos], board[currentPos]];
+                    }
+                }
+                
+                emptyPos = posRow * 4 + emptyCol;
+            } else {
+                return; // No está en la misma fila ni columna
+            }
+            
             moves++;
-            
             renderBoard();
         }
         
@@ -367,7 +408,7 @@
             highScoresModal.style.display = 'none';
         }
         
-        // Barajar el tablero (CORREGIDO)
+        // Barajar el tablero
         function shuffleBoard() {
             isGameWon = false;
             message.textContent = '';
@@ -375,31 +416,67 @@
             createBoard();
             
             // Realizar movimientos aleatorios válidos para mezclar
-            const shuffleMoves = 200;
-            let lastMoved = -1;
+            const shuffleMoves = 100;
             
             for (let i = 0; i < shuffleMoves; i++) {
-                const adjacentTiles = [];
+                const emptyRow = Math.floor(emptyPos / 4);
+                const emptyCol = emptyPos % 4;
                 
-                // Encontrar todas las fichas adyacentes al espacio vacío
-                for (let j = 0; j < 16; j++) {
-                    if (board[j] !== 0 && isAdjacent(j, emptyPos)) {
-                        adjacentTiles.push(j);
+                // Elegir aleatoriamente una dirección para mover
+                const possibleMoves = [];
+                
+                // Agregar posibles movimientos horizontales
+                for (let col = 0; col < 4; col++) {
+                    if (col !== emptyCol) {
+                        possibleMoves.push({type: 'row', pos: emptyRow * 4 + col});
                     }
                 }
                 
-                // Filtrar la ficha que se movió en el último movimiento
-                const validMoves = adjacentTiles.filter(pos => pos !== lastMoved);
-                if (validMoves.length === 0) continue;
+                // Agregar posibles movimientos verticales
+                for (let row = 0; row < 4; row++) {
+                    if (row !== emptyRow) {
+                        possibleMoves.push({type: 'col', pos: row * 4 + emptyCol});
+                    }
+                }
                 
-                // Seleccionar una ficha aleatoria para mover
-                const randomIndex = Math.floor(Math.random() * validMoves.length);
-                const movePos = validMoves[randomIndex];
+                // Seleccionar un movimiento aleatorio
+                const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
                 
-                // Mover la ficha
-                [board[movePos], board[emptyPos]] = [board[emptyPos], board[movePos]];
-                lastMoved = emptyPos;
-                emptyPos = movePos;
+                // Realizar el movimiento
+                if (randomMove.type === 'row') {
+                    const posCol = randomMove.pos % 4;
+                    const rowStart = emptyRow * 4;
+                    
+                    if (posCol < emptyCol) {
+                        for (let i = emptyCol; i > posCol; i--) {
+                            [board[rowStart + i], board[rowStart + i - 1]] = [board[rowStart + i - 1], board[rowStart + i]];
+                        }
+                    } else {
+                        for (let i = emptyCol; i < posCol; i++) {
+                            [board[rowStart + i], board[rowStart + i + 1]] = [board[rowStart + i + 1], board[rowStart + i]];
+                        }
+                    }
+                    
+                    emptyPos = rowStart + posCol;
+                } else {
+                    const posRow = Math.floor(randomMove.pos / 4);
+                    
+                    if (posRow < emptyRow) {
+                        for (let i = emptyRow; i > posRow; i--) {
+                            const currentPos = i * 4 + emptyCol;
+                            const newPos = (i - 1) * 4 + emptyCol;
+                            [board[currentPos], board[newPos]] = [board[newPos], board[currentPos]];
+                        }
+                    } else {
+                        for (let i = emptyRow; i < posRow; i++) {
+                            const currentPos = i * 4 + emptyCol;
+                            const newPos = (i + 1) * 4 + emptyCol;
+                            [board[currentPos], board[newPos]] = [board[newPos], board[currentPos]];
+                        }
+                    }
+                    
+                    emptyPos = posRow * 4 + emptyCol;
+                }
             }
             
             renderBoard();
