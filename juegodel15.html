@@ -237,8 +237,6 @@
         let moves = 0;
         let isGameWon = false;
         let highScores = JSON.parse(localStorage.getItem('highScores')) || [];
-        let selectedRow = -1;
-        let selectedCol = -1;
         
         // Elementos del DOM
         const grid = document.getElementById('grid');
@@ -283,17 +281,12 @@
                     cell.classList.add('correct');
                 }
                 
-                // Resaltar fila/columna seleccionada
-                const row = Math.floor(index / 4);
-                const col = index % 4;
-                if (row === selectedRow || col === selectedCol) {
-                    cell.style.backgroundColor = '#4a4a4a';
+                // Solo las celdas en la misma fila o columna que el espacio vacío son clickeables
+                if (num !== 0 && (isInSameRow(index, emptyPos) || isInSameCol(index, emptyPos))) {
+                    cell.addEventListener('click', () => moveTiles(index));
+                } else if (num !== 0) {
+                    cell.style.cursor = 'not-allowed';
                 }
-                
-                // Eventos para selección de fila/columna
-                cell.addEventListener('click', () => handleCellClick(index));
-                cell.addEventListener('mouseenter', () => highlightRowCol(index));
-                cell.addEventListener('mouseleave', () => clearHighlight());
                 
                 grid.appendChild(cell);
             });
@@ -302,128 +295,69 @@
             checkWin();
         }
         
-        // Manejar clic en celda
-        function handleCellClick(index) {
+        // Verificar si dos posiciones están en la misma fila
+        function isInSameRow(pos1, pos2) {
+            return Math.floor(pos1 / 4) === Math.floor(pos2 / 4);
+        }
+        
+        // Verificar si dos posiciones están en la misma columna
+        function isInSameCol(pos1, pos2) {
+            return pos1 % 4 === pos2 % 4;
+        }
+        
+        // Mover fichas en bloque hacia el espacio vacío
+        function moveTiles(pos) {
             if (isGameWon) return;
             
-            const row = Math.floor(index / 4);
-            const col = index % 4;
-            
-            // Si ya hay una fila o columna seleccionada, intentar mover
-            if (selectedRow !== -1 || selectedCol !== -1) {
-                if (selectedRow !== -1) {
-                    moveRow(selectedRow);
-                } else {
-                    moveColumn(selectedCol);
-                }
-                selectedRow = -1;
-                selectedCol = -1;
-                renderBoard();
-                return;
-            }
-            
-            // Verificar si la celda está en la misma fila o columna que el espacio vacío
             const emptyRow = Math.floor(emptyPos / 4);
             const emptyCol = emptyPos % 4;
+            const posRow = Math.floor(pos / 4);
+            const posCol = pos % 4;
             
-            if (row === emptyRow) {
-                selectedCol = col;
-            } else if (col === emptyCol) {
-                selectedRow = row;
-            }
-            
-            renderBoard();
-        }
-        
-        // Resaltar fila/columna al pasar el mouse
-        function highlightRowCol(index) {
-            if (isGameWon || selectedRow !== -1 || selectedCol !== -1) return;
-            
-            const row = Math.floor(index / 4);
-            const col = index % 4;
-            const emptyRow = Math.floor(emptyPos / 4);
-            const emptyCol = emptyPos % 4;
-            
-            if (row === emptyRow || col === emptyCol) {
-                const cells = document.querySelectorAll('.cell');
-                cells.forEach((cell, i) => {
-                    const cellRow = Math.floor(i / 4);
-                    const cellCol = i % 4;
-                    if ((row === emptyRow && cellRow === row) || (col === emptyCol && cellCol === col)) {
-                        cell.style.backgroundColor = '#4a4a4a';
+            if (isInSameRow(pos, emptyPos)) {
+                // Movimiento horizontal
+                const rowStart = emptyRow * 4;
+                const rowEnd = rowStart + 4;
+                const row = board.slice(rowStart, rowEnd);
+                
+                if (posCol < emptyCol) {
+                    // Mover hacia la derecha (desde la izquierda del vacío)
+                    for (let i = emptyCol; i > posCol; i--) {
+                        [board[rowStart + i], board[rowStart + i - 1]] = [board[rowStart + i - 1], board[rowStart + i]];
                     }
-                });
+                } else {
+                    // Mover hacia la izquierda (desde la derecha del vacío)
+                    for (let i = emptyCol; i < posCol; i++) {
+                        [board[rowStart + i], board[rowStart + i + 1]] = [board[rowStart + i + 1], board[rowStart + i]];
+                    }
+                }
+                
+                emptyPos = rowStart + posCol;
+            } else if (isInSameCol(pos, emptyPos)) {
+                // Movimiento vertical
+                if (posRow < emptyRow) {
+                    // Mover hacia abajo (desde arriba del vacío)
+                    for (let i = emptyRow; i > posRow; i--) {
+                        const currentPos = i * 4 + emptyCol;
+                        const newPos = (i - 1) * 4 + emptyCol;
+                        [board[currentPos], board[newPos]] = [board[newPos], board[currentPos]];
+                    }
+                } else {
+                    // Mover hacia arriba (desde abajo del vacío)
+                    for (let i = emptyRow; i < posRow; i++) {
+                        const currentPos = i * 4 + emptyCol;
+                        const newPos = (i + 1) * 4 + emptyCol;
+                        [board[currentPos], board[newPos]] = [board[newPos], board[currentPos]];
+                    }
+                }
+                
+                emptyPos = posRow * 4 + emptyCol;
+            } else {
+                return; // No está en la misma fila ni columna
             }
-        }
-        
-        // Limpiar resaltado
-        function clearHighlight() {
-            if (selectedRow !== -1 || selectedCol !== -1) return;
             
-            const cells = document.querySelectorAll('.cell');
-            cells.forEach(cell => {
-                if (!cell.classList.contains('correct') && !cell.classList.contains('empty')) {
-                    cell.style.backgroundColor = '#333333';
-                }
-            });
-        }
-        
-        // Mover una fila completa
-        function moveRow(row) {
-            const emptyCol = emptyPos % 4;
-            const emptyRow = Math.floor(emptyPos / 4);
-            
-            if (row !== emptyRow) return;
-            
-            const start = row * 4;
-            const end = start + 4;
-            const rowCells = board.slice(start, end);
-            
-            // Determinar dirección del movimiento
-            if (selectedCol < emptyCol) {
-                // Mover hacia la derecha
-                for (let i = emptyCol; i > selectedCol; i--) {
-                    [board[start + i], board[start + i - 1]] = [board[start + i - 1], board[start + i]];
-                }
-                emptyPos = start + selectedCol;
-                moves++;
-            } else if (selectedCol > emptyCol) {
-                // Mover hacia la izquierda
-                for (let i = emptyCol; i < selectedCol; i++) {
-                    [board[start + i], board[start + i + 1]] = [board[start + i + 1], board[start + i]];
-                }
-                emptyPos = start + selectedCol;
-                moves++;
-            }
-        }
-        
-        // Mover una columna completa
-        function moveColumn(col) {
-            const emptyRow = Math.floor(emptyPos / 4);
-            const emptyCol = emptyPos % 4;
-            
-            if (col !== emptyCol) return;
-            
-            // Determinar dirección del movimiento
-            if (selectedRow < emptyRow) {
-                // Mover hacia abajo
-                for (let i = emptyRow; i > selectedRow; i--) {
-                    const currentPos = i * 4 + col;
-                    const newPos = (i - 1) * 4 + col;
-                    [board[currentPos], board[newPos]] = [board[newPos], board[currentPos]];
-                }
-                emptyPos = selectedRow * 4 + col;
-                moves++;
-            } else if (selectedRow > emptyRow) {
-                // Mover hacia arriba
-                for (let i = emptyRow; i < selectedRow; i++) {
-                    const currentPos = i * 4 + col;
-                    const newPos = (i + 1) * 4 + col;
-                    [board[currentPos], board[newPos]] = [board[newPos], board[currentPos]];
-                }
-                emptyPos = selectedRow * 4 + col;
-                moves++;
-            }
+            moves++;
+            renderBoard();
         }
         
         // Verificar si el jugador ha ganado
@@ -479,38 +413,72 @@
             isGameWon = false;
             message.textContent = '';
             moves = 0;
-            selectedRow = -1;
-            selectedCol = -1;
             createBoard();
             
             // Realizar movimientos aleatorios válidos para mezclar
-            const shuffleMoves = 200;
-            let lastMoved = -1;
+            const shuffleMoves = 100;
             
             for (let i = 0; i < shuffleMoves; i++) {
                 const emptyRow = Math.floor(emptyPos / 4);
                 const emptyCol = emptyPos % 4;
                 
-                // Decidir aleatoriamente si mover fila o columna
-                if (Math.random() > 0.5) {
-                    // Mover fila
-                    const possibleCols = [0, 1, 2, 3].filter(col => col !== emptyCol);
-                    const randomCol = possibleCols[Math.floor(Math.random() * possibleCols.length)];
-                    selectedRow = emptyRow;
-                    selectedCol = randomCol;
-                    moveRow(emptyRow);
+                // Elegir aleatoriamente una dirección para mover
+                const possibleMoves = [];
+                
+                // Agregar posibles movimientos horizontales
+                for (let col = 0; col < 4; col++) {
+                    if (col !== emptyCol) {
+                        possibleMoves.push({type: 'row', pos: emptyRow * 4 + col});
+                    }
+                }
+                
+                // Agregar posibles movimientos verticales
+                for (let row = 0; row < 4; row++) {
+                    if (row !== emptyRow) {
+                        possibleMoves.push({type: 'col', pos: row * 4 + emptyCol});
+                    }
+                }
+                
+                // Seleccionar un movimiento aleatorio
+                const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                
+                // Realizar el movimiento
+                if (randomMove.type === 'row') {
+                    const posCol = randomMove.pos % 4;
+                    const rowStart = emptyRow * 4;
+                    
+                    if (posCol < emptyCol) {
+                        for (let i = emptyCol; i > posCol; i--) {
+                            [board[rowStart + i], board[rowStart + i - 1]] = [board[rowStart + i - 1], board[rowStart + i]];
+                        }
+                    } else {
+                        for (let i = emptyCol; i < posCol; i++) {
+                            [board[rowStart + i], board[rowStart + i + 1]] = [board[rowStart + i + 1], board[rowStart + i]];
+                        }
+                    }
+                    
+                    emptyPos = rowStart + posCol;
                 } else {
-                    // Mover columna
-                    const possibleRows = [0, 1, 2, 3].filter(row => row !== emptyRow);
-                    const randomRow = possibleRows[Math.floor(Math.random() * possibleRows.length)];
-                    selectedRow = randomRow;
-                    selectedCol = emptyCol;
-                    moveColumn(emptyCol);
+                    const posRow = Math.floor(randomMove.pos / 4);
+                    
+                    if (posRow < emptyRow) {
+                        for (let i = emptyRow; i > posRow; i--) {
+                            const currentPos = i * 4 + emptyCol;
+                            const newPos = (i - 1) * 4 + emptyCol;
+                            [board[currentPos], board[newPos]] = [board[newPos], board[currentPos]];
+                        }
+                    } else {
+                        for (let i = emptyRow; i < posRow; i++) {
+                            const currentPos = i * 4 + emptyCol;
+                            const newPos = (i + 1) * 4 + emptyCol;
+                            [board[currentPos], board[newPos]] = [board[newPos], board[currentPos]];
+                        }
+                    }
+                    
+                    emptyPos = posRow * 4 + emptyCol;
                 }
             }
             
-            selectedRow = -1;
-            selectedCol = -1;
             renderBoard();
         }
         
