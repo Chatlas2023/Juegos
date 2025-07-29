@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Juego de Secuencias</title>
+     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -722,7 +723,7 @@ function cleanupAfterTouch() {
                 return;
             }
             
-            const attempt = Array.from(slots).map(slot => slot.dataset.color);
+            const attempt = Array.from(slots).map(slot => slot.dataset.number);
             
             const feedback = calculateFeedback(attempt, secretCode);
             
@@ -755,6 +756,31 @@ function cleanupAfterTouch() {
                 winMessageEl.classList.remove('hidden');
                 checkBtn.classList.add('hidden');
                 newGameBtn.classList.remove('hidden');
+                
+                // Lanzar confeti al ganar
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+                
+                // Lanzar más confeti después de un retraso
+                setTimeout(() => {
+                    confetti({
+                        particleCount: 100,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 }
+                    });
+                    
+                    confetti({
+                        particleCount: 100,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 }
+                    });
+                }, 250);
+                
                 return;
             }
             
