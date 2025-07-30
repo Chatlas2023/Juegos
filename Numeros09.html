@@ -1,1 +1,829 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Juego de Secuencias Numéricas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c3e50;
+            color: white;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overscroll-behavior-y: contain;
+        }
+
+        .game-wrapper {
+            position: relative;
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 30px;
+        }
+
+        .game-container {
+            width: 100%;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: absolute;
+            right: 20px;
+            top: 150px;
+            width: 100px;
+        }
+
+        .number-palette {
+            display: grid;
+            flex-direction: column;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 5px;
+            background-color: rgba(52, 73, 94, 0.7);
+            border-radius: 10px;
+            padding: 10px;
+            width: 100px;
+        }
+
+        .number-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: grab;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6);
+            transition: transform 0.2s;
+            user-select: none;
+            position: relative;
+            z-index: 1;
+            background-color: #34495e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .number-option:active {
+            cursor: grabbing;
+        }
+
+        .number-option.dragging {
+            opacity: 0.5;
+            transform: scale(1.1);
+        }
+
+        .number-option-clone {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            opacity: 0.8;
+            pointer-events: none;
+            z-index: 1000;
+            background-color: #34495e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .game-board {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .guess-row {
+            display: flex;
+            gap: 5px;
+            height: 50px;
+        }
+
+        .guess-slot {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background-color: #34495e;
+            border: 2px dashed #7f8c8d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .guess-slot.filled {
+            border: none;
+            cursor: grab;
+        }
+
+        .guess-slot.filled:active {
+            cursor: grabbing;
+        }
+
+        .guess-slot.highlight {
+            border-color: white;
+            background-color: #3d566e;
+        }
+
+        .feedback {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-left: 10px;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+        }
+
+        .feedback-row {
+            display: flex;
+            gap: 2px;
+        }
+
+        .feedback-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .feedback-dot.exact {
+            background-color: #2ecc71;
+        }
+
+        .feedback-dot.partial {
+            background-color: #f1c40f;
+        }
+
+        .feedback-dot.wrong {
+            position: relative;
+        }
+
+        .feedback-dot.wrong::before,
+        .feedback-dot.wrong::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 1px;
+            background-color: #e74c3c;
+            top: 50%;
+            left: 0;
+        }
+
+        .feedback-dot.wrong::before {
+            transform: rotate(45deg);
+        }
+
+        .feedback-dot.wrong::after {
+            transform: rotate(-45deg);
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .controls button {
+            background-color: #9b59b6;
+            color: white;
+            border: none;
+            padding: 12px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: background 0.3s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .controls button:hover {
+            background-color: #8e44ad;
+        }
+
+        .message {
+            margin: 15px 0;
+            text-align: center;
+            min-height: 24px;
+            font-weight: bold;
+            color: #f1c40f;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .secret-code {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .secret-slot {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background-color: #34495e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .win-message {
+            color: #2ecc71;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <div class="game-container">
+            <div class="message" id="message">Arrastra números a los espacios vacíos o tócalos para llenar en orden</div>
+            <div id="win-message" class="win-message hidden">¡Ganaste!</div>
+            <div id="secret-code-container" class="hidden">
+                <div class="secret-code">
+                    <span>El código era:</span>
+                </div>
+            </div>
+            
+            <div class="game-board" id="game-board"></div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="controls">
+                <button id="check-btn">Ir</button>
+                <button id="new-game-btn" class="hidden">Nuevo Juego</button>
+            </div>
+            <div class="number-palette" id="number-palette"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración del juego
+        const NUMBERS = [
+         {id: '0', value: '0'},
+        {id: '1', value: '1'},
+        {id: '2', value: '2'},
+        {id: '3', value: '3'},
+        {id: '4', value: '4'},
+        {id: '5', value: '5'},
+        {id: '6', value: '6'},
+        {id: '7', value: '7'},
+        {id: '8', value: '8'},
+        {id: '9', value: '9'}
+        ];
+        
+        const CODE_LENGTH = 4;
+        const MAX_ATTEMPTS = 10;
+        
+        // Elementos del DOM
+        const numberPalette = document.getElementById('number-palette');
+        const gameBoard = document.getElementById('game-board');
+        const messageEl = document.getElementById('message');
+        const winMessageEl = document.getElementById('win-message');
+        const secretCodeContainer = document.getElementById('secret-code-container');
+        const checkBtn = document.getElementById('check-btn');
+        const newGameBtn = document.getElementById('new-game-btn');
+        
+        // Variables del juego
+        let secretCode = [];
+        let currentAttempt = 0;
+        let currentRow = null;
+        let gameOver = false;
+        let draggedNumber = null;
+        let draggedElement = null;
+        let draggingClone = null;
+        let activeTouch = null;
+        let isDragging = false;
+
+        // Inicializar el juego
+        function initGame() {
+            // Generar código secreto
+            secretCode = [];
+            for (let i = 0; i < CODE_LENGTH; i++) {
+                const randomIndex = Math.floor(Math.random() * NUMBERS.length);
+                secretCode.push(NUMBERS[randomIndex].id);
+            }
+            
+            // Limpiar tablero y mensajes
+            gameBoard.innerHTML = '';
+            currentAttempt = 0;
+            gameOver = false;
+            messageEl.textContent = 'Arrastra números a los espacios vacíos o tócalos para llenar en orden';
+            winMessageEl.classList.add('hidden');
+            secretCodeContainer.classList.add('hidden');
+            checkBtn.classList.remove('hidden');
+            newGameBtn.classList.add('hidden');
+            
+            // Crear filas de intentos
+            for (let i = 0; i < MAX_ATTEMPTS; i++) {
+                const row = document.createElement('div');
+                row.className = 'guess-row';
+                row.dataset.attempt = i;
+                
+                // Crear slots para números
+                for (let j = 0; j < CODE_LENGTH; j++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'guess-slot';
+                    slot.dataset.position = j;
+                    
+                    // Eventos para arrastrar y soltar (para PC)
+                    slot.addEventListener('dragover', handleDragOver);
+                    slot.addEventListener('dragenter', handleDragEnter);
+                    slot.addEventListener('dragleave', handleDragLeave);
+                    slot.addEventListener('drop', handleDrop);
+                    
+                    // Eventos táctiles (para móvil)
+                    slot.addEventListener('touchstart', handleTouchStartSlot);
+                    slot.addEventListener('touchmove', handleTouchMoveSlot);
+                    slot.addEventListener('touchend', handleTouchEndSlot);
+                    slot.addEventListener('touchcancel', handleTouchCancel);
+
+                    row.appendChild(slot);
+                }
+                
+                // Crear área de feedback
+                const feedback = document.createElement('div');
+                feedback.className = 'feedback';
+                
+                const feedbackRow1 = document.createElement('div');
+                feedbackRow1.className = 'feedback-row';
+                feedback.appendChild(feedbackRow1);
+                
+                const feedbackRow2 = document.createElement('div');
+                feedbackRow2.className = 'feedback-row';
+                feedback.appendChild(feedbackRow2);
+                
+                row.appendChild(feedback);
+                
+                gameBoard.appendChild(row);
+                
+                if (i > 0) {
+                    row.style.opacity = '0.5';
+                }
+            }
+            
+            currentRow = gameBoard.children[0];
+            
+            // Crear paleta de números
+            numberPalette.innerHTML = '';
+            NUMBERS.forEach(number => {
+                const numberEl = document.createElement('div');
+                numberEl.className = 'number-option';
+                numberEl.id = `option-${number.id}`;
+                numberEl.innerText = number.value;
+                numberEl.dataset.number = number.id;
+                numberEl.draggable = true;
+                
+                // Eventos de arrastre (para PC)
+                numberEl.addEventListener('dragstart', handleDragStart);
+                numberEl.addEventListener('dragend', handleDragEnd);
+                
+                // Eventos táctiles (para móvil)
+                numberEl.addEventListener('touchstart', handleTouchStartNumber);
+                numberEl.addEventListener('touchmove', handleTouchMoveNumber);
+                numberEl.addEventListener('touchend', handleTouchEndNumber);
+                numberEl.addEventListener('touchcancel', handleTouchCancel);
+
+                // Evento de clic para llenar el próximo slot vacío
+                numberEl.addEventListener('click', handleNumberClick);
+
+                numberPalette.appendChild(numberEl);
+            });
+        }
+        
+        // Mostrar el código secreto
+        function showSecretCode() {
+            const secretCodeElement = secretCodeContainer.querySelector('.secret-code');
+            while (secretCodeElement.children.length > 1) {
+                secretCodeElement.removeChild(secretCodeElement.lastChild);
+            }
+            
+            secretCode.forEach(numberId => {
+                const number = NUMBERS.find(n => n.id === numberId);
+                const slot = document.createElement('div');
+                slot.className = 'secret-slot';
+                slot.innerText = number.value;
+                secretCodeElement.appendChild(slot);
+            });
+            
+            secretCodeContainer.classList.remove('hidden');
+        }
+        
+        // --- Manejo de eventos para PC ---
+
+        function handleDragStart(e) {
+            if (e.target.classList.contains('number-option')) {
+                draggedNumber = e.target.dataset.number;
+                draggedElement = e.target;
+            } else if (e.target.classList.contains('filled')) {
+                draggedNumber = e.target.dataset.number;
+                draggedElement = e.target;
+            }
+            
+            e.dataTransfer.setData('text/plain', draggedNumber);
+            e.dataTransfer.effectAllowed = 'copy';
+        }
+        
+        function handleDragEnd(e) {
+            if (e.target.classList.contains('number-option')) {
+                e.target.classList.remove('dragging');
+            }
+            draggedNumber = null;
+            draggedElement = null;
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+        }
+        
+        function handleDragEnter(e) {
+            e.preventDefault();
+            e.target.classList.add('highlight');
+        }
+        
+        function handleDragLeave(e) {
+            e.target.classList.remove('highlight');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            e.target.classList.remove('highlight');
+            
+            if (gameOver || !draggedNumber) return;
+            
+            if (e.target.closest('.guess-row') !== currentRow) return;
+            
+            const number = NUMBERS.find(n => n.id === draggedNumber);
+            if (number) {
+                e.target.innerText = number.value;
+                e.target.classList.add('filled');
+                e.target.dataset.number = draggedNumber;
+                e.target.draggable = true;
+                
+                e.target.addEventListener('dragstart', handleDragStart);
+                e.target.addEventListener('dragend', handleDragEnd);
+            }
+        }
+
+        // --- Manejo de eventos táctiles ---
+
+        function handleTouchStartNumber(e) {
+            if (gameOver) return;
+            
+            e.preventDefault(); 
+            
+            isDragging = false;
+            const touch = e.touches[0];
+            activeTouch = touch.identifier;
+            
+            draggedElement = e.target;
+            draggedNumber = draggedElement.dataset.number;
+            
+            draggingClone = draggedElement.cloneNode(true);
+            draggingClone.classList.add('number-option-clone');
+            draggingClone.innerText = draggedElement.innerText;
+            document.body.appendChild(draggingClone);
+            
+            updateClonePosition(touch);
+            
+            draggedElement.classList.add('dragging');
+        }
+
+        function handleTouchStartSlot(e) {
+            if (gameOver) return;
+            
+            const slot = e.target;
+            
+            if (slot.classList.contains('filled')) {
+                e.preventDefault(); 
+                
+                isDragging = false;
+                const touch = e.touches[0];
+                activeTouch = touch.identifier;
+                
+                draggedElement = slot;
+                draggedNumber = slot.dataset.number;
+                
+                draggingClone = document.createElement('div');
+                draggingClone.className = 'number-option-clone';
+                draggingClone.innerText = slot.innerText;
+                document.body.appendChild(draggingClone);
+                
+                updateClonePosition(touch);
+            }
+        }
+
+        function handleTouchMoveNumber(e) {
+            if (!draggingClone) return;
+            
+            e.preventDefault(); 
+            
+            isDragging = true;
+            
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === activeTouch) {
+                    updateClonePosition(touch);
+                    highlightSlotUnderTouch(touch);
+                    break;
+                }
+            }
+        }
+
+        function handleTouchMoveSlot(e) {
+            if (!draggingClone) return;
+            
+            e.preventDefault(); 
+            
+            isDragging = true;
+            
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === activeTouch) {
+                    updateClonePosition(touch);
+                    highlightSlotUnderTouch(touch);
+                    break;
+                }
+            }
+        }
+
+        function handleTouchEndNumber(e) {
+            if (!draggingClone) return;
+            
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === activeTouch) {
+                    if (isDragging) {
+                        const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+                        if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
+                            placeNumberInSlot(elementUnderTouch);
+                        }
+                    } else {
+                        placeNumberInNextEmptySlot(draggedNumber);
+                    }
+                    
+                    cleanupAfterTouch();
+                    break;
+                }
+            }
+        }
+
+        function handleTouchEndSlot(e) {
+            if (!draggingClone) return;
+            
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                if (touch.identifier === activeTouch) {
+                    if (isDragging) {
+                        const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+                        if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
+                            placeNumberInSlot(elementUnderTouch);
+                        }
+                    }
+                    
+                    cleanupAfterTouch();
+                    break;
+                }
+            }
+        }
+
+        function handleTouchCancel(e) {
+            cleanupAfterTouch();
+        }
+
+        function updateClonePosition(touch) {
+            if (!draggingClone) return;
+            draggingClone.style.left = `${touch.pageX - draggingClone.offsetWidth / 2}px`;
+            draggingClone.style.top = `${touch.pageY - draggingClone.offsetHeight / 2}px`;
+        }
+
+        function highlightSlotUnderTouch(touch) {
+            document.querySelectorAll('.guess-slot').forEach(slot => {
+                slot.classList.remove('highlight');
+            });
+            
+            const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (elementUnderTouch && elementUnderTouch.classList.contains('guess-slot')) {
+                if (elementUnderTouch.closest('.guess-row') === currentRow) {
+                    elementUnderTouch.classList.add('highlight');
+                }
+            }
+        }
+
+        function placeNumberInSlot(slot) {
+            if (gameOver || !draggedNumber || slot.closest('.guess-row') !== currentRow) return;
+            
+            const number = NUMBERS.find(n => n.id === draggedNumber);
+            if (number) {
+                slot.innerText = number.value;
+                slot.classList.add('filled');
+                slot.dataset.number = draggedNumber;
+                
+                slot.addEventListener('touchstart', handleTouchStartSlot);
+                slot.addEventListener('touchmove', handleTouchMoveSlot);
+                slot.addEventListener('touchend', handleTouchEndSlot);
+                slot.addEventListener('touchcancel', handleTouchCancel);
+            }
+        }
+
+        function cleanupAfterTouch() {
+            if (draggingClone) {
+                draggingClone.remove();
+                draggingClone = null;
+            }
+            
+            document.querySelectorAll('.guess-slot').forEach(slot => {
+                slot.classList.remove('highlight');
+            });
+            
+            document.querySelectorAll('.number-option.dragging').forEach(el => {
+                el.classList.remove('dragging');
+            });
+            
+            draggedNumber = null;
+            draggedElement = null;
+            activeTouch = null;
+            isDragging = false;
+        }
+
+        function handleNumberClick(e) {
+            if (gameOver) return;
+            
+            const numberId = e.target.dataset.number;
+            placeNumberInNextEmptySlot(numberId);
+        }
+
+        function placeNumberInNextEmptySlot(numberId) {
+            if (gameOver || !numberId) return;
+            
+            const slots = currentRow.querySelectorAll('.guess-slot');
+            let placed = false;
+            
+            for (let i = 0; i < slots.length; i++) {
+                if (!slots[i].classList.contains('filled')) {
+                    const number = NUMBERS.find(n => n.id === numberId);
+                    if (number) {
+                        slots[i].innerText = number.value;
+                        slots[i].classList.add('filled');
+                        slots[i].dataset.number = numberId;
+                        
+                        slots[i].addEventListener('touchstart', handleTouchStartSlot);
+                        slots[i].addEventListener('touchmove', handleTouchMoveSlot);
+                        slots[i].addEventListener('touchend', handleTouchEndSlot);
+                        slots[i].addEventListener('touchcancel', handleTouchCancel);
+                        
+                        slots[i].draggable = true;
+                        slots[i].addEventListener('dragstart', handleDragStart);
+                        slots[i].addEventListener('dragend', handleDragEnd);
+                        
+                        placed = true;
+                    }
+                    break;
+                }
+            }
+            
+            if (!placed) {
+                messageEl.textContent = 'Todos los espacios están llenos. Haz clic en "Ir" o arrastra para cambiar números.';
+            } else {
+                messageEl.textContent = 'Arrastra números a los espacios vacíos o tócalos para llenar en orden';
+            }
+        }
+
+        // Comprobar el intento actual
+        function checkAttempt() {
+            if (gameOver) return;
+            
+            const slots = currentRow.querySelectorAll('.guess-slot.filled');
+            if (slots.length < CODE_LENGTH) {
+                messageEl.textContent = 'Debes completar todos los espacios';
+                return;
+            }
+            
+            const attempt = Array.from(slots).map(slot => slot.dataset.number);
+            
+            const feedback = calculateFeedback(attempt, secretCode);
+            
+            const feedbackEl = currentRow.querySelector('.feedback');
+            const feedbackRows = feedbackEl.querySelectorAll('.feedback-row');
+            
+            feedbackRows.forEach(row => row.innerHTML = '');
+            
+            for (let i = 0; i < feedback.exact; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'feedback-dot exact';
+                feedbackRows[i < 2 ? 0 : 1].appendChild(dot);
+            }
+            
+            for (let i = 0; i < feedback.partial; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'feedback-dot partial';
+                feedbackRows[(feedback.exact + i) < 2 ? 0 : 1].appendChild(dot);
+            }
+            
+            for (let i = 0; i < feedback.wrong; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'feedback-dot wrong';
+                feedbackRows[(feedback.exact + feedback.partial + i) < 2 ? 0 : 1].appendChild(dot);
+            }
+            
+            if (feedback.exact === CODE_LENGTH) {
+                gameOver = true;
+                messageEl.textContent = '';
+                winMessageEl.classList.remove('hidden');
+                checkBtn.classList.add('hidden');
+                newGameBtn.classList.remove('hidden');
+                return;
+            }
+            
+            currentAttempt++;
+            
+            if (currentAttempt >= MAX_ATTEMPTS) {
+                gameOver = true;
+                messageEl.textContent = '¡Game Over! No adivinaste la secuencia.';
+                checkBtn.classList.add('hidden');
+                newGameBtn.classList.remove('hidden');
+                showSecretCode();
+                return;
+            }
+            
+            currentRow = gameBoard.children[currentAttempt];
+            currentRow.style.opacity = '1';
+            messageEl.textContent = `Intento ${currentAttempt + 1} de ${MAX_ATTEMPTS}. Arrastra números o tócalos.`;
+        }
+        
+        // Calcular feedback (bien, regular y mal)
+        function calculateFeedback(attempt, secret) {
+            let exact = 0;
+            let partial = 0;
+            
+            const attemptCopy = [...attempt];
+            const secretCopy = [...secret];
+            
+            for (let i = 0; i < secretCopy.length; i++) {
+                if (attemptCopy[i] === secretCopy[i]) {
+                    exact++;
+                    attemptCopy[i] = null;
+                    secretCopy[i] = null;
+                }
+            }
+            
+            for (let i = 0; i < secretCopy.length; i++) {
+                if (secretCopy[i] === null) continue;
+                
+                const index = attemptCopy.indexOf(secretCopy[i]);
+                if (index !== -1) {
+                    partial++;
+                    attemptCopy[index] = null;
+                }
+            }
+            
+            const wrong = attemptCopy.filter(number => number !== null).length;
+            
+            return { exact, partial, wrong };
+        }
+        
+        // Event listeners
+        checkBtn.addEventListener('click', checkAttempt);
+        newGameBtn.addEventListener('click', initGame);
+        
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches[0].clientY < 50) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
