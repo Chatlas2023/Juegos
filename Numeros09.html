@@ -63,13 +63,25 @@
             user-select: none;
             position: relative;
             z-index: 1;
-            background-color: #34495e;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 24px;
             font-weight: bold;
+            color: white;
         }
+
+        /* Colores para cada número */
+        .number-option[data-number="0"] { background-color: #e74c3c; }
+        .number-option[data-number="1"] { background-color: #3498db; }
+        .number-option[data-number="2"] { background-color: #2ecc71; }
+        .number-option[data-number="3"] { background-color: #f1c40f; }
+        .number-option[data-number="4"] { background-color: #9b59b6; }
+        .number-option[data-number="5"] { background-color: #1abc9c; }
+        .number-option[data-number="6"] { background-color: #e67e22; }
+        .number-option[data-number="7"] { background-color: #e84393; }
+        .number-option[data-number="8"] { background-color: #0984e3; }
+        .number-option[data-number="9"] { background-color: #00b894; }
 
         .number-option:active {
             cursor: grabbing;
@@ -89,7 +101,6 @@
             opacity: 0.8;
             pointer-events: none;
             z-index: 1000;
-            background-color: #34495e;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -97,6 +108,18 @@
             font-weight: bold;
             color: white;
         }
+
+        /* Colores para los clones (igual que los originales) */
+        .number-option-clone[data-number="0"] { background-color: #e74c3c; }
+        .number-option-clone[data-number="1"] { background-color: #3498db; }
+        .number-option-clone[data-number="2"] { background-color: #2ecc71; }
+        .number-option-clone[data-number="3"] { background-color: #f1c40f; }
+        .number-option-clone[data-number="4"] { background-color: #9b59b6; }
+        .number-option-clone[data-number="5"] { background-color: #1abc9c; }
+        .number-option-clone[data-number="6"] { background-color: #e67e22; }
+        .number-option-clone[data-number="7"] { background-color: #e84393; }
+        .number-option-clone[data-number="8"] { background-color: #0984e3; }
+        .number-option-clone[data-number="9"] { background-color: #00b894; }
 
         .game-board {
             display: flex;
@@ -123,10 +146,22 @@
             cursor: pointer;
             font-size: 24px;
             font-weight: bold;
+            color: white;
         }
 
+        /* Colores para los slots llenos */
+        .guess-slot.filled[data-number="0"] { background-color: #e74c3c; border: none; }
+        .guess-slot.filled[data-number="1"] { background-color: #3498db; border: none; }
+        .guess-slot.filled[data-number="2"] { background-color: #2ecc71; border: none; }
+        .guess-slot.filled[data-number="3"] { background-color: #f1c40f; border: none; }
+        .guess-slot.filled[data-number="4"] { background-color: #9b59b6; border: none; }
+        .guess-slot.filled[data-number="5"] { background-color: #1abc9c; border: none; }
+        .guess-slot.filled[data-number="6"] { background-color: #e67e22; border: none; }
+        .guess-slot.filled[data-number="7"] { background-color: #e84393; border: none; }
+        .guess-slot.filled[data-number="8"] { background-color: #0984e3; border: none; }
+        .guess-slot.filled[data-number="9"] { background-color: #00b894; border: none; }
+
         .guess-slot.filled {
-            border: none;
             cursor: grab;
         }
 
@@ -240,13 +275,25 @@
             width: 40px;
             height: 40px;
             border-radius: 8px;
-            background-color: #34495e;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 20px;
             font-weight: bold;
+            color: white;
         }
+
+        /* Colores para los slots del código secreto */
+        .secret-slot[data-number="0"] { background-color: #e74c3c; }
+        .secret-slot[data-number="1"] { background-color: #3498db; }
+        .secret-slot[data-number="2"] { background-color: #2ecc71; }
+        .secret-slot[data-number="3"] { background-color: #f1c40f; }
+        .secret-slot[data-number="4"] { background-color: #9b59b6; }
+        .secret-slot[data-number="5"] { background-color: #1abc9c; }
+        .secret-slot[data-number="6"] { background-color: #e67e22; }
+        .secret-slot[data-number="7"] { background-color: #e84393; }
+        .secret-slot[data-number="8"] { background-color: #0984e3; }
+        .secret-slot[data-number="9"] { background-color: #00b894; }
 
         .win-message {
             color: #2ecc71;
@@ -433,6 +480,7 @@
                 const slot = document.createElement('div');
                 slot.className = 'secret-slot';
                 slot.innerText = number.value;
+                slot.dataset.number = numberId;
                 secretCodeElement.appendChild(slot);
             });
             
@@ -513,6 +561,7 @@
             draggingClone = draggedElement.cloneNode(true);
             draggingClone.classList.add('number-option-clone');
             draggingClone.innerText = draggedElement.innerText;
+            draggingClone.dataset.number = draggedElement.dataset.number;
             document.body.appendChild(draggingClone);
             
             updateClonePosition(touch);
@@ -538,6 +587,7 @@
                 draggingClone = document.createElement('div');
                 draggingClone.className = 'number-option-clone';
                 draggingClone.innerText = slot.innerText;
+                draggingClone.dataset.number = slot.dataset.number;
                 document.body.appendChild(draggingClone);
                 
                 updateClonePosition(touch);
@@ -757,17 +807,17 @@
                 feedbackRows[(feedback.exact + feedback.partial + i) < 2 ? 0 : 1].appendChild(dot);
             }
             
-    if (feedback.exact === CODE_LENGTH) {
-        gameOver = true;
-        messageEl.textContent = '';
-        winMessageEl.classList.remove('hidden');
-        checkBtn.classList.add('hidden');
-        newGameBtn.classList.remove('hidden');
-        
-        // Lanzar confeti
-        fireConfetti();
-        return;
-    }
+            if (feedback.exact === CODE_LENGTH) {
+                gameOver = true;
+                messageEl.textContent = '';
+                winMessageEl.classList.remove('hidden');
+                checkBtn.classList.add('hidden');
+                newGameBtn.classList.remove('hidden');
+                
+                // Lanzar confeti
+                fireConfetti();
+                return;
+            }
             
             currentAttempt++;
             
@@ -784,36 +834,38 @@
             currentRow.style.opacity = '1';
             messageEl.textContent = `Intento ${currentAttempt + 1} de ${MAX_ATTEMPTS}. Arrastra números o tócalos.`;
         }
+        
         // Función para el efecto de confeti
-function fireConfetti() {
-    confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff']
-    });
-    
-    // Opcional: Lanzar confeti adicional después de un retraso
-    setTimeout(() => {
-        confetti({
-            particleCount: 100,
-            angle: 60,
-            spread: 55,
-            origin: { x: 0 },
-            colors: ['#ff0000', '#00ff00', '#0000ff']
-        });
-    }, 250);
-    
-    setTimeout(() => {
-        confetti({
-            particleCount: 100,
-            angle: 120,
-            spread: 55,
-            origin: { x: 1 },
-            colors: ['#ffff00', '#ff00ff', '#00ffff']
-        });
-    }, 400);
-}
+        function fireConfetti() {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff']
+            });
+            
+            // Opcional: Lanzar confeti adicional después de un retraso
+            setTimeout(() => {
+                confetti({
+                    particleCount: 100,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#ff0000', '#00ff00', '#0000ff']
+                });
+            }, 250);
+            
+            setTimeout(() => {
+                confetti({
+                    particleCount: 100,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#ffff00', '#ff00ff', '#00ffff']
+                });
+            }, 400);
+        }
+        
         // Calcular feedback (bien, regular y mal)
         function calculateFeedback(attempt, secret) {
             let exact = 0;
