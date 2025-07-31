@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <title>Juego de Secuencias Numéricas</title>
     <style>
         body {
@@ -756,14 +757,17 @@
                 feedbackRows[(feedback.exact + feedback.partial + i) < 2 ? 0 : 1].appendChild(dot);
             }
             
-            if (feedback.exact === CODE_LENGTH) {
-                gameOver = true;
-                messageEl.textContent = '';
-                winMessageEl.classList.remove('hidden');
-                checkBtn.classList.add('hidden');
-                newGameBtn.classList.remove('hidden');
-                return;
-            }
+    if (feedback.exact === CODE_LENGTH) {
+        gameOver = true;
+        messageEl.textContent = '';
+        winMessageEl.classList.remove('hidden');
+        checkBtn.classList.add('hidden');
+        newGameBtn.classList.remove('hidden');
+        
+        // Lanzar confeti
+        fireConfetti();
+        return;
+    }
             
             currentAttempt++;
             
@@ -780,7 +784,36 @@
             currentRow.style.opacity = '1';
             messageEl.textContent = `Intento ${currentAttempt + 1} de ${MAX_ATTEMPTS}. Arrastra números o tócalos.`;
         }
-        
+        // Función para el efecto de confeti
+function fireConfetti() {
+    confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff']
+    });
+    
+    // Opcional: Lanzar confeti adicional después de un retraso
+    setTimeout(() => {
+        confetti({
+            particleCount: 100,
+            angle: 60,
+            spread: 55,
+            origin: { x: 0 },
+            colors: ['#ff0000', '#00ff00', '#0000ff']
+        });
+    }, 250);
+    
+    setTimeout(() => {
+        confetti({
+            particleCount: 100,
+            angle: 120,
+            spread: 55,
+            origin: { x: 1 },
+            colors: ['#ffff00', '#ff00ff', '#00ffff']
+        });
+    }, 400);
+}
         // Calcular feedback (bien, regular y mal)
         function calculateFeedback(attempt, secret) {
             let exact = 0;
