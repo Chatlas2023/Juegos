@@ -264,6 +264,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <script>
         // Configuración del juego
         const COLORS = [
@@ -755,6 +756,9 @@ function cleanupAfterTouch() {
                 winMessageEl.classList.remove('hidden');
                 checkBtn.classList.add('hidden');
                 newGameBtn.classList.remove('hidden');
+                
+                // Lanzar confeti al ganar
+                fireConfetti();
                 return;
             }
             
@@ -772,6 +776,34 @@ function cleanupAfterTouch() {
             currentRow = gameBoard.children[currentAttempt];
             currentRow.style.opacity = '1';
             messageEl.textContent = `Intento ${currentAttempt + 1} de ${MAX_ATTEMPTS}. Arrastra colores o tócalos.`;
+        }
+        
+        // Función para lanzar confeti
+        function fireConfetti() {
+            const count = 200;
+            const defaults = {
+                origin: { y: 0.7 },
+                spread: 70,
+                ticks: 100,
+                gravity: 1,
+                decay: 0.95,
+                startVelocity: 30,
+                colors: ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#e67e22']
+            };
+
+            function fire(particleRatio, opts) {
+                confetti({
+                    ...defaults,
+                    ...opts,
+                    particleCount: Math.floor(count * particleRatio)
+                });
+            }
+
+            fire(0.25, { spread: 26, startVelocity: 55 });
+            fire(0.2, { spread: 60 });
+            fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+            fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+            fire(0.1, { spread: 120, startVelocity: 45 });
         }
         
         // Calcular feedback (bien, regular y mal)
