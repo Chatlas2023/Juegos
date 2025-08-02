@@ -221,6 +221,37 @@
         const topScoresTable = document.getElementById('topScoresTable').getElementsByTagName('tbody')[0];
         const closeModalBtn = document.getElementById('closeModalBtn');
         
+        // Cargar imágenes
+        const playerImg = new Image();
+        playerImg.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MCAzMCI+PHBhdGggZmlsbD0iI2JiODZmYyIgZD0iTTI1IDBMNDUgMzBINWwyMC0zMHoiLz48L3N2Zz4=';
+        let playerImageLoaded = false;
+        playerImg.onload = function() {
+            playerImageLoaded = true;
+        };
+
+        // Cargar imágenes de aliens (SVG embebidos como data URLs)
+        const alienImages = [
+            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzOCAyNiI+PHBhdGggZmlsbD0iIzJlY2M3MSIgZD0iTTAgMTNjMC03LjIgNS44LTEzIDEzLTEzczEzIDUuOCAxMyAxM0wyNiAxM2MwLTcuMi01LjgtMTMtMTMtMTNTMCA1LjggMCAxM3oiLz48L3N2Zz4=',
+            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzOCAyNiI+PHBhdGggZmlsbD0iIzM0OThkYiIgZD0iTTAgMTNjMC03LjIgNS44LTEzIDEzLTEzczEzIDUuOCAxMyAxM0wyNiAxM2MwLTcuMi01LjgtMTMtMTMtMTNTMCA1LjggMCAxM3oiLz48L3N2Zz4=',
+            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzOCAyNiI+PHBhdGggZmlsbD0iIzliNTliNiIgZD0iTTAgMTNjMC03LjIgNS44LTEzIDEzLTEzczEzIDUuOCAxMyAxM0wyNiAxM2MwLTcuMi01LjgtMTMtMTMtMTNTMCA1LjggMCAxM3oiLz48L3N2Zz4=',
+            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzOCAyNiI+PHBhdGggZmlsbD0iI2U3NGMzYyIgZD0iTTAgMTNjMC03LjIgNS44LTEzIDEzLTEzczEzIDUuOCAxMyAxM0wyNiAxM2MwLTcuMi01LjgtMTMtMTMtMTNTMCA1LjggMCAxM3oiLz48L3N2Zz4='
+        ].map(src => {
+            const img = new Image();
+            img.src = src;
+            return img;
+        });
+        let alienImagesLoaded = false;
+        let loadedImagesCount = 0;
+        
+        alienImages.forEach(img => {
+            img.onload = function() {
+                loadedImagesCount++;
+                if (loadedImagesCount === alienImages.length) {
+                    alienImagesLoaded = true;
+                }
+            };
+        });
+
         // Game objects
         let player, bullets, aliens, alienSpeed, alienDirection;
         let gameOver = false;
@@ -231,11 +262,8 @@
         let lives = 3;
         let topScores = JSON.parse(localStorage.getItem('spaceInvadersTopScores')) || [];
         let isDragging = false;
-
-        // Colores para cuando las imágenes no estén disponibles
-        const playerColor = '#bb86fc';
-        const bulletColor = '#ffffff';
-        const alienColors = ['#2ecc71', '#3498db', '#9b59b6', '#e74c3c', '#f39c12', '#1abc9c'];
+        let lastShotTime = 0;
+        const shotDelay = 300; // 300ms de retraso entre disparos
 
         // Initialize game state
         function startGame() {
@@ -279,7 +307,7 @@
                         height: alienHeight,
                         alive: true,
                         points: (alienRows - row) * 10,
-                        color: alienColors[row % alienColors.length]
+                        img: alienImages[row % alienImages.length]
                     });
                 }
             }
@@ -308,7 +336,7 @@
                     height: alienHeight,
                     alive: true,
                     points: alien.points,
-                    color: alien.color
+                    img: alien.img
                 });
             });
             
@@ -359,7 +387,8 @@
         }
 
         function shoot() {
-            if (gameStarted && !gameOver && !win) {
+            const now = Date.now();
+            if (gameStarted && !gameOver && !win && now - lastShotTime > shotDelay) {
                 bullets.push({
                     x: player.x + player.width / 2 - 5 / 2,
                     y: player.y - 10,
@@ -367,6 +396,7 @@
                     height: 10,
                     speed: 7
                 });
+                lastShotTime = now;
             }
         }
 
@@ -383,12 +413,10 @@
         function handleTouchStart(e) {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const touchX = (e.touches[0].clientX - rect.left) * scaleX;
-            const touchY = (e.touches[0].clientY - rect.top) * scaleY;
+            const touchX = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
+            const touchY = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
             
-            // Disparar automáticamente al tocar la nave
+            // Disparar al tocar la nave
             if (touchX >= player.x && touchX <= player.x + player.width &&
                 touchY >= player.y && touchY <= player.y + player.height) {
                 shoot();
@@ -403,16 +431,7 @@
             e.preventDefault();
             
             const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const touchX = (e.touches[0].clientX - rect.left) * scaleX;
-            const touchY = (e.touches[0].clientY - rect.top) * scaleY;
-            
-            // Disparar automáticamente si el movimiento es sobre la nave
-            if (touchX >= player.x && touchX <= player.x + player.width &&
-                touchY >= player.y && touchY <= player.y + player.height) {
-                shoot();
-            }
+            const touchX = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
             
             // Calcular movimiento
             const playerCenter = player.x + player.width / 2;
@@ -427,12 +446,10 @@
 
         function handleMouseDown(e) {
             const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const mouseX = (e.clientX - rect.left) * scaleX;
-            const mouseY = (e.clientY - rect.top) * scaleY;
+            const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
             
-            // Disparar automáticamente al hacer clic en la nave
+            // Disparar al hacer clic en la nave
             if (mouseX >= player.x && mouseX <= player.x + player.width &&
                 mouseY >= player.y && mouseY <= player.y + player.height) {
                 shoot();
@@ -446,16 +463,7 @@
             if (!isDragging) return;
             
             const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const mouseX = (e.clientX - rect.left) * scaleX;
-            const mouseY = (e.clientY - rect.top) * scaleY;
-            
-            // Disparar automáticamente si el movimiento es sobre la nave
-            if (mouseX >= player.x && mouseX <= player.x + player.width &&
-                mouseY >= player.y && mouseY <= player.y + player.height) {
-                shoot();
-            }
+            const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
             
             // Calcular movimiento
             const playerCenter = player.x + player.width / 2;
@@ -590,20 +598,32 @@
 
             if (gameStarted) {
                 // Draw player
-                ctx.fillStyle = playerColor;
-                ctx.fillRect(player.x, player.y, player.width, player.height);
+                if (playerImageLoaded) {
+                    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+                } else {
+                    ctx.fillStyle = '#bb86fc';
+                    ctx.fillRect(player.x, player.y, player.width, player.height);
+                }
 
                 // Draw bullets
-                ctx.fillStyle = bulletColor;
+                ctx.fillStyle = '#ffffff';
                 for (let bullet of bullets) {
                     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
                 }
 
                 // Draw aliens
-                for (let alien of aliens) {
-                    if (alien.alive) {
-                        ctx.fillStyle = alien.color;
-                        ctx.fillRect(alien.x, alien.y, alien.width, alien.height);
+                if (alienImagesLoaded) {
+                    for (let alien of aliens) {
+                        if (alien.alive) {
+                            ctx.drawImage(alien.img, alien.x, alien.y, alien.width, alien.height);
+                        }
+                    }
+                } else {
+                    for (let alien of aliens) {
+                        if (alien.alive) {
+                            ctx.fillStyle = ['#2ecc71', '#3498db', '#9b59b6', '#e74c3c', '#f39c12'][alien.row % 5];
+                            ctx.fillRect(alien.x, alien.y, alien.width, alien.height);
+                        }
                     }
                 }
             }
