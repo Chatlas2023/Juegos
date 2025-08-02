@@ -35,6 +35,7 @@
             height: auto;
             aspect-ratio: 4 / 3.6;
             margin-bottom: 10px;
+            touch-action: none;
         }
         h1 {
             color: #bb86fc;
@@ -50,40 +51,6 @@
             color: #e0e0e0;
             font-size: 12px;
             margin-top: 10px;
-        }
-        .control-panel {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            margin-top: 15px;
-            height: 60px;
-        }
-        .joystick-area {
-            flex: 2;
-            background-color: rgba(51, 51, 51, 0.5);
-            border-radius: 10px;
-            margin-right: 10px;
-            position: relative;
-            touch-action: none;
-            border: 1px solid #3498db; /* Borde azul fino */
-        }
-        .shoot-btn {
-            flex: 1;
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-left: 5px;
-        }
-        .shoot-btn:active {
-            background-color: #c0392b;
         }
         .start-btn {
             background-color: #2ecc71;
@@ -165,23 +132,9 @@
             p, .controls {
                 font-size: 12px;
             }
-            .control-panel {
-                height: 50px;
-            }
-            .shoot-btn {
-                font-size: 14px;
-            }
             .score-box {
                 font-size: 12px;
                 padding: 6px 8px;
-            }
-        }
-        @media (min-width: 601px) {
-            .control-panel {
-                display: none;
-            }
-            .start-btn {
-                display: none;
             }
         }
         /* Estilos para los botones del modal */
@@ -228,13 +181,9 @@
         </div>
         <canvas id="gameCanvas" width="400" height="360"></canvas>
         <div class="controls">
-            <p>Desliza en el área izquierda y botón para disparar</p>
+            <p>Toca y arrastra la nave para moverte. Toca para disparar.</p>
         </div>
         <button class="start-btn" id="startBtn">Iniciar Juego</button>
-        <div class="control-panel">
-            <div class="joystick-area" id="joystickArea"></div>
-            <button class="shoot-btn" id="shootBtn">DISPARAR</button>
-        </div>
     </div>
 
     <!-- Modal para Top Scores -->
@@ -264,8 +213,6 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const joystickArea = document.getElementById('joystickArea');
-        const shootBtn = document.getElementById('shootBtn');
         const startBtn = document.getElementById('startBtn');
         const scoreDisplay = document.getElementById('score');
         const levelDisplay = document.getElementById('level');
@@ -313,13 +260,12 @@
         let gameOver = false;
         let win = false;
         let gameStarted = false;
-        let isJoystickActive = false;
-        let joystickStartX = 0;
-        let joystickCurrentX = 0;
         let score = 0;
         let level = 1;
         let lives = 3;
         let topScores = JSON.parse(localStorage.getItem('spaceInvadersTopScores')) || [];
+        let isDragging = false;
+        let lastTouchTime = 0;
 
         // Initialize game state
         function startGame() {
@@ -454,7 +400,91 @@
             }
         }
 
-        // Keyboard controls
+        // Touch and mouse controls for player movement and shooting
+        canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
+        canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
+        canvas.addEventListener('touchend', handleTouchEnd);
+        
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mousemove', handleMouseMove);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        canvas.addEventListener('mouseleave', handleMouseUp);
+
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const touchX = (e.touches[0].clientX - rect.left) * (canvas.width / dpr / rect.width);
+            const touchY = (e.touches[0].clientY - rect.top) * (canvas.height / dpr / rect.height);
+            
+            // Check if touch is on player (for shooting)
+            if (touchX >= player.x && touchX <= player.x + player.width &&
+                touchY >= player.y && touchY <= player.y + player.height) {
+                const currentTime = new Date().getTime();
+                if (currentTime - lastTouchTime < 300) { // Double tap
+                    shoot();
+                }
+                lastTouchTime = currentTime;
+            }
+            
+            isDragging = true;
+            player.dx = 0; // Reset movement when starting new touch
+        }
+
+        function handleTouchMove(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const rect = canvas.getBoundingClientRect();
+            const touchX = (e.touches[0].clientX - rect.left) * (canvas.width / dpr / rect.width);
+            
+            // Calculate movement direction based on touch position relative to player
+            const playerCenter = player.x + player.width / 2;
+            const diff = touchX - playerCenter;
+            
+            // Set player movement speed proportional to distance from center
+            player.dx = Math.sign(diff) * player.speed * Math.min(Math.abs(diff) / 20, 1.5);
+        }
+
+        function handleTouchEnd() {
+            isDragging = false;
+            player.dx = 0;
+        }
+
+        function handleMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left) * (canvas.width / dpr / rect.width);
+            const mouseY = (e.clientY - rect.top) * (canvas.height / dpr / rect.height);
+            
+            // Check if click is on player (for shooting)
+            if (mouseX >= player.x && mouseX <= player.x + player.width &&
+                mouseY >= player.y && mouseY <= player.y + player.height) {
+                shoot();
+            }
+            
+            isDragging = true;
+            player.dx = 0; // Reset movement when starting new drag
+        }
+
+        function handleMouseMove(e) {
+            if (!isDragging) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left) * (canvas.width / dpr / rect.width);
+            
+            // Calculate movement direction based on mouse position relative to player
+            const playerCenter = player.x + player.width / 2;
+            const diff = mouseX - playerCenter;
+            
+            // Set player movement speed proportional to distance from center
+            player.dx = Math.sign(diff) * player.speed * Math.min(Math.abs(diff) / 20, 1.5);
+        }
+
+        function handleMouseUp() {
+            isDragging = false;
+            player.dx = 0;
+        }
+
+        // Keyboard controls (for desktop)
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') player.dx = -player.speed;
             if (e.key === 'ArrowRight') player.dx = player.speed;
@@ -470,61 +500,6 @@
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
         });
 
-        // Joystick controls
-        joystickArea.addEventListener('touchstart', handleJoystickStart);
-        joystickArea.addEventListener('mousedown', handleJoystickStart);
-        
-        joystickArea.addEventListener('touchmove', handleJoystickMove);
-        joystickArea.addEventListener('mousemove', handleJoystickMove);
-        
-        joystickArea.addEventListener('touchend', handleJoystickEnd);
-        joystickArea.addEventListener('mouseup', handleJoystickEnd);
-        joystickArea.addEventListener('mouseleave', handleJoystickEnd);
-
-        function handleJoystickStart(e) {
-            if (!gameStarted || gameOver || win) return;
-            
-            isJoystickActive = true;
-            const rect = joystickArea.getBoundingClientRect();
-            const clientX = e.clientX || e.touches[0].clientX;
-            joystickStartX = clientX - rect.left;
-            joystickCurrentX = joystickStartX;
-            e.preventDefault();
-        }
-
-        function handleJoystickMove(e) {
-            if (!isJoystickActive) return;
-            
-            const rect = joystickArea.getBoundingClientRect();
-            const clientX = e.clientX || e.touches[0].clientX;
-            joystickCurrentX = Math.max(0, Math.min(rect.width, clientX - rect.left));
-            
-            const center = rect.width / 2;
-            const relativeX = (joystickCurrentX - center) / center;
-            
-            player.dx = relativeX * player.speed * 2;
-            e.preventDefault();
-        }
-
-        function handleJoystickEnd() {
-            if (!isJoystickActive) return;
-            
-            isJoystickActive = false;
-            player.dx = 0;
-        }
-
-        // Shoot button controls
-        shootBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            shoot();
-        }, {passive: false});
-        
-        shootBtn.addEventListener('mousedown', (e) => {
-            e.stopPropagation();
-            shoot();
-        });
-
         // Start button
         startBtn.addEventListener('click', () => {
             if (!gameStarted || gameOver || win) {
@@ -533,14 +508,6 @@
                 lives = 3;
                 startGame();
             }
-        });
-
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            shoot();
-        });
-        canvas.addEventListener('mousedown', () => {
-            shoot();
         });
 
         // Close modal
@@ -636,8 +603,8 @@
 
         // Draw everything
         function draw() {
-                ctx.fillStyle = '#000000';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             if (gameStarted) {
                 // Draw player
