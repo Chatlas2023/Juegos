@@ -221,40 +221,6 @@
         const topScoresTable = document.getElementById('topScoresTable').getElementsByTagName('tbody')[0];
         const closeModalBtn = document.getElementById('closeModalBtn');
         
-        // Cargar imágenes
-        const playerImg = new Image();
-        playerImg.src = 'nave2.png';
-        let playerImageLoaded = false;
-        playerImg.onload = function() {
-            playerImageLoaded = true;
-        };
-
-        // Cargar imágenes de aliens
-        const alienImages = [
-            new Image(), new Image(), new Image(), new Image()
-        ];
-        alienImages[0].src = 'alien1.png';
-        alienImages[1].src = 'alien2.png';
-        alienImages[2].src = 'alien3.png';
-        alienImages[3].src = 'alien4.png';
-        let alienImagesLoaded = false;
-        let loadedImagesCount = 0;
-        
-        alienImages.forEach(img => {
-            img.onload = function() {
-                loadedImagesCount++;
-                if (loadedImagesCount === alienImages.length) {
-                    alienImagesLoaded = true;
-                }
-            };
-        });
-
-        // Adjust canvas for high-DPI displays
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = 400 * dpr;
-        canvas.height = 360 * dpr;
-        ctx.scale(dpr, dpr);
-
         // Game objects
         let player, bullets, aliens, alienSpeed, alienDirection;
         let gameOver = false;
@@ -265,12 +231,17 @@
         let lives = 3;
         let topScores = JSON.parse(localStorage.getItem('spaceInvadersTopScores')) || [];
         let isDragging = false;
-       
+
+        // Colores para cuando las imágenes no estén disponibles
+        const playerColor = '#bb86fc';
+        const bulletColor = '#ffffff';
+        const alienColors = ['#2ecc71', '#3498db', '#9b59b6', '#e74c3c', '#f39c12', '#1abc9c'];
+
         // Initialize game state
         function startGame() {
             player = {
-                x: canvas.width / dpr / 2 - 25,
-                y: canvas.height / dpr - 40,
+                x: canvas.width / 2 - 25,
+                y: canvas.height - 40,
                 width: 50,
                 height: 30,
                 speed: 4,
@@ -308,14 +279,14 @@
                         height: alienHeight,
                         alive: true,
                         points: (alienRows - row) * 10,
-                        img: alienImages[row % alienImages.length] // Asignar imagen diferente por fila
+                        color: alienColors[row % alienColors.length]
                     });
                 }
             }
         }
 
         function resetGameAfterLifeLost() {
-            player.x = canvas.width / dpr / 2 - 25;
+            player.x = canvas.width / 2 - 25;
             player.dx = 0;
             bullets = [];
             
@@ -337,7 +308,7 @@
                     height: alienHeight,
                     alive: true,
                     points: alien.points,
-                    img: alien.img // Mantener la misma imagen que tenía
+                    color: alien.color
                 });
             });
             
@@ -409,87 +380,86 @@
         canvas.addEventListener('mouseup', handleMouseUp);
         canvas.addEventListener('mouseleave', handleMouseUp);
 
-function handleTouchStart(e) {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const touchX = (e.touches[0].clientX - rect.left) * (canvas.width / dpr / rect.width);
-    const touchY = (e.touches[0].clientY - rect.top) * (canvas.height / dpr / rect.height);
-    
-    // Disparar automáticamente al tocar la nave
-    if (touchX >= player.x && touchX <= player.x + player.width &&
-        touchY >= player.y && touchY <= player.y + player.height) {
-        shoot();
-    }
-    
-    isDragging = true;
-    player.dx = 0; // Reset movement when starting new touch
-}
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const touchX = (e.touches[0].clientX - rect.left) * scaleX;
+            const touchY = (e.touches[0].clientY - rect.top) * scaleY;
+            
+            // Disparar automáticamente al tocar la nave
+            if (touchX >= player.x && touchX <= player.x + player.width &&
+                touchY >= player.y && touchY <= player.y + player.height) {
+                shoot();
+            }
+            
+            isDragging = true;
+            player.dx = 0;
+        }
 
-function handleTouchMove(e) {
-    if (!isDragging) return;
-    e.preventDefault();
-    
-    const rect = canvas.getBoundingClientRect();
-    const touchX = (e.touches[0].clientX - rect.left) * (canvas.width / dpr / rect.width);
-    const touchY = (e.touches[0].clientY - rect.top) * (canvas.height / dpr / rect.height);
-    
-    // Disparar automáticamente si el movimiento es sobre la nave
-    if (touchX >= player.x && touchX <= player.x + player.width &&
-        touchY >= player.y && touchY <= player.y + player.height) {
-        shoot();
-    }
-    
-    // Calcular movimiento
-    const playerCenter = player.x + player.width / 2;
-    const diff = touchX - playerCenter;
-    player.dx = Math.sign(diff) * player.speed * Math.min(Math.abs(diff) / 20, 1.5);
-}
+        function handleTouchMove(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const touchX = (e.touches[0].clientX - rect.left) * scaleX;
+            const touchY = (e.touches[0].clientY - rect.top) * scaleY;
+            
+            // Disparar automáticamente si el movimiento es sobre la nave
+            if (touchX >= player.x && touchX <= player.x + player.width &&
+                touchY >= player.y && touchY <= player.y + player.height) {
+                shoot();
+            }
+            
+            // Calcular movimiento
+            const playerCenter = player.x + player.width / 2;
+            const diff = touchX - playerCenter;
+            player.dx = Math.sign(diff) * player.speed * Math.min(Math.abs(diff) / 20, 1.5);
+        }
 
-function handleMouseDown(e) {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left) * (canvas.width / dpr / rect.width);
-    const mouseY = (e.clientY - rect.top) * (canvas.height / dpr / rect.height);
-    
-    // Disparar automáticamente al hacer clic en la nave
-    if (mouseX >= player.x && mouseX <= player.x + player.width &&
-        mouseY >= player.y && mouseY <= player.y + player.height) {
-        shoot();
-    }
-    
-    isDragging = true;
-    player.dx = 0; // Reset movement when starting new drag
-}
+        function handleTouchEnd() {
+            isDragging = false;
+            player.dx = 0;
+        }
 
-function handleMouseMove(e) {
-    if (!isDragging) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left) * (canvas.width / dpr / rect.width);
-    const mouseY = (e.clientY - rect.top) * (canvas.height / dpr / rect.height);
-    
-    // Disparar automáticamente si el movimiento es sobre la nave
-    if (mouseX >= player.x && mouseX <= player.x + player.width &&
-        mouseY >= player.y && mouseY <= player.y + player.height) {
-        shoot();
-    }
-    
-    // Calcular movimiento
-    const playerCenter = player.x + player.width / 2;
-    const diff = mouseX - playerCenter;
-    player.dx = Math.sign(diff) * player.speed * Math.min(Math.abs(diff) / 20, 1.5);
-}
+        function handleMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
+            
+            // Disparar automáticamente al hacer clic en la nave
+            if (mouseX >= player.x && mouseX <= player.x + player.width &&
+                mouseY >= player.y && mouseY <= player.y + player.height) {
+                shoot();
+            }
+            
+            isDragging = true;
+            player.dx = 0;
+        }
 
         function handleMouseMove(e) {
             if (!isDragging) return;
             
             const rect = canvas.getBoundingClientRect();
-            const mouseX = (e.clientX - rect.left) * (canvas.width / dpr / rect.width);
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (e.clientX - rect.left) * scaleX;
+            const mouseY = (e.clientY - rect.top) * scaleY;
             
-            // Calculate movement direction based on mouse position relative to player
+            // Disparar automáticamente si el movimiento es sobre la nave
+            if (mouseX >= player.x && mouseX <= player.x + player.width &&
+                mouseY >= player.y && mouseY <= player.y + player.height) {
+                shoot();
+            }
+            
+            // Calcular movimiento
             const playerCenter = player.x + player.width / 2;
             const diff = mouseX - playerCenter;
-            
-            // Set player movement speed proportional to distance from center
             player.dx = Math.sign(diff) * player.speed * Math.min(Math.abs(diff) / 20, 1.5);
         }
 
@@ -500,14 +470,12 @@ function handleMouseMove(e) {
 
         // Keyboard controls (for desktop)
         document.addEventListener('keydown', (e) => {
+            if (!gameStarted || gameOver || win) return;
+            
             if (e.key === 'ArrowLeft') player.dx = -player.speed;
             if (e.key === 'ArrowRight') player.dx = player.speed;
-            if (e.key === ' ' && gameStarted && !gameOver && !win) {
-                shoot();
-            }
-            if (e.key === 'h' && !gameStarted) {
-                showTopScores();
-            }
+            if (e.key === ' ') shoot();
+            if (e.key === 'h' && !gameStarted) showTopScores();
         });
 
         document.addEventListener('keyup', (e) => {
@@ -536,7 +504,7 @@ function handleMouseMove(e) {
         function updatePlayer() {
             player.x += player.dx;
             if (player.x < 0) player.x = 0;
-            if (player.x + player.width > canvas.width / dpr) player.x = canvas.width / dpr - player.width;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
         }
 
         // Update bullets
@@ -575,12 +543,12 @@ function handleMouseMove(e) {
                 anyAlienAlive = true;
                 alien.x += alienSpeed * alienDirection;
                 
-                if ((alien.x + alien.width > canvas.width / dpr - 5 && alienDirection > 0) || 
+                if ((alien.x + alien.width > canvas.width - 5 && alienDirection > 0) || 
                     (alien.x < 5 && alienDirection < 0)) {
                     hitEdge = true;
                 }
                 
-                if (alien.y + alien.height >= canvas.height / dpr - 50) {
+                if (alien.y + alien.height >= canvas.height - 50) {
                     alienReachedBottom = true;
                 }
             }
@@ -622,15 +590,11 @@ function handleMouseMove(e) {
 
             if (gameStarted) {
                 // Draw player
-                if (playerImageLoaded) {
-                    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
-                } else {
-                    ctx.fillStyle = '#bb86fc';
-                    ctx.fillRect(player.x, player.y, player.width, player.height);
-                }
+                ctx.fillStyle = playerColor;
+                ctx.fillRect(player.x, player.y, player.width, player.height);
 
                 // Draw bullets
-                ctx.fillStyle = '#ffffff';
+                ctx.fillStyle = bulletColor;
                 for (let bullet of bullets) {
                     ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
                 }
@@ -638,14 +602,8 @@ function handleMouseMove(e) {
                 // Draw aliens
                 for (let alien of aliens) {
                     if (alien.alive) {
-                        if (alienImagesLoaded) {
-                            ctx.drawImage(alien.img, alien.x, alien.y, alien.width, alien.height);
-                        } else {
-                            const rowColor = Math.floor((alien.y - 40) / (15 + 8));
-                            const colors = ['#2ecc71', '#3498db', '#9b59b6', '#e74c3c', '#f39c12', '#1abc9c'];
-                            ctx.fillStyle = colors[rowColor % colors.length];
-                            ctx.fillRect(alien.x, alien.y, alien.width, alien.height);
-                        }
+                        ctx.fillStyle = alien.color;
+                        ctx.fillRect(alien.x, alien.y, alien.width, alien.height);
                     }
                 }
             }
@@ -655,22 +613,22 @@ function handleMouseMove(e) {
                 ctx.fillStyle = '#bb86fc';
                 ctx.font = '24px Segoe UI';
                 ctx.textAlign = 'center';
-                ctx.fillText('Toca "Iniciar Juego"', canvas.width / dpr / 2, canvas.height / dpr / 2);
+                ctx.fillText('Toca "Iniciar Juego"', canvas.width / 2, canvas.height / 2);
             } else if (gameOver) {
                 ctx.fillStyle = '#e74c3c';
                 ctx.font = '24px Segoe UI';
                 ctx.textAlign = 'center';
-                ctx.fillText('¡Game Over!', canvas.width / dpr / 2, canvas.height / dpr / 2);
+                ctx.fillText('¡Game Over!', canvas.width / 2, canvas.height / 2);
                 ctx.font = '16px Segoe UI';
-                ctx.fillText(`Puntuación: ${score}`, canvas.width / dpr / 2, canvas.height / dpr / 2 + 30);
-                ctx.fillText(`Nivel alcanzado: ${level}`, canvas.width / dpr / 2, canvas.height / dpr / 2 + 60);
+                ctx.fillText(`Puntuación: ${score}`, canvas.width / 2, canvas.height / 2 + 30);
+                ctx.fillText(`Nivel alcanzado: ${level}`, canvas.width / 2, canvas.height / 2 + 60);
             } else if (win) {
                 ctx.fillStyle = '#2ecc71';
                 ctx.font = '24px Segoe UI';
                 ctx.textAlign = 'center';
-                ctx.fillText(`¡Nivel ${level} completado!`, canvas.width / dpr / 2, canvas.height / dpr / 2);
+                ctx.fillText(`¡Nivel ${level} completado!`, canvas.width / 2, canvas.height / 2);
                 ctx.font = '16px Segoe UI';
-                ctx.fillText(`Preparando nivel ${level+1}...`, canvas.width / dpr / 2, canvas.height / dpr / 2 + 30);
+                ctx.fillText(`Preparando nivel ${level+1}...`, canvas.width / 2, canvas.height / 2 + 30);
             }
         }
 
