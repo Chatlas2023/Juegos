@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -35,7 +36,6 @@
             height: auto;
             aspect-ratio: 4 / 3.6;
             margin-bottom: 10px;
-            touch-action: none;
         }
         h1 {
             color: #bb86fc;
@@ -51,6 +51,39 @@
             color: #e0e0e0;
             font-size: 12px;
             margin-top: 10px;
+        }
+        .control-panel {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 15px;
+            height: 60px;
+        }
+        .joystick-area {
+            flex: 2;
+            background-color: rgba(51, 51, 51, 0.5);
+            border-radius: 10px;
+            margin-right: 10px;
+            position: relative;
+            touch-action: none;
+        }
+        .shoot-btn {
+            flex: 1;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 5px;
+        }
+        .shoot-btn:active {
+            background-color: #c0392b;
         }
         .start-btn {
             background-color: #2ecc71;
@@ -132,9 +165,23 @@
             p, .controls {
                 font-size: 12px;
             }
+            .control-panel {
+                height: 50px;
+            }
+            .shoot-btn {
+                font-size: 14px;
+            }
             .score-box {
                 font-size: 12px;
                 padding: 6px 8px;
+            }
+        }
+        @media (min-width: 601px) {
+            .control-panel {
+                display: none;
+            }
+            .start-btn {
+                display: none;
             }
         }
         /* Estilos para los botones del modal */
@@ -172,7 +219,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Space Invaders V2.110</h1>
+        <h1>Space Invaders V2.5</h1>
         <p>¡Destruye a los invasores alienígenas!</p>
         <div class="score-display">
             <div class="score-box">Puntos: <span id="score">0</span></div>
@@ -181,9 +228,13 @@
         </div>
         <canvas id="gameCanvas" width="400" height="360"></canvas>
         <div class="controls">
-            <p>Toca y arrastra la nave para moverte. Toca para disparar.</p>
+            <p>Desliza en el área izquierda y botón para disparar</p>
         </div>
         <button class="start-btn" id="startBtn">Iniciar Juego</button>
+        <div class="control-panel">
+            <div class="joystick-area" id="joystickArea"></div>
+            <button class="shoot-btn" id="shootBtn">DISPARAR</button>
+        </div>
     </div>
 
     <!-- Modal para Top Scores -->
@@ -213,6 +264,8 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const joystickArea = document.getElementById('joystickArea');
+        const shootBtn = document.getElementById('shootBtn');
         const startBtn = document.getElementById('startBtn');
         const scoreDisplay = document.getElementById('score');
         const levelDisplay = document.getElementById('level');
@@ -223,23 +276,20 @@
         
         // Cargar imágenes
         const playerImg = new Image();
-        playerImg.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MCAzMCI+PHBhdGggZmlsbD0iI2JiODZmYyIgZD0iTTI1IDBMNDUgMzBINWwyMC0zMHoiLz48L3N2Zz4=';
+        playerImg.src = 'nave2.png';
         let playerImageLoaded = false;
         playerImg.onload = function() {
             playerImageLoaded = true;
         };
 
-        // Cargar imágenes de aliens (SVG embebidos como data URLs)
+        // Cargar imágenes de aliens
         const alienImages = [
-            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzOCAyNiI+PHBhdGggZmlsbD0iIzJlY2M3MSIgZD0iTTAgMTNjMC03LjIgNS44LTEzIDEzLTEzczEzIDUuOCAxMyAxM0wyNiAxM2MwLTcuMi01LjgtMTMtMTMtMTNTMCA1LjggMCAxM3oiLz48L3N2Zz4=',
-            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzOCAyNiI+PHBhdGggZmlsbD0iIzM0OThkYiIgZD0iTTAgMTNjMC03LjIgNS44LTEzIDEzLTEzczEzIDUuOCAxMyAxM0wyNiAxM2MwLTcuMi01LjgtMTMtMTMtMTNTMCA1LjggMCAxM3oiLz48L3N2Zz4=',
-            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzOCAyNiI+PHBhdGggZmlsbD0iIzliNTliNiIgZD0iTTAgMTNjMC03LjIgNS44LTEzIDEzLTEzczEzIDUuOCAxMyAxM0wyNiAxM2MwLTcuMi01LjgtMTMtMTMtMTNTMCA1LjggMCAxM3oiLz48L3N2Zz4=',
-            'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzOCAyNiI+PHBhdGggZmlsbD0iI2U3NGMzYyIgZD0iTTAgMTNjMC03LjIgNS44LTEzIDEzLTEzczEzIDUuOCAxMyAxM0wyNiAxM2MwLTcuMi01LjgtMTMtMTMtMTNTMCA1LjggMCAxM3oiLz48L3N2Zz4='
-        ].map(src => {
-            const img = new Image();
-            img.src = src;
-            return img;
-        });
+            new Image(), new Image(), new Image(), new Image()
+        ];
+        alienImages[0].src = 'alien1.png';
+        alienImages[1].src = 'alien2.png';
+        alienImages[2].src = 'alien3.png';
+        alienImages[3].src = 'alien4.png';
         let alienImagesLoaded = false;
         let loadedImagesCount = 0;
         
@@ -252,24 +302,30 @@
             };
         });
 
+        // Adjust canvas for high-DPI displays
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = 400 * dpr;
+        canvas.height = 360 * dpr;
+        ctx.scale(dpr, dpr);
+
         // Game objects
         let player, bullets, aliens, alienSpeed, alienDirection;
         let gameOver = false;
         let win = false;
         let gameStarted = false;
+        let isJoystickActive = false;
+        let joystickStartX = 0;
+        let joystickCurrentX = 0;
         let score = 0;
         let level = 1;
         let lives = 3;
         let topScores = JSON.parse(localStorage.getItem('spaceInvadersTopScores')) || [];
-        let isDragging = false;
-        let lastShotTime = 0;
-        const shotDelay = 300; // 300ms de retraso entre disparos
 
         // Initialize game state
         function startGame() {
             player = {
-                x: canvas.width / 2 - 25,
-                y: canvas.height - 40,
+                x: canvas.width / dpr / 2 - 25,
+                y: canvas.height / dpr - 40,
                 width: 50,
                 height: 30,
                 speed: 4,
@@ -290,9 +346,9 @@
         function createAliens() {
             const alienRows = Math.min(level, 5);
             const alienCols = 8;
-            const alienWidth = 38;
-            const alienHeight = 26;
-            const alienPadding = 1;
+            const alienWidth = 30;
+            const alienHeight = 20;
+            const alienPadding = 8;
             const startY = 40;
             const verticalSpacing = alienHeight + alienPadding;
             
@@ -307,23 +363,23 @@
                         height: alienHeight,
                         alive: true,
                         points: (alienRows - row) * 10,
-                        img: alienImages[row % alienImages.length]
+                        img: alienImages[row % alienImages.length] // Asignar imagen diferente por fila
                     });
                 }
             }
         }
 
         function resetGameAfterLifeLost() {
-            player.x = canvas.width / 2 - 25;
+            player.x = canvas.width / dpr / 2 - 25;
             player.dx = 0;
             bullets = [];
             
             const aliveAliens = aliens.filter(alien => alien.alive);
             aliens = [];
             
-            const alienWidth = 38;
-            const alienHeight = 26;
-            const alienPadding = 1;
+            const alienWidth = 30;
+            const alienHeight = 20;
+            const alienPadding = 8;
             const startY = 40;
             
             aliveAliens.forEach(alien => {
@@ -336,7 +392,7 @@
                     height: alienHeight,
                     alive: true,
                     points: alien.points,
-                    img: alien.img
+                    img: alien.img // Mantener la misma imagen que tenía
                 });
             });
             
@@ -387,8 +443,7 @@
         }
 
         function shoot() {
-            const now = Date.now();
-            if (gameStarted && !gameOver && !win && now - lastShotTime > shotDelay) {
+            if (gameStarted && !gameOver && !win) {
                 bullets.push({
                     x: player.x + player.width / 2 - 5 / 2,
                     y: player.y - 10,
@@ -396,98 +451,78 @@
                     height: 10,
                     speed: 7
                 });
-                lastShotTime = now;
             }
         }
 
-        // Touch and mouse controls for player movement and shooting
-        canvas.addEventListener('touchstart', handleTouchStart, {passive: false});
-        canvas.addEventListener('touchmove', handleTouchMove, {passive: false});
-        canvas.addEventListener('touchend', handleTouchEnd);
-        
-        canvas.addEventListener('mousedown', handleMouseDown);
-        canvas.addEventListener('mousemove', handleMouseMove);
-        canvas.addEventListener('mouseup', handleMouseUp);
-        canvas.addEventListener('mouseleave', handleMouseUp);
-
-        function handleTouchStart(e) {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const touchX = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
-            const touchY = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
-            
-            // Disparar al tocar la nave
-            if (touchX >= player.x && touchX <= player.x + player.width &&
-                touchY >= player.y && touchY <= player.y + player.height) {
-                shoot();
-            }
-            
-            isDragging = true;
-            player.dx = 0;
-        }
-
-        function handleTouchMove(e) {
-            if (!isDragging) return;
-            e.preventDefault();
-            
-            const rect = canvas.getBoundingClientRect();
-            const touchX = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
-            
-            // Calcular movimiento
-            const playerCenter = player.x + player.width / 2;
-            const diff = touchX - playerCenter;
-            player.dx = Math.sign(diff) * player.speed * Math.min(Math.abs(diff) / 20, 1.5);
-        }
-
-        function handleTouchEnd() {
-            isDragging = false;
-            player.dx = 0;
-        }
-
-        function handleMouseDown(e) {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
-            const mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
-            
-            // Disparar al hacer clic en la nave
-            if (mouseX >= player.x && mouseX <= player.x + player.width &&
-                mouseY >= player.y && mouseY <= player.y + player.height) {
-                shoot();
-            }
-            
-            isDragging = true;
-            player.dx = 0;
-        }
-
-        function handleMouseMove(e) {
-            if (!isDragging) return;
-            
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
-            
-            // Calcular movimiento
-            const playerCenter = player.x + player.width / 2;
-            const diff = mouseX - playerCenter;
-            player.dx = Math.sign(diff) * player.speed * Math.min(Math.abs(diff) / 20, 1.5);
-        }
-
-        function handleMouseUp() {
-            isDragging = false;
-            player.dx = 0;
-        }
-
-        // Keyboard controls (for desktop)
+        // Keyboard controls
         document.addEventListener('keydown', (e) => {
-            if (!gameStarted || gameOver || win) return;
-            
             if (e.key === 'ArrowLeft') player.dx = -player.speed;
             if (e.key === 'ArrowRight') player.dx = player.speed;
-            if (e.key === ' ') shoot();
-            if (e.key === 'h' && !gameStarted) showTopScores();
+            if (e.key === ' ' && gameStarted && !gameOver && !win) {
+                shoot();
+            }
+            if (e.key === 'h' && !gameStarted) {
+                showTopScores();
+            }
         });
 
         document.addEventListener('keyup', (e) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
+        });
+
+        // Joystick controls
+        joystickArea.addEventListener('touchstart', handleJoystickStart);
+        joystickArea.addEventListener('mousedown', handleJoystickStart);
+        
+        joystickArea.addEventListener('touchmove', handleJoystickMove);
+        joystickArea.addEventListener('mousemove', handleJoystickMove);
+        
+        joystickArea.addEventListener('touchend', handleJoystickEnd);
+        joystickArea.addEventListener('mouseup', handleJoystickEnd);
+        joystickArea.addEventListener('mouseleave', handleJoystickEnd);
+
+        function handleJoystickStart(e) {
+            if (!gameStarted || gameOver || win) return;
+            
+            isJoystickActive = true;
+            const rect = joystickArea.getBoundingClientRect();
+            const clientX = e.clientX || e.touches[0].clientX;
+            joystickStartX = clientX - rect.left;
+            joystickCurrentX = joystickStartX;
+            e.preventDefault();
+        }
+
+        function handleJoystickMove(e) {
+            if (!isJoystickActive) return;
+            
+            const rect = joystickArea.getBoundingClientRect();
+            const clientX = e.clientX || e.touches[0].clientX;
+            joystickCurrentX = Math.max(0, Math.min(rect.width, clientX - rect.left));
+            
+            const center = rect.width / 2;
+            const relativeX = (joystickCurrentX - center) / center;
+            
+            player.dx = relativeX * player.speed * 2;
+            e.preventDefault();
+        }
+
+        function handleJoystickEnd() {
+            if (!isJoystickActive) return;
+            
+            isJoystickActive = false;
+            player.dx = 0;
+        }
+
+        // Shoot button controls
+        shootBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            shoot();
+        }, {passive: false});
+        
+        shootBtn.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            shoot();
         });
 
         // Start button
@@ -498,6 +533,14 @@
                 lives = 3;
                 startGame();
             }
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            shoot();
+        });
+        canvas.addEventListener('mousedown', () => {
+            shoot();
         });
 
         // Close modal
@@ -512,7 +555,7 @@
         function updatePlayer() {
             player.x += player.dx;
             if (player.x < 0) player.x = 0;
-            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+            if (player.x + player.width > canvas.width / dpr) player.x = canvas.width / dpr - player.width;
         }
 
         // Update bullets
@@ -551,12 +594,12 @@
                 anyAlienAlive = true;
                 alien.x += alienSpeed * alienDirection;
                 
-                if ((alien.x + alien.width > canvas.width - 5 && alienDirection > 0) || 
+                if ((alien.x + alien.width > canvas.width / dpr - 5 && alienDirection > 0) || 
                     (alien.x < 5 && alienDirection < 0)) {
                     hitEdge = true;
                 }
                 
-                if (alien.y + alien.height >= canvas.height - 50) {
+                if (alien.y + alien.height >= canvas.height / dpr - 50) {
                     alienReachedBottom = true;
                 }
             }
@@ -593,8 +636,8 @@
 
         // Draw everything
         function draw() {
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             if (gameStarted) {
                 // Draw player
@@ -612,16 +655,14 @@
                 }
 
                 // Draw aliens
-                if (alienImagesLoaded) {
-                    for (let alien of aliens) {
-                        if (alien.alive) {
+                for (let alien of aliens) {
+                    if (alien.alive) {
+                        if (alienImagesLoaded) {
                             ctx.drawImage(alien.img, alien.x, alien.y, alien.width, alien.height);
-                        }
-                    }
-                } else {
-                    for (let alien of aliens) {
-                        if (alien.alive) {
-                            ctx.fillStyle = ['#2ecc71', '#3498db', '#9b59b6', '#e74c3c', '#f39c12'][alien.row % 5];
+                        } else {
+                            const rowColor = Math.floor((alien.y - 40) / (15 + 8));
+                            const colors = ['#2ecc71', '#3498db', '#9b59b6', '#e74c3c', '#f39c12', '#1abc9c'];
+                            ctx.fillStyle = colors[rowColor % colors.length];
                             ctx.fillRect(alien.x, alien.y, alien.width, alien.height);
                         }
                     }
@@ -633,22 +674,22 @@
                 ctx.fillStyle = '#bb86fc';
                 ctx.font = '24px Segoe UI';
                 ctx.textAlign = 'center';
-                ctx.fillText('Toca "Iniciar Juego"', canvas.width / 2, canvas.height / 2);
+                ctx.fillText('Toca "Iniciar Juego"', canvas.width / dpr / 2, canvas.height / dpr / 2);
             } else if (gameOver) {
                 ctx.fillStyle = '#e74c3c';
                 ctx.font = '24px Segoe UI';
                 ctx.textAlign = 'center';
-                ctx.fillText('¡Game Over!', canvas.width / 2, canvas.height / 2);
+                ctx.fillText('¡Game Over!', canvas.width / dpr / 2, canvas.height / dpr / 2);
                 ctx.font = '16px Segoe UI';
-                ctx.fillText(`Puntuación: ${score}`, canvas.width / 2, canvas.height / 2 + 30);
-                ctx.fillText(`Nivel alcanzado: ${level}`, canvas.width / 2, canvas.height / 2 + 60);
+                ctx.fillText(`Puntuación: ${score}`, canvas.width / dpr / 2, canvas.height / dpr / 2 + 30);
+                ctx.fillText(`Nivel alcanzado: ${level}`, canvas.width / dpr / 2, canvas.height / dpr / 2 + 60);
             } else if (win) {
                 ctx.fillStyle = '#2ecc71';
                 ctx.font = '24px Segoe UI';
                 ctx.textAlign = 'center';
-                ctx.fillText(`¡Nivel ${level} completado!`, canvas.width / 2, canvas.height / 2);
+                ctx.fillText(`¡Nivel ${level} completado!`, canvas.width / dpr / 2, canvas.height / dpr / 2);
                 ctx.font = '16px Segoe UI';
-                ctx.fillText(`Preparando nivel ${level+1}...`, canvas.width / 2, canvas.height / 2 + 30);
+                ctx.fillText(`Preparando nivel ${level+1}...`, canvas.width / dpr / 2, canvas.height / dpr / 2 + 30);
             }
         }
 
