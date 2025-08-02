@@ -16,6 +16,12 @@
             --dark: #212529;
             --warning: #f8961e;
             --info: #38b000;
+            --rainbow-1: #FF9AA2;
+            --rainbow-2: #FFB7B2;
+            --rainbow-3: #FFDAC1;
+            --rainbow-4: #E2F0CB;
+            --rainbow-5: #B5EAD7;
+            --rainbow-6: #C7CEEA;
         }
         
         body {
@@ -45,9 +51,20 @@
         h1 {
             font-size: 24px;
             margin: 0 0 20px 0;
-            color: var(--accent);
+            background: linear-gradient(90deg, var(--rainbow-1), var(--rainbow-2), var(--rainbow-3), var(--rainbow-4), var(--rainbow-5), var(--rainbow-6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
             font-weight: 700;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: gradient 8s ease infinite;
+            background-size: 400% 400%;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .word-display-container {
@@ -55,8 +72,9 @@
             border-radius: 8px;
             padding: 15px;
             margin: 15px 0;
-            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2), 0 0 20px rgba(67, 97, 238, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
         }
 
         .word-display {
@@ -70,22 +88,38 @@
             color: var(--light);
             text-transform: uppercase;
             line-height: 1.3;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
         }
 
         .word-display.correct {
             background: linear-gradient(to right, var(--info), var(--success));
             color: white;
-            animation: blink 1s ease-in-out 3;
+            animation: blink 1s ease-in-out 3, rainbow-bg 2s ease infinite;
+            box-shadow: 0 0 20px rgba(76, 201, 240, 0.5);
         }
+        
         .word-display.incorrect {
-    background: linear-gradient(to right, var(--danger), #d90429);
-    color: white;
-    animation: blink 1s ease-in-out 3;
-}
+            background: linear-gradient(to right, var(--danger), #d90429);
+            color: white;
+            animation: blink 1s ease-in-out 3, shake 0.5s ease-in-out;
+            box-shadow: 0 0 20px rgba(247, 37, 133, 0.5);
+        }
 
         @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.7; }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        
+        @keyframes rainbow-bg {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .game-info-container {
@@ -94,28 +128,35 @@
             padding: 12px;
             margin: 15px 0;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 15px rgba(67, 97, 238, 0.2);
         }
 
-.game-info {
-    display: flex;
-    flex-direction: row; /* Asegura que los elementos estén en una fila */
-    justify-content: space-between; /* Espacio equitativo entre los contenedores */
-    gap: 10px; /* Espacio entre los contenedores */
-}
+        .game-info {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 10px;
+        }
 
-.info-box {
-    background: rgba(33, 37, 41, 0.8);
-    padding: 12px 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    width: 48%; /* Cada contenedor ocupa casi la mitad del espacio */
-    color: var(--light);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    min-height: 60px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
+        .info-box {
+            background: rgba(33, 37, 41, 0.8);
+            padding: 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            width: 48%;
+            color: var(--light);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .info-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
 
         .info-box h3 {
             margin: 0 0 8px 0;
@@ -130,16 +171,52 @@
             font-weight: 700;
         }
 
+        #guessed-letters-container {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) rgba(255, 255, 255, 0.1);
+        }
+        
+        #guessed-letters-container::-webkit-scrollbar {
+            height: 5px;
+        }
+        
+        #guessed-letters-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        #guessed-letters-container::-webkit-scrollbar-thumb {
+            background-color: var(--accent);
+            border-radius: 10px;
+        }
+
         #guessed-letters {
             color: var(--danger);
             font-weight: 600;
             font-size: 14px;
-                white-space: nowrap; /* Evita saltos de línea */
-    overflow: hidden; /* Oculta el texto que desborda */
-    text-overflow: ellipsis; /* Añade ... si el texto es muy largo */
-    min-height: 20px; /* Altura mínima para mantener el espacio */
-    line-height: 1.2; /* Ajuste de interlineado */
-    margin-top: 5px; /* Espacio constante */
+            white-space: nowrap;
+            min-height: 20px;
+            line-height: 1.2;
+            margin-top: 5px;
+            display: inline-block;
+            padding: 0 5px;
+        }
+        
+        .guessed-letter {
+            display: inline-block;
+            margin: 0 3px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(247, 37, 133, 0.2);
+            transition: all 0.2s ease;
+        }
+        
+        .guessed-letter.correct {
+            background: rgba(56, 176, 0, 0.3);
+            color: #a7f3a0;
         }
 
         .keyboard-container {
@@ -148,6 +225,7 @@
             padding: 15px;
             margin: 15px 0 5px 0;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
         }
 
         .keyboard {
@@ -180,11 +258,29 @@
             color: var(--light);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .key::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .key:hover::after {
+            opacity: 1;
         }
 
         .key:hover:not(.used) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             background: linear-gradient(to bottom, #495057, #343a40);
         }
 
@@ -193,16 +289,20 @@
             color: #adb5bd;
             cursor: not-allowed;
             opacity: 0.7;
+            transform: scale(0.95);
         }
 
         .key.correct {
             background: linear-gradient(to bottom, var(--info), #38b000);
             color: white;
+            box-shadow: 0 0 15px rgba(56, 176, 0, 0.5);
         }
 
         .key.wrong {
             background: linear-gradient(to bottom, var(--danger), #d90429);
             color: white;
+            box-shadow: 0 0 15px rgba(247, 37, 133, 0.5);
+            animation: shake 0.3s ease;
         }
 
         .buttons {
@@ -219,12 +319,39 @@
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
-            display: none; /* Oculto por defecto */
+            display: none;
+            position: relative;
+            overflow: hidden;
         }
 
         #next-word-btn {
             background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
+            box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
+        }
+        
+        #next-word-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0) 45%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0) 55%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(30deg);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
         }
 
         #next-word-btn:disabled {
@@ -233,12 +360,19 @@
         }
 
         #next-word-btn.show {
-            display: block; /* Mostrar cuando tenga la clase show */
+            display: block;
+            animation: pulse 1.5s infinite;
+        }
+        
+        #next-word-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(67, 97, 238, 0.4);
         }
 
         .attempts-warning {
             color: var(--danger);
             animation: pulse 1.5s infinite;
+            text-shadow: 0 0 8px rgba(247, 37, 133, 0.5);
         }
 
         @keyframes pulse {
@@ -258,9 +392,9 @@
             }
             
             .key {
-                width: 45px;
-                height: 40px;
-                font-size: 22px;
+                width: 35px;
+                height: 35px;
+                font-size: 18px;
                 border-radius: 6px;
             }
             
@@ -285,6 +419,10 @@
             .info-box p {
                 font-size: 16px;
             }
+            
+            #guessed-letters {
+                font-size: 12px;
+            }
         }
     </style>
 </head>
@@ -304,7 +442,9 @@
                 </div>
                 <div class="info-box">
                     <h3>Letras usadas</h3>
-                    <p><span id="guessed-letters">-</span></p>
+                    <div id="guessed-letters-container">
+                        <p id="guessed-letters">-</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -314,7 +454,7 @@
         </div>
         
         <div class="buttons">
-            <button id="next-word-btn" class="btn-next-word">Siguiente</button>
+            <button id="next-word-btn" class="btn-next-word">Siguiente palabra</button>
         </div>
     </div>
 
@@ -322,963 +462,23 @@
         class HangmanGame {
             constructor() {
                 this.words = [
-                   "ACASSUSO",
-"ACEVEDO",
-"ACHALA",
-"ACHAL",
-"ACHEGA",
-"ACHIRA",
-"ACHUPALLAS",
-"ACONCAGUA",
-"AGACES",
-"AGRELO",
-"AGUARIBAY",
-"AGÜERO",
-"AGUILAR",
-"AGUIRRE",
-"AIZPURUA",
-"ALAGON",
-"ALBANIA",
-"ALBARIÑO",
-"ALBARRACIN",
-"ALBERTI",
-"ALCARAZ",
-"ALEMANIA",
-"ALFARERO",
-"ALGARROBO",
-"ALICANTE",
-"ALLENDE",
-"ALMAGRO",
-"ALPATACAL",
-"ALTOLAGUIRRE",
-"ALVARADO",
-"ALZAGA",
-"AMALIA",
-"AMAMBAY",
-"AMANCAY",
-"AMBERES",
-"AMENABAR",
-"AMPERE",
-"AMSTERDAM",
-"ANASAGASTI",
-"AÑASCO",
-"ANCASTE",
-"ANCHORIS",
-"ANCON",
-"ANDALGALA",
-"ANDALUCIA",
-"ANDONAEGUI",
-"ANDORRA",
-"ANGACO",
-"ANKARA",
-"ANTEQUERA",
-"ANTEZANA",
-"ANTOFAGASTA",
-"APULE",
-"AQUINO",
-"ARAOZ",
-"ARAUJO",
-"ARCAMENDIA",
-"ARCE",
-"ARCOS",
-"ARENALES",
-"ARENGREEN",
-"AREVALO",
-"ARGAÑARAS",
-"ARGELIA",
-"ARGERICH",
-"ARIAS",
-"ARIEL",
-"ARISMENDI",
-"ARIZONA",
-"ARJONILLA",
-"ARMENIA",
-"AROMA",
-"AROMO",
-"ARQUIMEDES",
-"ARREGUI",
-"ARRIBEÑOS",
-"ARRIOLA",
-"ARROTEA",
-"ARROYO",
-"ARTILLEROS",
-"ASCASUBI",
-"ASIA",
-"ASTURIAS",
-"ASUNCION",
-"ATACALCO",
-"ATAHUALPA",
-"ATENAS",
-"ATUEL",
-"AU1",
-"AUSTRALIA",
-"AUSTRIA",
-"AVALLE",
-"AVALOS",
-"AVELLANEDA",
-"AYACUCHO",
-"AYOLAS",
-"AYUI",
-"AZARA",
-"AZCUENAGA",
-"AZOPARDO",
-"AZUL",
-"BACACAY",
-"BACON",
-"BAEZ",
-"BAHIA",
-"BAIGORRI",
-"BAIGORRIA",
-"BALBASTRO",
-"BALBOA",
-"BALCARCE",
-"BALLIVIAN",
-"BARADERO",
-"BARAGAÑA",
-"BARCALA",
-"BARCELONA",
-"BARILOCHE",
-"BARRAGAN",
-"BARRIENTOS",
-"BARZANA",
-"BASAVILBASO",
-"BASUALDO",
-"BATHURST",
-"BAUNESS",
-"BAZURCO",
-"BEADE",
-"BEAUCHEF",
-"BEAZLEY",
-"BEETHOVEN",
-"BEHRING",
-"BELEN",
-"BELFAST",
-"BELGICA",
-"BELGRADO",
-"BERLIN",
-"BERMEJO",
-"BERMUDEZ",
-"BERNA",
-"BERNAL",
-"BERNALDES",
-"BERTHELOT",
-"BERTRES",
-"BERUTI",
-"BESARES",
-"BETHLEN",
-"BEYROUTH",
-"BIARRITZ",
-"BILLINGHURST",
-"BLANDENGUES",
-"BOGADO",
-"BOGOTA",
-"BOLAÑOS",
-"BOLIVAR",
-"BOLIVIA",
-"BOLLINI",
-"BOLONIA",
-"BOMBAY",
-"BONPLAND",
-"BOQUERON",
-"BORDABEHERE",
-"BOSTON",
-"BOUCHARD",
-"BRAGADO",
-"BRANDSEN",
-"BRAVARD",
-"BRUSELAS",
-"BUCARELLI",
-"BUCAREST",
-"BUDAPEST",
-"BUERAS",
-"BULGARIA",
-"BULNES",
-"BURELA",
-"BURGOS",
-"BUTTELER",
-"BYNNON",
-"BYRON",
-"CAAGUAZU",
-"CABALLITO",
-"CABELLO",
-"CABOT",
-"CABOTO",
-"CACHEUTA",
-"CACHI",
-"CACHIMAYO",
-"CACIQUE",
-"CADIZ",
-"CAFAYATE",
-"CAGLIARI",
-"CAJARAVILLA",
-"CALABRIA",
-"CALCENA",
-"CALDAS",
-"CALDEN",
-"CALFUCURA",
-"CALIFORNIA",
-"CALINGASTA",
-"CAMACUA",
-"CAMARGO",
-"CAMARONES",
-"CAMINITO",
-"CAMOATI",
-"CAMPANA",
-"CAMPICHUELO",
-"CAMPILLO",
-"CANADA",
-"CANDELARIA",
-"CANGALLO",
-"CANGAYE",
-"CAÑUELAS",
-"CAPDEVILA",
-"CAPERUCITA",
-"CARABELAS",
-"CARACAS",
-"CARANDAY",
-"CARAPACHAY",
-"CARBAJAL",
-"CARDOSO",
-"CARHUE",
-"CARICANCHA",
-"CAROYA",
-"CARRASCO",
-"CASACUBERTA",
-"CASAFOUST",
-"CASCO",
-"CASTAÑEDA",
-"CASTAÑON",
-"CASTELLI",
-"CASTEX",
-"CASTILLO",
-"CASTRO",
-"CATAMARCA",
-"CATANIA",
-"CATRIEL",
-"CAVIA",
-"CAYASTA",
-"CAZADORES",
-"CENTENARIO",
-"CERETTI",
-"CERRILLOS",
-"CERRITO",
-"CERVANTES",
-"CERVIÑO",
-"CESPEDES",
-"CHACABUCO",
-"CHACO",
-"CHAJARI",
-"CHAMICAL",
-"CHARCAS",
-"CHARLONE",
-"CHARRUA",
-"CHASCOMUS",
-"CHECOSLOVAQUIA",
-"CHICOANA",
-"CHILE",
-"CHILECITO",
-"CHIMBORAZO",
-"CHINA",
-"CHIRIGUANOS",
-"CHIRIMAY",
-"CHIVILCOY",
-"CHONINO",
-"CHUBUT",
-"CHUMBICHA",
-"CIPOLLETTI",
-"CISNE",
-"CIUDADELA",
-"CLAY",
-"COCHABAMBA",
-"COCHICO",
-"COCHRANE",
-"COLIGÜE",
-"COLIQUEO",
-"COLOMBRES",
-"COLONIA",
-"COLPAYO",
-"COLUMBIA",
-"CONCORDIA",
-"CONDARCO",
-"CONDE",
-"CONDOR",
-"CONESA",
-"CONSTANTINOPLA",
-"CONSTITUCION",
-"CONVENCION",
-"COOPERACION",
-"COPAHUE",
-"COPENHAGUE",
-"COPERNICO",
-"COREA",
-"CORONDA",
-"CORRALES",
-"CORREA",
-"CORREGIDORES",
-"CORTINA",
-"CORVALAN",
-"COSQUIN",
-"COTAGAITA",
-"COTOCOLLAO",
-"CRAIG",
-"CRAINQUEVILLE",
-"CRAMER",
-"CRANWELL",
-"CRESPO",
-"CUBA",
-"CUENCA",
-"CULLEN",
-"CULPINA",
-"CURAPALIGUE",
-"CURITYBA",
-"CURUPAYTI",
-"CUYO",
-"CUZCO",
-"DAGUERRE",
-"DANEL",
-"DANTE",
-"DARREGUEYRA",
-"DARWIN",
-"DAVILA",
-"DEFENSA",
-"DEHEZA",
-"DEKAY",
-"DELAMBRE",
-"DELGADO",
-"DEMARIA",
-"DESAGUADERO",
-"DESEADO",
-"DIAMANTE",
-"DINAMARCA",
-"DOBLAS",
-"DOLORES",
-"DONADO",
-"DONIZETTI",
-"DRAGONES",
-"DRUMOND",
-"DUBLIN",
-"DUPUY",
-"ECHAURI",
-"ECHEANDIA",
-"ECHENAGUCIA",
-"ECHEVERRIA",
-"ECUADOR",
-"ELIA",
-"EMPEDRADO",
-"ENSENADA",
-"EPECUEN",
-"EPUYEN",
-"ERASMO",
-"ERCILLA",
-"EREZCANO",
-"ESCALADA",
-"ESCOBAR",
-"ESCRIBANO",
-"ESMERALDA",
-"ESNAOLA",
-"ESPARTACO",
-"ESPARZA",
-"ESPINILLO",
-"ESPINOSA",
-"ESPRONCEDA",
-"ESQUEL",
-"ESQUINA",
-"ESQUIU",
-"ESTIVAO",
-"ESTOCOLMO",
-"ESTOMBA",
-"ESTONIA",
-"ESTRADA",
-"EUCLIDES",
-"EZEIZA",
-"FABRE",
-"FACUNDO",
-"FALUCHO",
-"FAMAILLA",
-"FAMATINA",
-"FARADAY",
-"FECUNDIDAD",
-"FERNANDEZ",
-"FERRARI",
-"FERRE",
-"FERROCARRIL",
-"FILIBERTO",
-"FINLANDIA",
-"FLORESTA",
-"FLORIDA",
-"FONROUGE",
-"FORMOSA",
-"FOURNIER",
-"FRAGA",
-"FRAGUEIRO",
-"FRANCO",
-"FRANKLIN",
-"FRATERNIDAD",
-"FRENCH",
-"GALENO",
-"GALICIA",
-"GALILEO",
-"GALLARDO",
-"GALLEGOS",
-"GALLO",
-"GALVAN",
-"GAMARRA",
-"GANA",
-"GANDARA",
-"GARIBALDI",
-"GARRO",
-"GASCON",
-"GAVILAN",
-"GELLY",
-"GENA",
-"GENOVA",
-"GIBRALTAR",
-"GIBSON",
-"GINEBRA",
-"GIRARDOT",
-"GIRIBONE",
-"GOROSTIAGA",
-"GORRITI",
-"GOYA",
-"GRANADEROS",
-"GRECIA",
-"GRIVEO",
-"GUAL",
-"GUALEGUAY",
-"GUALEGUAYCHU",
-"GUAMINI",
-"GUANAHANI",
-"GUARANI",
-"GUATEMALA",
-"GUAYAQUIL",
-"GUAYMALLEN",
-"GUAYQUIRARO",
-"GUAYRA",
-"GÜEMES",
-"GUEVARA",
-"GUIDO",
-"GUIPUZCOA",
-"GUISE",
-"GURRUCHAGA",
-"GUTENBERG",
-"HABANA",
-"HAITI",
-"HAMBURGO",
-"HAWAII",
-"HELGUERA",
-"HEREDIA",
-"HERNANDARIAS",
-"HERRERA",
-"HIDALGO",
-"HINOJO",
-"HIROSHIMA",
-"HOLMBERG",
-"HOMERO",
-"HONDURAS",
-"HORTIGUERA",
-"HUALFIN",
-"HUAURA",
-"HUBAC",
-"HUDSON",
-"HUEMUL",
-"HUERGO",
-"HUMAHUACA",
-"HUMAITA",
-"HUMBOLDT",
-"HUNGRIA",
-"HUSARES",
-"IBAÑEZ",
-"IBARROLA",
-"IBERA",
-"ICALMA",
-"IGUALDAD",
-"IGUAZU",
-"INCA",
-"INCLAN",
-"INDIO",
-"IRALA",
-"IRIARTE",
-"IRIGOYEN",
-"IRIZAR",
-"IRLANDA",
-"ISLANDIA",
-"ITALIA",
-"ITAQUI",
-"ITURRI",
-"ITUZAINGO",
-"JACARANDA",
-"JACHAL",
-"JARAMILLO",
-"JORGE",
-"JUFRE",
-"JUNCAL",
-"JUNIN",
-"JURAMENTO",
-"KING",
-"LACARRA",
-"LADINES",
-"LAFAYETTE",
-"LAFINUR",
-"LAFUENTE",
-"LAGOS",
-"LAGRANGE",
-"LAGUNA",
-"LAMBARE",
-"LANIN",
-"LANUS",
-"LANZA",
-"LAPACHO",
-"LAPLACE",
-"LAPRIDA",
-"LARRAYA",
-"LARRAZABAL",
-"LARREA",
-"LARSEN",
-"LASCANO",
-"LAUSANA",
-"LAUTARO",
-"LAVADERO",
-"LAVALLE",
-"LAVALLEJA",
-"LAVARDEN",
-"LAVOISIER",
-"LEIPZIG",
-"LEIVA",
-"LEONES",
-"LEOPARDI",
-"LERMA",
-"LEZICA",
-"LIBERTAD",
-"LIBRES",
-"LIMA",
-"LINNEO",
-"LISBOA",
-"LITUANIA",
-"LIVERPOOL",
-"LLAVALLOL",
-"LLERENA",
-"LLORENTE",
-"LOBERIA",
-"LOBOS",
-"LOGROÑO",
-"LONDRES",
-"LOYOLA",
-"LUCERO",
-"LÜCHTER",
-"LUGO",
-"LUGONES",
-"LUNA",
-"LUXEMBURGO",
-"LUZURIAGA",
-"LYNCH",
-"MACHAIN",
-"MADARIAGA",
-"MADERO",
-"MADRID",
-"MAGALLANES",
-"MAGDALENA",
-"MAIPU",
-"MAITEN",
-"MALABIA",
-"MALAGA",
-"MALASIA",
-"MALDONADO",
-"MANAGUA",
-"MANDISOBI",
-"MANGIANTE",
-"MANZANARES",
-"MANZONI",
-"MARACAIBO",
-"MARSELLA",
-"MASON",
-"MATACO",
-"MATANZA",
-"MATHEU",
-"MATORRAS",
-"MATURIN",
-"MAURE",
-"MAZA",
-"MBURUCUYA",
-"MEDANOS",
-"MEDEYROS",
-"MEDINA",
-"MEDRANO",
-"MELGAR",
-"MELIAN",
-"MELINCUE",
-"MEMBRILLAR",
-"MENDEZ",
-"MENDOZA",
-"MERCEDES",
-"METAN",
-"MEXICO",
-"MIGUELETES",
-"MILAN",
-"MILLER",
-"MILTON",
-"MIÑONES",
-"MIRAFLORES",
-"MIRALLA",
-"MIRAMAR",
-"MIRANDA",
-"MIRAVE",
-"MIRIÑAY",
-"MIRO",
-"MISIONES",
-"MOCORETA",
-"MOCTEZUMA",
-"MOLDES",
-"MOLIERE",
-"MOLINA",
-"MOM",
-"MOMPOX",
-"MONACO",
-"MONASTERIO",
-"MONROE",
-"MONTAÑESES",
-"MONTE",
-"MONTEAGUDO",
-"MONTENEGRO",
-"MONTESQUIEU",
-"MONTEVIDEO",
-"MONTIEL",
-"MONTREAL",
-"MORELOS",
-"MORENO",
-"MORETO",
-"MORLOTE",
-"MORON",
-"MORSE",
-"MOSCU",
-"MOZART",
-"MUÑECAS",
-"MUNICH",
-"MUÑIZ",
-"MURATURE",
-"MURCIA",
-"MURGUIONDO",
-"MURILLO",
-"MUTUALISMO",
-"NAMUNCURA",
-"ÑANDUTI",
-"NAPOLES",
-"NATAL",
-"NAVARRO",
-"NAZARRE",
-"NECOCHEA",
-"NEPPER",
-"NEUQUEN",
-"NEVADA",
-"NEWTON",
-"NICARAGUA",
-"NIZA",
-"NOGOYA",
-"NORUEGA",
-"NUMANCIA",
-"NUÑEZ",
-"O'BRIEN",
-"O'GORMAN",
-"O'HIGGINS",
-"OCEANIA",
-"OHM",
-"OLAVARRIA",
-"OLAYA",
-"OLAZABAL",
-"OLIDEN",
-"OLIVIERI",
-"OLIVOS",
-"OLLEROS",
-"OMBU",
-"ONCATIVO",
-"OPORTO",
-"ORMA",
-"ORTEGA",
-"ORURO",
-"OSAKA",
-"OSLO",
-"OSORIO",
-"OSTENDE",
-"OTAMENDI",
-"OTERO",
-"OTTAWA",
-"OWEN",
-"PACHECO",
-"PADILLA",
-"PAEZ",
-"PALESTINA",
-"PALMAR",
-"PALOS",
-"PALPA",
-"PANAMA",
-"PARACAS",
-"PARAGUAY",
-"PARANA",
-"PAREJA",
-"PARERA",
-"PARIS",
-"PARKER",
-"PAROISSIEN",
-"PARRAL",
-"PASCO",
-"PASO",
-"PASTEUR",
-"PATAGONES",
-"PATRON",
-"PAUNERO",
-"PAVON",
-"PAYSANDU",
-"PEDERNERA",
-"PEHUAJO",
-"PEIPING",
-"PEÑA",
-"PEPIRI",
-"PERDRIEL",
-"PEREYRA",
-"PERGAMINO",
-"PERIBEBUY",
-"PERNAMBUCO",
-"PERRAULT",
-"PERU",
-"PESCADORES",
-"PESTALOZZI",
-"PICHEUTA",
-"PICHINCHA",
-"PICO",
-"PIEDRAS",
-"PIERES",
-"PILA",
-"PILAR",
-"PILCOMAYO",
-"PILLADO",
-"PINTO",
-"PINZON",
-"PIRAN",
-"PIROVANO",
-"PITAGORAS",
-"PIZARRO",
-"PIZZURNO",
-"PLANES",
-"PLAZA",
-"PLUMERILLO",
-"PLUTARCO",
-"POLA",
-"POLONIA",
-"PORTELA",
-"PORTILLO",
-"PORTUGAL",
-"POSADAS",
-"POSTA",
-"POTOSI",
-"PRAGA",
-"PRINGLES",
-"PROMETEO",
-"PUAN",
-"PUJOL",
-"PUMACAHUA",
-"PUNA",
-"QUEBRACHO",
-"QUERANDIES",
-"QUEROL",
-"QUESADA",
-"QUEVEDO",
-"QUILMES",
-"QUINTANA",
-"QUIRNO",
-"QUIROS",
-"QUITO",
-"RAFAELA",
-"RAMALLO",
-"RAMSAY",
-"RANQUELES",
-"RAUCH",
-"RAULET",
-"RAULIES",
-"RAWSON",
-"RECONQUISTA",
-"REMEDIOS",
-"RENACIMIENTO",
-"RENAN",
-"REPUBLICA",
-"RESURRECCION",
-"RIACHUELO",
-"RIGLOS",
-"RINCON",
-"RIOBAMBA",
-"ROBERTSON",
-"ROCAMORA",
-"ROCHA",
-"ROCHDALE",
-"RODNEY",
-"ROJAS",
-"ROMA",
-"ROMERO",
-"RONDEAU",
-"ROSARIO",
-"ROSETI",
-"RUBENS",
-"RUFINO",
-"RUMANIA",
-"RUSIA",
-"RUSSEL",
-"SAAVEDRA",
-"SALADILLO",
-"SALALA",
-"SALAS",
-"SALCEDO",
-"SALOM",
-"SALTA",
-"SALTO",
-"SALVIGNY",
-"SANABRIA",
-"SANCHEZ",
-"SANTANDER",
-"SARACHAGA",
-"SARANDI",
-"SARAVIA",
-"SARAZA",
-"SARMIENTO",
-"SAYOS",
-"SENILLOSA",
-"SERRANO",
-"SERVET",
-"SEVILLA",
-"SHAKESPEARE",
-"SHANGHAI",
-"SIMBRON",
-"SINCLAIR",
-"SOCRATES",
-"SOFIA",
-"SOLER",
-"SOLIS",
-"SOMELLERA",
-"SORIA",
-"STEPHENSON",
-"SUAREZ",
-"SUDAMERICA",
-"SUECIA",
-"SUIPACHA",
-"SUIZA",
-"SUNCHALES",
-"SUPERI",
-"TABARE",
-"TACUARA",
-"TACUARI",
-"TAFI",
-"TAGLE",
-"TALAVERA",
-"TALCAHUANO",
-"TANDIL",
-"TAPALQUE",
-"TARIJA",
-"TARTAGAL",
-"TASSO",
-"TEGUCIGALPA",
-"TEJEDOR",
-"TEMPERLEY",
-"TERRADA",
-"TERRERO",
-"THAMES",
-"THOMPSON",
-"THORNE",
-"TILCARA",
-"TIMBO",
-"TIMBUES",
-"TINOGASTA",
-"TOAY",
-"TOBAS",
-"TOKIO",
-"TOLEDO",
-"TOLL",
-"TONELERO",
-"TORRENT",
-"TOTORAL",
-"TRAFUL",
-"TREVERIS",
-"TRIESTE",
-"TRIPOLI",
-"TROLE",
-"TRONADOR",
-"TUCUMAN",
-"TUNEZ",
-"TUPIZA",
-"TURIN",
-"TURQUIA",
-"TUYU",
-"TUYUTI",
-"UCACHA",
-"UGARTECHE",
-"UKRANIA",
-"UNANUE",
-"URDANETA",
-"URDININEA",
-"URIARTE",
-"URIBURU",
-"URIEN",
-"URUGUAY",
-"URUNDAY",
-"USPALLATA",
-"VALDENEGRO",
-"VALDERRAMA",
-"VALENCIA",
-"VALLE",
-"VALLEJOS",
-"VALPARAISO",
-"VARELA",
-"VARSOVIA",
-"VEDIA",
-"VELAZQUEZ",
-"VENECIA",
-"VENEZUELA",
-"VENIALVO",
-"VENTANA",
-"VERA",
-"VERACRUZ",
-"VIAMONTE",
-"VIDT",
-"VIEJOBUENO",
-"VIEL",
-"VIENA",
-"VIEYRA",
-"VIEYTES",
-"VIGO",
-"VILELA",
-"VILLANUEVA",
-"VILLARINO",
-"VILLARROEL",
-"VINCHINA",
-"VIRASORO",
-"VIRGILIO",
-"VIRREYES",
-"VOLTA",
-"VOLTAIRE",
-"WAGNER",
-"WASHINGTON",
-"WHITE",
-"YAPEYU",
-"YATAY",
-"YERBAL",
-"YERUA",
-"YRUPE",
-"YUGOSLAVIA",
-"ZABALA",
-"ZADO",
-"ZAMUDIO",
-"ZAÑARTU",
-"ZAPALA",
-"ZAPATA",
-"ZAPIOLA",
-"ZARATE",
-"ZARRAGA",
-"ZAVALETA",
-"ZAVALIA",
-"ZELADA",
-"ZELARRAYAN",
-"ZELAYA",
-"ZENTENO",
-"ZEPITA",
-"ZINNY",
-"ZURICH",
-"ZUVIRIA",
+                    "ACASSUSO", "ACEVEDO", "ACHALA", "ACHAL", "ACHEGA", "ACHIRA", 
+                    "ACHUPALLAS", "ACONCAGUA", "AGACES", "AGRELO", "AGUARIBAY", 
+                    "AGÜERO", "AGUILAR", "AGUIRRE", "AIZPURUA", "ALAGON", 
+                    "ALBANIA", "ALBARIÑO", "ALBARRACIN", "ALBERTI", "ALCARAZ", 
+                    "ALEMANIA", "ALFARERO", "ALGARROBO", "ALICANTE", "ALLENDE", 
+                    "ALMAGRO", "ALPATACAL", "AMSTERDAM", "ANASAGASTI", "AÑASCO", 
+                    "ANCASTE", "ANCHORIS", "ANCON", "ANDALGALA", "ANDALUCIA", 
+                    "ANDONAEGUI", "ANDORRA", "ANGACO", "ANKARA", "ANTEQUERA", 
+                    "ANTEZANA", "ANTOFAGASTA", "APULE", "AQUINO", "ARAOZ", 
+                    "ARAUJO", "ARCAMENDIA", "ARCE", "ARCOS", "ARENALES", 
+                    "ARENGREEN", "AREVALO", "ARGAÑARAS", "ARGELIA", "ARGERICH", 
+                    "ARIAS", "ARIEL", "ARISMENDI", "ARIZONA", "ARJONILLA", 
+                    "ARMENIA", "AROMA", "AROMO", "ARQUIMEDES", "ARREGUI", 
+                    "ARRIBEÑOS", "ARRIOLA", "ARROTEA", "ARROYO", "ARTILLEROS", 
+                    "ASCASUBI", "ASIA", "ASTURIAS", "ASUNCION", "ZAVALIA", 
+                    "ZELADA", "ZELARRAYAN", "ZELAYA", "ZENTENO", "ZEPITA", 
+                    "ZINNY", "ZURICH", "ZUVIRIA"
                 ];
                 this.wordToGuess = "";
                 this.guessedLetters = new Set();
@@ -1302,12 +502,12 @@
             
             createKeyboard() {
                 const letters = [
-                ['A', 'B', 'C', 'D', 'E'], 
-                ['F', 'G', 'H', 'I', 'J'],
-                ['K', 'L', 'M', 'N', 'Ñ'],
-                ['O', 'P', 'Q', 'R', 'S'],
-                ['T', 'U', 'V', 'W', 'X'],
-                ['Y', 'Z']
+                    ['A', 'B', 'C', 'D', 'E'], 
+                    ['F', 'G', 'H', 'I', 'J'],
+                    ['K', 'L', 'M', 'N', 'Ñ'],
+                    ['O', 'P', 'Q', 'R', 'S'],
+                    ['T', 'U', 'V', 'W', 'X'],
+                    ['Y', 'Z']
                 ];
                 this.keyboard.innerHTML = '';
                 
@@ -1352,8 +552,24 @@
             }
             
             updateGuessedLettersDisplay() {
-    const letters = [...this.guessedLetters].sort();
-    this.guessedLettersDisplay.textContent = letters.length > 0 ? letters.join(', ') : '-';
+                const letters = [...this.guessedLetters].sort();
+                
+                if (letters.length === 0) {
+                    this.guessedLettersDisplay.innerHTML = '-';
+                    return;
+                }
+                
+                let html = '';
+                letters.forEach(letter => {
+                    const isCorrect = this.wordToGuess.includes(letter);
+                    html += `<span class="guessed-letter ${isCorrect ? 'correct' : ''}">${letter}</span>`;
+                });
+                
+                this.guessedLettersDisplay.innerHTML = html;
+                
+                // Auto-scroll to the end
+                const container = document.getElementById('guessed-letters-container');
+                container.scrollLeft = container.scrollWidth;
             }
             
             handleKeyPress(event) {
@@ -1363,50 +579,49 @@
                 }
             }
             
-makeGuess(guess) {
-    if (this.guessedLetters.has(guess) || this.attempts <= 0) {
-        return;
-    }
-    
-    this.guessedLetters.add(guess);
-    this.updateGuessedLettersDisplay();
-    
-    const keys = document.querySelectorAll('.key');
-    keys.forEach(key => {
-        if (key.textContent === guess) {
-            if (this.wordToGuess.includes(guess)) {
-                key.classList.add('correct');
-            } else {
-                key.classList.add('wrong');
+            makeGuess(guess) {
+                if (this.guessedLetters.has(guess) || this.attempts <= 0) {
+                    return;
+                }
+                
+                this.guessedLetters.add(guess);
+                this.updateGuessedLettersDisplay();
+                
+                const keys = document.querySelectorAll('.key');
+                keys.forEach(key => {
+                    if (key.textContent === guess) {
+                        if (this.wordToGuess.includes(guess)) {
+                            key.classList.add('correct');
+                        } else {
+                            key.classList.add('wrong');
+                        }
+                        key.classList.add('used');
+                        key.disabled = true;
+                    }
+                });
+                
+                if (this.wordToGuess.includes(guess)) {
+                    const currentDisplay = this.displayWord();
+                    if (!currentDisplay.includes('_')) {
+                        this.wordDisplay.classList.add('correct');
+                        this.showNextWordButton();
+                        setTimeout(() => {
+                            this.wordDisplay.classList.remove('correct');
+                        }, 3000);
+                    }
+                } else {
+                    this.attempts--;
+                    this.updateAttemptsDisplay();
+                    if (this.attempts <= 0) {
+                        this.wordDisplay.textContent = this.wordToGuess;
+                        this.wordDisplay.classList.add('incorrect');
+                        this.showNextWordButton();
+                        setTimeout(() => {
+                            this.wordDisplay.classList.remove('incorrect');
+                        }, 3000);
+                    }
+                }
             }
-            key.classList.add('used');
-            key.disabled = true;
-        }
-    });
-    
-    if (this.wordToGuess.includes(guess)) {
-        const currentDisplay = this.displayWord();
-        if (!currentDisplay.includes('_')) {
-            this.wordDisplay.classList.add('correct');
-            this.showNextWordButton();
-            setTimeout(() => {
-                this.wordDisplay.classList.remove('correct');
-            }, 3000);
-        }
-    } else {
-        this.attempts--;
-        this.updateAttemptsDisplay();
-        if (this.attempts <= 0) {
-            // Mostrar la palabra completa con fondo rojo
-            this.wordDisplay.textContent = this.wordToGuess;
-            this.wordDisplay.classList.add('incorrect');
-            this.showNextWordButton();
-            setTimeout(() => {
-                this.wordDisplay.classList.remove('incorrect');
-            }, 3000);
-        }
-    }
-}
             
             showNextWordButton() {
                 this.nextWordBtn.classList.add('show');
@@ -1416,32 +631,32 @@ makeGuess(guess) {
                 this.nextWordBtn.classList.remove('show');
             }
             
-            showMessage(title, message) {
-                alert(`${title}\n${message}`);
+            nextWord() {
+                if (this.words.length === 0) {
+                    alert('¡Felicidades! Has completado todas las palabras.');
+                    return;
+                }
+                
+                // Seleccionar palabra aleatoria y eliminarla del array
+                const randomIndex = Math.floor(Math.random() * this.words.length);
+                this.wordToGuess = this.words[randomIndex].toUpperCase();
+                this.words.splice(randomIndex, 1);
+                
+                this.guessedLetters = new Set();
+                this.attempts = 6;
+                
+                this.wordDisplay.classList.remove('correct', 'incorrect');
+                this.displayWord();
+                this.updateAttemptsDisplay();
+                this.updateGuessedLettersDisplay();
+                this.hideNextWordButton();
+                
+                const keys = document.querySelectorAll('.key');
+                keys.forEach(key => {
+                    key.classList.remove('used', 'correct', 'wrong');
+                    key.disabled = false;
+                });
             }
-            
-nextWord() {
-    if (this.words.length === 0) {
-        alert('No hay más palabras');
-        return;
-    }
-    
-    this.wordToGuess = this.words[Math.floor(Math.random() * this.words.length)].toUpperCase();
-    this.guessedLetters = new Set();
-    this.attempts = 6;
-    
-    this.wordDisplay.classList.remove('correct', 'incorrect'); // Asegurar que ambas clases se eliminen
-    this.displayWord();
-    this.updateAttemptsDisplay();
-    this.guessedLettersDisplay.textContent = '';
-    this.hideNextWordButton();
-    
-    const keys = document.querySelectorAll('.key');
-    keys.forEach(key => {
-        key.classList.remove('used', 'correct', 'wrong');
-        key.disabled = false;
-    });
-}
         }
 
         document.addEventListener('DOMContentLoaded', () => {
