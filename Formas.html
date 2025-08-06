@@ -11,7 +11,8 @@
             overflow: hidden;
             touch-action: manipulation;
             font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            background-color: #121212;
+            color: #e0e0e0;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -22,7 +23,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #f0f0f0;
+            background-color: #121212;
         }
         
         .object {
@@ -34,13 +35,15 @@
         
         #scorePanel {
             position: fixed;
-            top: 10px;
+            top: 20px;
             left: 10px;
-            background-color: rgba(255, 255, 255, 0.7);
+            background-color: rgba(30, 30, 30, 0.8);
             padding: 10px;
             border-radius: 5px;
             font-size: 16px;
             z-index: 100;
+            color: #e0e0e0;
+            border: 1px solid #444;
         }
         
         #gameOver {
@@ -48,20 +51,23 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
+            background-color: rgba(30, 30, 30, 0.9);
+            color: #e0e0e0;
             padding: 20px;
             border-radius: 10px;
             text-align: center;
             display: none;
             z-index: 200;
+            border: 1px solid #444;
+            width: 80%;
+            max-width: 300px;
         }
         
         #restartButton {
             background-color: #4CAF50;
             border: none;
             color: white;
-            padding: 10px 20px;
+            padding: 12px 24px;
             text-align: center;
             text-decoration: none;
             display: inline-block;
@@ -69,11 +75,24 @@
             margin-top: 15px;
             cursor: pointer;
             border-radius: 5px;
+            width: 100%;
+        }
+        
+        #safeArea {
+            position: absolute;
+            top: 50px;
+            left: 10px;
+            right: 10px;
+            bottom: 50px;
+            /* border: 1px dashed rgba(255,255,255,0.1); */
+            /* Descomenta la línea anterior para visualizar el área segura */
         }
     </style>
 </head>
 <body>
-    <div id="gameArea"></div>
+    <div id="gameArea">
+        <div id="safeArea"></div>
+    </div>
     
     <div id="scorePanel">
         Puntuación: <span id="score">0</span><br>
@@ -95,9 +114,11 @@
         let gameActive = true;
         let objectsOnScreen = 0;
         const maxObjects = 10; // Máximo de objetos en pantalla simultáneamente
+        const safeAreaMargin = 50; // Margen seguro para evitar bordes
         
         // Elementos del DOM
         const gameArea = document.getElementById('gameArea');
+        const safeArea = document.getElementById('safeArea');
         const scoreElement = document.getElementById('score');
         const topScoreElement = document.getElementById('topScore');
         const gameOverElement = document.getElementById('gameOver');
@@ -108,9 +129,9 @@
         // Actualizar la mejor puntuación mostrada
         topScoreElement.textContent = topScore;
         
-        // Formas y colores posibles
+        // Formas y colores posibles (colores más vibrantes para contraste con fondo oscuro)
         const shapes = ['circle', 'square', 'triangle', 'rectangle', 'pentagon'];
-        const colors = ['#FF5733', '#33FF57', '#3357FF', '#F3FF33', '#FF33F3', '#33FFF3'];
+        const colors = ['#FF5733', '#33FF57', '#3357FF', '#F3FF33', '#FF33F3', '#33FFF3', '#FF6B6B', '#4ECDC4'];
         
         // Iniciar el juego
         startGame();
@@ -124,7 +145,8 @@
             gameOverElement.style.display = 'none';
             
             // Limpiar cualquier objeto existente
-            gameArea.innerHTML = '';
+            gameArea.innerHTML = '<div id="safeArea"></div>';
+            safeArea = document.getElementById('safeArea');
             gameArea.appendChild(scorePanel);
             
             // Iniciar el ciclo del juego
@@ -143,11 +165,16 @@
             // Tamaño aleatorio
             const size = Math.floor(Math.random() * 50) + 30;
             
-            // Posición inicial aleatoria (asegurando que esté completamente en pantalla)
-            const maxX = gameArea.clientWidth - size;
-            const maxY = gameArea.clientHeight - size;
-            const startX = Math.floor(Math.random() * maxX);
-            const startY = Math.floor(Math.random() * maxY);
+            // Obtener dimensiones del área segura
+            const safeAreaRect = safeArea.getBoundingClientRect();
+            const safeAreaWidth = safeAreaRect.width;
+            const safeAreaHeight = safeAreaRect.height;
+            
+            // Posición inicial aleatoria dentro del área segura
+            const maxX = safeAreaWidth - size;
+            const maxY = safeAreaHeight - size;
+            const startX = Math.floor(Math.random() * maxX) + safeAreaRect.left;
+            const startY = Math.floor(Math.random() * maxY) + safeAreaRect.top;
             
             // Forma y color aleatorios
             const shape = shapes[Math.floor(Math.random() * shapes.length)];
@@ -222,24 +249,24 @@
             // Mover el objeto
             let posX = startX;
             let posY = startY;
+            let currentSpeedX = speedX;
+            let currentSpeedY = speedY;
             
             function moveObject() {
                 if (!gameActive) return;
                 
-                posX += speedX;
-                posY += speedY;
+                posX += currentSpeedX;
+                posY += currentSpeedY;
                 
-                // Rebotar en los bordes
-                if (posX <= 0 || posX >= maxX) {
-                    object.speedX = -speedX;
+                // Rebotar en los bordes del área segura
+                if (posX <= safeAreaRect.left || posX >= safeAreaRect.left + safeAreaWidth - size) {
+                    currentSpeedX = -currentSpeedX;
+                    posX = Math.max(safeAreaRect.left, Math.min(posX, safeAreaRect.left + safeAreaWidth - size));
                 }
-                if (posY <= 0 || posY >= maxY) {
-                    object.speedY = -speedY;
+                if (posY <= safeAreaRect.top || posY >= safeAreaRect.top + safeAreaHeight - size) {
+                    currentSpeedY = -currentSpeedY;
+                    posY = Math.max(safeAreaRect.top, Math.min(posY, safeAreaRect.top + safeAreaHeight - size));
                 }
-                
-                // Asegurar que el objeto no salga de la pantalla
-                posX = Math.max(0, Math.min(posX, maxX));
-                posY = Math.max(0, Math.min(posY, maxY));
                 
                 object.style.left = `${posX}px`;
                 object.style.top = `${posY}px`;
@@ -271,6 +298,7 @@
             if (score > topScore) {
                 topScore = score;
                 localStorage.setItem('topScore', topScore);
+                topScoreElement.textContent = topScore;
             }
             
             // Mostrar pantalla de fin de juego
@@ -288,6 +316,13 @@
                 e.preventDefault();
             }
         }, { passive: false });
+        
+        // Ajustar el área segura cuando cambia el tamaño de la pantalla
+        window.addEventListener('resize', function() {
+            if (safeArea) {
+                const safeAreaRect = safeArea.getBoundingClientRect();
+            }
+        });
     </script>
 </body>
 </html>
