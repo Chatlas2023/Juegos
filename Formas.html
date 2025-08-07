@@ -1,1 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Elimina los Objetos</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            touch-action: manipulation;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        #gameArea {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #121212;
+        }
+        
+.object {
+    position: absolute;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.2s ease-in-out; /* Transición suave para interacciones */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra para profundidad */
+    border: 2px solid rgba(255, 255, 255, 0.2); /* Borde sutil para contraste */
+}
+.object:hover {
+    transform: scale(1.1); /* Efecto al pasar el ratón/tocar */
+}
+        
+        #scorePanel {
+            position: fixed;
+            top: 20px;
+            left: 10px;
+            background-color: rgba(30, 30, 30, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+            z-index: 100;
+            color: #e0e0e0;
+            border: 1px solid #444;
+        }
+        
+        #gameOver {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(30, 30, 30, 0.9);
+            color: #e0e0e0;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            z-index: 200;
+            border: 1px solid #444;
+            width: 80%;
+            max-width: 300px;
+        }
+        
+        #restartButton {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-top: 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            width: 100%;
+        }
+        
+        #safeArea {
+            position: absolute;
+            top: 50px;
+            left: 10px;
+            right: 10px;
+            bottom: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div id="safeArea"></div>
+    </div>
+    
+    <div id="scorePanel">
+        Puntuación: <span id="score">0</span><br>
+        Mejor Puntuación: <span id="topScore">0</span>
+    </div>
+    
+    <div id="gameOver">
+        <h2>¡Juego Terminado!</h2>
+        <p>Tu puntuación: <span id="finalScore">0</span></p>
+        <p>Mejor puntuación: <span id="finalTopScore">0</span></p>
+        <button id="restartButton">Jugar de Nuevo</button>
+    </div>
+
+    <script>
+        // Variables del juego
+        let score = 0;
+        let topScore = localStorage.getItem('topScore') || 0;
+        let gameSpeed = 1000; // ms entre objetos
+        let gameActive = true;
+        let objectsOnScreen = 0;
+        const maxObjects = 10; // Máximo de objetos en pantalla simultáneamente
+        const safeAreaMargin = 50; // Margen seguro para evitar bordes
+        
+        // Elementos del DOM
+        const gameArea = document.getElementById('gameArea');
+        let safeArea = document.getElementById('safeArea');
+        const scoreElement = document.getElementById('score');
+        const topScoreElement = document.getElementById('topScore');
+        const gameOverElement = document.getElementById('gameOver');
+        const finalScoreElement = document.getElementById('finalScore');
+        const finalTopScoreElement = document.getElementById('finalTopScore');
+        const restartButton = document.getElementById('restartButton');
+        
+        // Actualizar la mejor puntuación mostrada
+        topScoreElement.textContent = topScore;
+        
+        // Formas y colores posibles (colores más vibrantes para contraste con fondo oscuro)
+        const shapes = ['circle', 'square', 'triangle', 'rectangle', 'pentagon'];
+const colors = ['#FF6F61', '#6BFF8C', '#4B7BFF', '#FFD166', '#FF5EBF', '#66FFF9', '#FF9F9F', '#5CE1E6'];
+        // Iniciar el juego
+        startGame();
+        
+        function startGame() {
+            gameActive = true;
+            score = 0;
+            gameSpeed = 1000;
+            objectsOnScreen = 0;
+            scoreElement.textContent = score;
+            gameOverElement.style.display = 'none';
+            
+            // Limpiar cualquier objeto existente
+            gameArea.innerHTML = '<div id="safeArea"></div>';
+            safeArea = document.getElementById('safeArea');
+            
+            // Iniciar el ciclo del juego
+            spawnObject();
+        }
+        
+        function spawnObject() {
+            if (!gameActive || objectsOnScreen >= maxObjects) {
+                if (gameActive) {
+                    setTimeout(spawnObject, gameSpeed);
+                }
+                return;
+            }
+            
+            const object = document.createElement('div');
+            object.className = 'object';
+            
+            // Tamaño aleatorio
+            const size = Math.floor(Math.random() * 30) + 50;
+            
+            // Obtener dimensiones del área segura
+            const safeAreaRect = safeArea.getBoundingClientRect();
+            const safeAreaWidth = safeAreaRect.width;
+            const safeAreaHeight = safeAreaRect.height;
+            
+            // Posición inicial aleatoria dentro del área segura
+            const maxX = safeAreaWidth - size;
+            const maxY = safeAreaHeight - size;
+            
+            if (maxX <= 0 || maxY <= 0) {
+                setTimeout(spawnObject, 100);
+                return;
+            }
+            
+            const startX = Math.floor(Math.random() * maxX) + safeAreaRect.left;
+            const startY = Math.floor(Math.random() * maxY) + safeAreaRect.top;
+            
+            // Forma y color aleatorios
+            const shape = shapes[Math.floor(Math.random() * shapes.length)];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Estilo según la forma
+switch(shape) {
+    case 'circle':
+        object.style.width = `${size}px`;
+        object.style.height = `${size}px`;
+        object.style.borderRadius = '50%';
+        break;
+    case 'square':
+        object.style.width = `${size}px`;
+        object.style.height = `${size}px`;
+        object.style.borderRadius = '10%'; // Bordes ligeramente redondeados
+        break;
+    case 'triangle':
+        object.style.width = `${size}px`;
+        object.style.height = `${size}px`;
+        object.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)'; // Triángulo equilátero
+        object.style.backgroundColor = color;
+        break;
+    case 'rectangle':
+        object.style.width = `${size}px`;
+        object.style.height = `${size * 0.6}px`; // Proporción más estética
+        object.style.borderRadius = '10%'; // Bordes redondeados
+        break;
+    case 'pentagon':
+        object.style.width = `${size}px`;
+        object.style.height = `${size}px`;
+        object.style.clipPath = 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)';
+        break;
+}
+            
+            if (shape !== 'triangle') {
+                object.style.backgroundColor = color;
+            }
+            
+            object.style.left = `${startX}px`;
+            object.style.top = `${startY}px`;
+            
+            // Velocidad y dirección de movimiento aleatorios
+            const speedX = (Math.random() - 0.5) * 4;
+            const speedY = (Math.random() - 0.5) * 4;
+            
+            // Evento para eliminar el objeto al tocarlo
+            object.addEventListener('click', function() {
+                if (!gameActive) return;
+                
+                // Eliminar el objeto
+                gameArea.removeChild(object);
+                objectsOnScreen--;
+                
+                // Aumentar puntuación
+                score++;
+                scoreElement.textContent = score;
+                
+                // Aumentar dificultad gradualmente
+                if (score % 5 === 0 && gameSpeed > 200) {
+                    gameSpeed -= 50;
+                }
+            });
+            
+            // Añadir objeto al área de juego
+            gameArea.appendChild(object);
+            objectsOnScreen++;
+            
+            // Mover el objeto
+            let posX = startX;
+            let posY = startY;
+            let currentSpeedX = speedX;
+            let currentSpeedY = speedY;
+            
+            function moveObject() {
+                if (!gameActive) return;
+                
+                posX += currentSpeedX;
+                posY += currentSpeedY;
+                
+                // Rebotar en los bordes del área segura
+                if (posX <= safeAreaRect.left || posX >= safeAreaRect.left + safeAreaWidth - size) {
+                    currentSpeedX = -currentSpeedX;
+                    posX = Math.max(safeAreaRect.left, Math.min(posX, safeAreaRect.left + safeAreaWidth - size));
+                }
+                if (posY <= safeAreaRect.top || posY >= safeAreaRect.top + safeAreaHeight - size) {
+                    currentSpeedY = -currentSpeedY;
+                    posY = Math.max(safeAreaRect.top, Math.min(posY, safeAreaRect.top + safeAreaHeight - size));
+                }
+                
+                object.style.left = `${posX}px`;
+                object.style.top = `${posY}px`;
+                
+                requestAnimationFrame(moveObject);
+            }
+            
+            moveObject();
+            
+            // Eliminar objeto después de un tiempo si no se toca
+            setTimeout(() => {
+                if (gameArea.contains(object)) {
+                    gameArea.removeChild(object);
+                    objectsOnScreen--;
+                    endGame();
+                }
+            }, 5000);
+            
+            // Generar siguiente objeto
+            if (gameActive) {
+                setTimeout(spawnObject, gameSpeed);
+            }
+        }
+        
+        function endGame() {
+            if (!gameActive) return;
+            
+            gameActive = false;
+            
+            // Actualizar mejor puntuación
+            if (score > topScore) {
+                topScore = score;
+                localStorage.setItem('topScore', topScore);
+                topScoreElement.textContent = topScore;
+            }
+            
+            // Mostrar pantalla de fin de juego
+            finalScoreElement.textContent = score;
+            finalTopScoreElement.textContent = topScore;
+            gameOverElement.style.display = 'block';
+        }
+        
+        // Evento para el botón de reinicio
+        restartButton.addEventListener('click', startGame);
+        
+        // Evitar el desplazamiento táctil no deseado
+        document.addEventListener('touchmove', function(e) {
+            if (gameActive) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Ajustar el área segura cuando cambia el tamaño de la pantalla
+        window.addEventListener('resize', function() {
+            if (safeArea) {
+                const safeAreaRect = safeArea.getBoundingClientRect();
+            }
+        });
+    </script>
+</body>
+</html>
 
