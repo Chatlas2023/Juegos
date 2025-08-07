@@ -84,8 +84,6 @@
             left: 10px;
             right: 10px;
             bottom: 50px;
-            /* border: 1px dashed rgba(255,255,255,0.1); */
-            /* Descomenta la línea anterior para visualizar el área segura */
         }
     </style>
 </head>
@@ -118,7 +116,7 @@
         
         // Elementos del DOM
         const gameArea = document.getElementById('gameArea');
-        const safeArea = document.getElementById('safeArea');
+        let safeArea = document.getElementById('safeArea');
         const scoreElement = document.getElementById('score');
         const topScoreElement = document.getElementById('topScore');
         const gameOverElement = document.getElementById('gameOver');
@@ -147,15 +145,16 @@
             // Limpiar cualquier objeto existente
             gameArea.innerHTML = '<div id="safeArea"></div>';
             safeArea = document.getElementById('safeArea');
-            gameArea.appendChild(scorePanel);
             
             // Iniciar el ciclo del juego
-            setTimeout(spawnObject, gameSpeed);
+            spawnObject();
         }
         
         function spawnObject() {
             if (!gameActive || objectsOnScreen >= maxObjects) {
-                setTimeout(spawnObject, gameSpeed);
+                if (gameActive) {
+                    setTimeout(spawnObject, gameSpeed);
+                }
                 return;
             }
             
@@ -173,6 +172,12 @@
             // Posición inicial aleatoria dentro del área segura
             const maxX = safeAreaWidth - size;
             const maxY = safeAreaHeight - size;
+            
+            if (maxX <= 0 || maxY <= 0) {
+                setTimeout(spawnObject, 100);
+                return;
+            }
+            
             const startX = Math.floor(Math.random() * maxX) + safeAreaRect.left;
             const startY = Math.floor(Math.random() * maxY) + safeAreaRect.top;
             
@@ -206,7 +211,6 @@
                     object.style.borderRadius = '0';
                     break;
                 case 'pentagon':
-                    // Simulamos un pentágono con clip-path
                     object.style.width = `${size}px`;
                     object.style.height = `${size}px`;
                     object.style.clipPath = 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)';
@@ -286,7 +290,9 @@
             }, 5000);
             
             // Generar siguiente objeto
-            setTimeout(spawnObject, gameSpeed);
+            if (gameActive) {
+                setTimeout(spawnObject, gameSpeed);
+            }
         }
         
         function endGame() {
