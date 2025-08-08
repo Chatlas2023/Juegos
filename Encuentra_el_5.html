@@ -192,7 +192,7 @@
         const playBtn = document.getElementById('play-btn');
         
         // Event Listeners
-        playBtn.addEventListener('click', toggleGame);
+        playBtn.addEventListener('click', startGame);
         
         // Inicializar el juego
         function initialize() {
@@ -226,8 +226,7 @@
             score = 0;
             displayTime = 2.0;
             isGameRunning = true;
-            playBtn.textContent = 'Detener';
-            playBtn.style.backgroundColor = '#d32f2f';
+            playBtn.style.display = 'none'; // Ocultar el botón al iniciar el juego
             updateScoreDisplay();
             
             playRound();
@@ -349,8 +348,9 @@
         // Finalizar el juego
         function endGame() {
             isGameRunning = false;
-            playBtn.textContent = 'Jugar';
-            playBtn.style.backgroundColor = '#2c3e50';
+            playBtn.style.display = 'block'; // Mostrar el botón al finalizar
+            playBtn.textContent = 'Jugar'; // Asegurar que el texto sea "Jugar"
+            playBtn.style.backgroundColor = '#3c3c3c'; // Restaurar color original
             
             const cells = document.querySelectorAll('.cell');
             cells.forEach((cell, index) => {
