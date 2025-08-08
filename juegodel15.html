@@ -183,6 +183,10 @@
             width: 100%;
         }
         
+        #play-again-btn {
+            display: none;
+        }
+        
         @media (max-width: 480px) {
             #game-container {
                 height: 350px;
@@ -220,7 +224,7 @@
     <div id="message"></div>
     
     <div id="controls">
-        <button id="shuffle-btn">Mezclar</button>
+        <button id="play-again-btn">Jugar de nuevo</button>
     </div>
 
     <div id="high-scores-modal">
@@ -243,7 +247,7 @@
         const grid = document.getElementById('grid');
         const movesDisplay = document.getElementById('moves-display');
         const message = document.getElementById('message');
-        const shuffleBtn = document.getElementById('shuffle-btn');
+        const playAgainBtn = document.getElementById('play-again-btn');
         const highScoresBtn = document.getElementById('high-scores-btn');
         const highScoresModal = document.getElementById('high-scores-modal');
         const highScoresList = document.getElementById('high-scores-list');
@@ -279,7 +283,7 @@
             createBoard();
             shuffleBoard();
             renderBoard();
-            shuffleBtn.addEventListener('click', shuffleBoard);
+            playAgainBtn.addEventListener('click', startNewGame);
             highScoresBtn.addEventListener('click', showHighScores);
             closeHighScores.addEventListener('click', hideHighScores);
         }
@@ -397,6 +401,7 @@
             
             isGameWon = true;
             message.textContent = '¡Felicidades! Has ganado.';
+            playAgainBtn.style.display = 'block';
             updateHighScores(moves);
             launchConfetti();
         }
@@ -440,6 +445,7 @@
             isGameWon = false;
             message.textContent = '';
             moves = 0;
+            playAgainBtn.style.display = 'none';
             createBoard();
             
             // Realizar movimientos aleatorios válidos para mezclar
@@ -507,6 +513,11 @@
             }
             
             renderBoard();
+        }
+        
+        // Comenzar un nuevo juego
+        function startNewGame() {
+            shuffleBoard();
         }
         
         // Inicializar el juego cuando se carga la página
