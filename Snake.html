@@ -229,7 +229,6 @@
         let score = 0;
         let foodCount = 1; // Comienza con 1 comida
         let originalSpeed = 150;
-        let gameSpeed = originalSpeed;
         let gameInterval;
         let gameRunning = true;
         
@@ -380,19 +379,9 @@
                 // Generar nuevas comidas (una más que antes)
                 generateFoods(foodCount);
                 
-                // Calcular nueva velocidad basada en la longitud de la serpiente
-                const lengthFactor = snake.length * 0.1;
-                gameSpeed = Math.max(originalSpeed * (1 + lengthFactor), 300);
-                
+                // Mantener la velocidad original sin cambios
                 clearInterval(gameInterval);
-                gameInterval = setInterval(gameLoop, gameSpeed);
-            } else {
-                snake.pop();
-            }
-            
-            // Verificar colisiones
-            if (checkCollisions()) {
-                gameOver();
+                gameInterval = setInterval(gameLoop, originalSpeed);
             }
         }
         
