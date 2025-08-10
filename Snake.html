@@ -381,9 +381,11 @@
                 
                 // Mantener la velocidad original sin cambios
                 clearInterval(gameInterval);
-                gameInterval = setInterval(gameLoop, originalSpeed);
+    gameInterval = setInterval(gameLoop, originalSpeed);
+} else {
+    snake.pop(); // Añade esta línea para eliminar el último segmento cuando no come
+}
             }
-        }
         
         // Verificar colisiones
         function checkCollisions() {
@@ -441,10 +443,14 @@
         }
         
         // Bucle principal del juego
-        function gameLoop() {
-            update();
-            draw();
-        }
+function gameLoop() {
+    if (!checkCollisions()) {
+        update();
+        draw();
+    } else {
+        gameOver();
+    }
+}
         
         // Controles táctiles
         document.getElementById('up-btn').addEventListener('touchstart', (e) => {
