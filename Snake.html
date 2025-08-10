@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Snake Móvil v1.40</title>
+    <title>Snake Móvil v1.50</title>
     <style>
         body {
             margin: 0;
@@ -166,7 +166,7 @@
     </style>
 </head>
 <body>
-    <div class="version">v1.2</div>
+    <div class="version">v1.5</div>
     <h1>Snake Móvil</h1>
     <div id="score">Puntuación: 0</div>
     <div id="high-score">Máxima puntuación: 0</div>
@@ -188,7 +188,7 @@
     </div>
 
     <script>
-        // Configuración del juego - v1.2
+        // Configuración del juego - v1.5 con efecto de estela
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d');
         const gameOverDiv = document.getElementById('game-over');
@@ -222,6 +222,7 @@
         
         // Estado del juego
         let snake = [{x: 5, y: 5}];
+        let snakeTrail = []; // Array para guardar la estela
         let snakeDirection = {x: 1, y: 0};
         let nextDirection = {x: 1, y: 0};
         let food = generateFood();
@@ -244,15 +245,16 @@
             return newFood;
         }
         
-        // Dibujar elementos del juego
+        // Dibujar elementos del juego con efecto de estela
         function draw() {
-            // Limpiar el canvas
-            ctx.fillStyle = '#1e1e1e';
+            // Limpiar el canvas con un color semi-transparente para crear efecto de estela
+            ctx.fillStyle = 'rgba(30, 30, 30, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Dibujar la serpiente
-            ctx.fillStyle = '#4CAF50';
-            snake.forEach(segment => {
+            // Dibujar la estela (segmentos más antiguos con menor opacidad)
+            snakeTrail.forEach((segment, index) => {
+                const opacity = 0.2 + (0.8 * (index / snakeTrail.length)); // Opacidad basada en posición
+                ctx.fillStyle = `rgba(76, 175, 80, ${opacity})`;
                 ctx.fillRect(
                     segment.x * GRID_SIZE, 
                     segment.y * GRID_SIZE, 
@@ -261,7 +263,35 @@
                 );
                 
                 // Borde más oscuro para los segmentos
-                ctx.strokeStyle = '#388E3C';
+                ctx.strokeStyle = `rgba(56, 142, 60, ${opacity})`;
+                ctx.strokeRect(
+                    segment.x * GRID_SIZE, 
+                    segment.y * GRID_SIZE, 
+                    GRID_SIZE - 1, 
+                    GRID_SIZE - 1
+                );
+            });
+            
+            // Dibujar la serpiente actual (segmentos con opacidad completa)
+            snake.forEach((segment, index) => {
+                // Cabeza más brillante
+                if (index === 0) {
+                    ctx.fillStyle = '#4CAF50';
+                    ctx.strokeStyle = '#388E3C';
+                } else {
+                    // Cuerpo con degradado de color
+                    const colorIntensity = 0.7 + (0.3 * (1 - index / snake.length));
+                    ctx.fillStyle = `rgba(76, 175, 80, ${colorIntensity})`;
+                    ctx.strokeStyle = `rgba(56, 142, 60, ${colorIntensity})`;
+                }
+                
+                ctx.fillRect(
+                    segment.x * GRID_SIZE, 
+                    segment.y * GRID_SIZE, 
+                    GRID_SIZE - 1, 
+                    GRID_SIZE - 1
+                );
+                
                 ctx.strokeRect(
                     segment.x * GRID_SIZE, 
                     segment.y * GRID_SIZE, 
@@ -289,6 +319,14 @@
         
         // Actualizar el estado del juego
         function update() {
+            // Guardar posición actual en la estela antes de mover
+            snakeTrail.unshift({...snake[0]});
+            
+            // Mantener solo los últimos 10 segmentos de estela
+            if (snakeTrail.length > 10) {
+                snakeTrail.pop();
+            }
+            
             // Actualizar dirección
             snakeDirection = {...nextDirection};
             
@@ -357,6 +395,7 @@
         // Reiniciar el juego
         function restartGame() {
             snake = [{x: 5, y: 5}];
+            snakeTrail = []; // Limpiar la estela
             snakeDirection = {x: 1, y: 0};
             nextDirection = {x: 1, y: 0};
             food = generateFood();
