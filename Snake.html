@@ -231,6 +231,7 @@
         let originalSpeed = 150;
         let gameInterval;
         let gameRunning = true;
+        let gameSpeed = originalSpeed; // Añade esta línea
         
         // Generar comida en posición aleatoria
         function generateFood() {
@@ -344,48 +345,48 @@
         }
         
         // Actualizar el estado del juego
-        function update() {
-            // Guardar posición actual en la estela antes de mover
-            snakeTrail.unshift({...snake[0]});
-            
-            // Mantener solo los últimos 5 segmentos de estela (más corta)
-            if (snakeTrail.length > 5) {
-                snakeTrail.pop();
-            }
-            
-            // Actualizar dirección
-            snakeDirection = {...nextDirection};
-            
-            // Mover la serpiente
-            const head = {x: snake[0].x + snakeDirection.x, y: snake[0].y + snakeDirection.y};
-            snake.unshift(head);
-            
-            // Verificar si comió alguna comida
-            let foodEaten = false;
-            for (let i = 0; i < foods.length; i++) {
-                if (head.x === foods[i].x && head.y === foods[i].y) {
-                    score++;
-                    scoreDisplay.textContent = `Puntuación: ${score}`;
-                    foods.splice(i, 1); // Eliminar la comida comida
-                    foodEaten = true;
-                    break;
-                }
-            }
-            
-            if (foodEaten) {
-                // Aumentar la cantidad de comida para la próxima generación
-                foodCount++;
-                
-                // Generar nuevas comidas (una más que antes)
-                generateFoods(foodCount);
-                
-                // Mantener la velocidad original sin cambios
-                clearInterval(gameInterval);
-    gameInterval = setInterval(gameLoop, originalSpeed);
-} else {
-    snake.pop(); // Añade esta línea para eliminar el último segmento cuando no come
+function update() {
+    // Guardar posición actual en la estela antes de mover
+    snakeTrail.unshift({...snake[0]});
+    
+    // Mantener solo los últimos 5 segmentos de estela (más corta)
+    if (snakeTrail.length > 5) {
+        snakeTrail.pop();
+    }
+    
+    // Actualizar dirección
+    snakeDirection = {...nextDirection};
+    
+    // Mover la serpiente
+    const head = {x: snake[0].x + snakeDirection.x, y: snake[0].y + snakeDirection.y};
+    snake.unshift(head);
+    
+    // Verificar si comió alguna comida
+    let foodEaten = false;
+    for (let i = 0; i < foods.length; i++) {
+        if (head.x === foods[i].x && head.y === foods[i].y) {
+            score++;
+            scoreDisplay.textContent = `Puntuación: ${score}`;
+            foods.splice(i, 1); // Eliminar la comida comida
+            foodEaten = true;
+            break;
+        }
+    }
+    
+    if (foodEaten) {
+        // Aumentar la cantidad de comida para la próxima generación
+        foodCount++;
+        
+        // Generar nuevas comidas (una más que antes)
+        generateFoods(foodCount);
+        
+        // Mantener la velocidad original sin cambios
+        clearInterval(gameInterval);
+        gameInterval = setInterval(gameLoop, originalSpeed);
+    } else {
+        snake.pop(); // Eliminar el último segmento cuando no come
+    }
 }
-            }
         
         // Verificar colisiones
         function checkCollisions() {
@@ -433,7 +434,7 @@
             foodCount = 1; // Volver a empezar con 1 comida
             generateFoods(foodCount); // Generar la comida inicial
             scoreDisplay.textContent = `Puntuación: ${score}`;
-            gameSpeed = originalSpeed;
+            const gameSpeed = originalSpeed;
             gameOverDiv.style.display = 'none';
             gameRunning = true;
             
