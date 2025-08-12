@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="es">
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -96,23 +97,23 @@
     const gameOverElement = document.getElementById('gameOver');
     const gameOverText = document.getElementById('gameOverText');
     const restartBtn = document.getElementById('restartBtn');
-    
+
     // Elementos de audio
     const paddleSound = document.getElementById('paddleSound');
     const wallSound = document.getElementById('wallSound');
     const scoreSound = document.getElementById('scoreSound');
     const gameOverSound = document.getElementById('gameOverSound');
-    
+
     const NORMAL_SPEED = 4;
     const INITIAL_SPEED = NORMAL_SPEED / 2;
     const WINNING_SCORE = 10;
-    
+
     // Ajustar tamaño del canvas
     function resizeCanvas() {
         const container = document.getElementById('gameContainer');
         canvas.width = container.clientWidth;
         canvas.height = container.clientHeight;
-        
+
         // Reajustar posición de los elementos
         if (!ballLaunched) {
             playerPaddle.y = canvas.height / 2 - playerPaddle.height / 2;
@@ -121,18 +122,18 @@
             ball.y = playerPaddle.y + playerPaddle.height / 2;
         }
     }
-    
+
     // Variables del juego
     const PADDLE_WIDTH = 10;
     const PADDLE_HEIGHT = 100;
     const BALL_SIZE = 10;
     const PADDLE_OFFSET = 30;
-    
+
     let machineScore = 0;
     let playerScore = 0;
     let gameActive = true;
     let ballLaunched = false;
-    
+
     // Paletas
     const machinePaddle = {
         x: PADDLE_OFFSET,
@@ -141,15 +142,16 @@
         height: PADDLE_HEIGHT,
         speed: 5
     };
-    
+
     const playerPaddle = {
         x: 0, // Se ajustará en resizeCanvas
         y: 0, // Se ajustará en resizeCanvas
         width: PADDLE_WIDTH,
         height: PADDLE_HEIGHT,
-        speed: 8
+        speed: 8,
+        targetY: 0 // Para suavizado de movimiento
     };
-    
+
     // Pelota
     const ball = {
         x: 0, // Se ajustará en resizeCanvas
@@ -158,149 +160,166 @@
         speedX: 0,
         speedY: 0
     };
-    
+
     // Inicializar el canvas y posiciones
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
-    
-    // Variables para el control táctil
+
+    // Variables para el control táctil mejorado
     let isDragging = false;
     let touchStartY = 0;
     let paddleStartY = 0;
-    
-    // Eventos táctiles
+    let lastTouchY = 0;
+    let touchActive = false;
+
+    // Zona sensible ampliada (derecha del canvas)
+    const TOUCH_ZONE_WIDTH = canvas.width * 0.3;
+
+    // Eventos táctiles mejorados
     canvas.addEventListener('touchstart', (e) => {
+        if (!gameActive) return;
+        
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
         const touchX = touch.clientX - rect.left;
         const touchY = touch.clientY - rect.top;
-        
-        if (touchX > playerPaddle.x && 
-            touchX < playerPaddle.x + playerPaddle.width &&
-            touchY > playerPaddle.y && 
-            touchY < playerPaddle.y + playerPaddle.height) {
-            
+
+        // Zona sensible ampliada en el lado derecho
+        if (touchX > canvas.width - TOUCH_ZONE_WIDTH) {
             isDragging = true;
             touchStartY = touchY;
+            lastTouchY = touchY;
             paddleStartY = playerPaddle.y;
+            touchActive = true;
             e.preventDefault();
+            
+            // Lanzar la pelota al primer toque si no está lanzada
+            if (!ballLaunched) {
+                launchBall();
+            }
         }
     });
-    
+
     canvas.addEventListener('touchmove', (e) => {
         if (!gameActive || !isDragging) return;
-        
+
         const touch = e.touches[0];
         const rect = canvas.getBoundingClientRect();
         const touchY = touch.clientY - rect.top;
-        
+        lastTouchY = touchY;
+
         const deltaY = touchY - touchStartY;
-        let newY = paddleStartY + deltaY;
-        
-        newY = Math.max(0, Math.min(newY, canvas.height - playerPaddle.height));
-        playerPaddle.y = newY;
-        
-        if (!ballLaunched && Math.abs(deltaY) > 5) {
-            launchBall();
-        }
+        playerPaddle.targetY = paddleStartY + deltaY;
+
+        // Limitar y aplicar movimiento suavizado
+        playerPaddle.targetY = Math.max(0, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height));
         
         if (!ballLaunched) {
             ball.y = playerPaddle.y + playerPaddle.height / 2;
             ball.x = playerPaddle.x - ball.size;
         }
-        
+
         e.preventDefault();
     });
-    
+
     canvas.addEventListener('touchend', (e) => {
         isDragging = false;
+        touchActive = false;
     });
-    
-    // Eventos de ratón
+
+    // Eventos de ratón mejorados
     canvas.addEventListener('mousedown', (e) => {
+        if (!gameActive) return;
+        
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
-        
-        if (mouseX > playerPaddle.x && 
-            mouseX < playerPaddle.x + playerPaddle.width &&
-            mouseY > playerPaddle.y && 
-            mouseY < playerPaddle.y + playerPaddle.height) {
-            
+
+        // Zona sensible ampliada en el lado derecho
+        if (mouseX > canvas.width - TOUCH_ZONE_WIDTH) {
             isDragging = true;
             touchStartY = mouseY;
+            lastTouchY = mouseY;
             paddleStartY = playerPaddle.y;
+            touchActive = true;
             e.preventDefault();
+            
+            // Lanzar la pelota al primer clic si no está lanzada
+            if (!ballLaunched) {
+                launchBall();
+            }
         }
     });
-    
+
     canvas.addEventListener('mousemove', (e) => {
         if (!gameActive || !isDragging) return;
-        
+
         const rect = canvas.getBoundingClientRect();
         const mouseY = e.clientY - rect.top;
-        
+        lastTouchY = mouseY;
+
         const deltaY = mouseY - touchStartY;
-        let newY = paddleStartY + deltaY;
-        
-        newY = Math.max(0, Math.min(newY, canvas.height - playerPaddle.height));
-        playerPaddle.y = newY;
-        
-        if (!ballLaunched && Math.abs(deltaY) > 5) {
-            launchBall();
-        }
+        playerPaddle.targetY = paddleStartY + deltaY;
+
+        // Limitar y aplicar movimiento suavizado
+        playerPaddle.targetY = Math.max(0, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height));
         
         if (!ballLaunched) {
             ball.y = playerPaddle.y + playerPaddle.height / 2;
             ball.x = playerPaddle.x - ball.size;
         }
-        
+
         e.preventDefault();
     });
-    
+
     canvas.addEventListener('mouseup', (e) => {
         isDragging = false;
+        touchActive = false;
     });
-    
+
     canvas.addEventListener('mouseleave', (e) => {
-        isDragging = false;
+        if (isDragging) {
+            isDragging = false;
+            touchActive = false;
+        }
     });
-    
+
     // Función para lanzar la pelota
     function launchBall() {
         if (ballLaunched) return;
-        
+
         ballLaunched = true;
         ball.speedX = -INITIAL_SPEED;
         ball.speedY = (Math.random() * 2 - 1) * INITIAL_SPEED;
-        
+
         if (Math.abs(ball.speedY) < 0.5) {
             ball.speedY = (Math.random() > 0.5 ? 1 : -1) * 2;
         }
     }
-    
+
     // Función para reiniciar el juego
     function resetGame() {
         machineScore = 0;
         playerScore = 0;
         gameActive = true;
         ballLaunched = false;
-        
+
         machinePaddle.y = canvas.height / 2 - machinePaddle.height / 2;
         playerPaddle.y = canvas.height / 2 - playerPaddle.height / 2;
+        playerPaddle.targetY = playerPaddle.y;
         playerPaddle.x = canvas.width - PADDLE_OFFSET - playerPaddle.width;
-        
+
         ball.x = playerPaddle.x - ball.size;
         ball.y = playerPaddle.y + playerPaddle.height / 2;
         ball.speedX = 0;
         ball.speedY = 0;
-        
+
         gameOverElement.style.display = 'none';
         scoreElement.textContent = `Machine: ${machineScore} - Player: ${playerScore}`;
     }
-    
+
     restartBtn.addEventListener('click', resetGame);
-    
+
     function showGameOver(winner) {
         gameActive = false;
         ballLaunched = false;
@@ -310,24 +329,24 @@
         gameOverElement.style.display = 'flex';
         gameOverSound.play();
     }
-    
+
     // Función para dibujar elementos
     function draw() {
         // Limpiar canvas
         ctx.fillStyle = 'green';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
+
         // Dibujar paletas
         ctx.fillStyle = 'white';
         ctx.fillRect(machinePaddle.x, machinePaddle.y, machinePaddle.width, machinePaddle.height);
         ctx.fillRect(playerPaddle.x, playerPaddle.y, playerPaddle.width, playerPaddle.height);
-        
+
         // Dibujar pelota
         ctx.fillStyle = 'red';
         ctx.beginPath();
         ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
         ctx.fill();
-        
+
         // Dibujar línea central
         ctx.strokeStyle = 'white';
         ctx.setLineDash([10, 10]);
@@ -337,48 +356,55 @@
         ctx.stroke();
         ctx.setLineDash([]);
     }
-    
-    // Función para actualizar la posición de los elementos
+
+    // Función para actualizar la posición de los elementos con suavizado
     function update() {
         if (!gameActive) return;
-        
+
+        // Suavizar el movimiento de la paleta del jugador
+        if (Math.abs(playerPaddle.y - playerPaddle.targetY) > 1) {
+            playerPaddle.y += (playerPaddle.targetY - playerPaddle.y) * 0.3;
+        } else {
+            playerPaddle.y = playerPaddle.targetY;
+        }
+
         if (ballLaunched) {
             ball.x += ball.speedX;
             ball.y += ball.speedY;
         }
-        
+
         // IA para la paleta de la máquina
         if (ballLaunched) {
-        const machinePaddleCenter = machinePaddle.y + machinePaddle.height / 2;
-        const isSharpAngle = Math.abs(ball.speedY / ball.speedX) > 1;
-        
-        // 30% de probabilidad de fallar en ángulos pronunciados
-        if (!isSharpAngle || Math.random() > 0.3) {
-            const targetY = ball.y - machinePaddle.height / 2;
-            // Movimiento con suavizado y margen de error
-            machinePaddle.y += (targetY - machinePaddle.y) * (0.08 + Math.random() * 0.04);
-        } else {
-            // Movimiento erróneo (falla a propósito)
-            machinePaddle.y += (Math.random() * 4 - 2);
+            const machinePaddleCenter = machinePaddle.y + machinePaddle.height / 2;
+            const isSharpAngle = Math.abs(ball.speedY / ball.speedX) > 1;
+
+            // 30% de probabilidad de fallar en ángulos pronunciados
+            if (!isSharpAngle || Math.random() > 0.3) {
+                const targetY = ball.y - machinePaddle.height / 2;
+                // Movimiento con suavizado y margen de error
+                machinePaddle.y += (targetY - machinePaddle.y) * (0.08 + Math.random() * 0.04);
+            } else {
+                // Movimiento erróneo (falla a propósito)
+                machinePaddle.y += (Math.random() * 4 - 2);
+            }
+
+            // Limitar la paleta dentro del canvas
+            machinePaddle.y = Math.max(0, Math.min(machinePaddle.y, canvas.height - machinePaddle.height));
         }
-        
-        // Limitar la paleta dentro del canvas
-        machinePaddle.y = Math.max(0, Math.min(machinePaddle.y, canvas.height - machinePaddle.height));
-    }
-        
+
         // Colisión con bordes
         if (ballLaunched && (ball.y - ball.size < 0 || ball.y + ball.size > canvas.height)) {
             ball.speedY = -ball.speedY;
             wallSound.currentTime = 0;
             wallSound.play();
         }
-        
+
         // Colisión con paletas
         if (ballLaunched && 
             ball.x - ball.size < machinePaddle.x + machinePaddle.width &&
             ball.y > machinePaddle.y &&
             ball.y < machinePaddle.y + machinePaddle.height) {
-            
+
             ball.speedX = Math.abs(ball.speedX) * 1.03;
             ball.speedY *= 1.03;
             const hitPosition = (ball.y - (machinePaddle.y + machinePaddle.height / 2)) / (machinePaddle.height / 2);
@@ -386,12 +412,12 @@
             paddleSound.currentTime = 0;
             paddleSound.play();
         }
-        
+
         if (ballLaunched && 
             ball.x + ball.size > playerPaddle.x &&
             ball.y > playerPaddle.y &&
             ball.y < playerPaddle.y + playerPaddle.height) {
-            
+
             ball.speedX = -Math.abs(ball.speedX) * 1.03;
             ball.speedY *= 1.03;
             const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
@@ -399,7 +425,7 @@
             paddleSound.currentTime = 0;
             paddleSound.play();
         }
-        
+
         // Puntuación
         if (ballLaunched) {
             if (ball.x - ball.size < 0) {
@@ -407,7 +433,7 @@
                 ballLaunched = false;
                 scoreSound.currentTime = 0;
                 scoreSound.play();
-                
+
                 if (playerScore >= WINNING_SCORE) {
                     showGameOver('player');
                 } else {
@@ -418,7 +444,7 @@
                 ballLaunched = false;
                 scoreSound.currentTime = 0;
                 scoreSound.play();
-                
+
                 if (machineScore >= WINNING_SCORE) {
                     showGameOver('machine');
                 } else {
@@ -426,10 +452,10 @@
                 }
             }
         }
-        
+
         scoreElement.textContent = `Machine: ${machineScore} - Player: ${playerScore}`;
     }
-    
+
     function resetBall() {
         ball.x = playerPaddle.x - ball.size;
         ball.y = playerPaddle.y + playerPaddle.height / 2;
@@ -437,16 +463,17 @@
         ball.speedY = 0;
         ballLaunched = false;
     }
-    
+
     // Bucle del juego
     function gameLoop() {
         update();
         draw();
         requestAnimationFrame(gameLoop);
     }
-    
+
     // Iniciar el juego
     resetGame();
     gameLoop();
-</script></body>
+</script>
+</body>
 </html>
