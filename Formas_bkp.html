@@ -26,12 +26,17 @@
             background-color: #121212;
         }
         
-        .object {
-            position: absolute;
-            border-radius: 50%;
-            cursor: pointer;
-            touch-action: manipulation;
-        }
+.object {
+    position: absolute;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.2s ease-in-out; /* Transición suave para interacciones */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra para profundidad */
+    border: 2px solid rgba(255, 255, 255, 0.2); /* Borde sutil para contraste */
+}
+.object:hover {
+    transform: scale(1.1); /* Efecto al pasar el ratón/tocar */
+}
         
         #scorePanel {
             position: fixed;
@@ -129,8 +134,7 @@
         
         // Formas y colores posibles (colores más vibrantes para contraste con fondo oscuro)
         const shapes = ['circle', 'square', 'triangle', 'rectangle', 'pentagon'];
-        const colors = ['#FF5733', '#33FF57', '#3357FF', '#F3FF33', '#FF33F3', '#33FFF3', '#FF6B6B', '#4ECDC4'];
-        
+const colors = ['#FF6F61', '#6BFF8C', '#4B7BFF', '#FFD166', '#FF5EBF', '#66FFF9', '#FF9F9F', '#5CE1E6'];
         // Iniciar el juego
         startGame();
         
@@ -162,7 +166,7 @@
             object.className = 'object';
             
             // Tamaño aleatorio
-            const size = Math.floor(Math.random() * 50) + 30;
+            const size = Math.floor(Math.random() * 30) + 50;
             
             // Obtener dimensiones del área segura
             const safeAreaRect = safeArea.getBoundingClientRect();
@@ -186,36 +190,34 @@
             const color = colors[Math.floor(Math.random() * colors.length)];
             
             // Estilo según la forma
-            switch(shape) {
-                case 'circle':
-                    object.style.width = `${size}px`;
-                    object.style.height = `${size}px`;
-                    object.style.borderRadius = '50%';
-                    break;
-                case 'square':
-                    object.style.width = `${size}px`;
-                    object.style.height = `${size}px`;
-                    object.style.borderRadius = '0';
-                    break;
-                case 'triangle':
-                    object.style.width = '0';
-                    object.style.height = '0';
-                    object.style.borderLeft = `${size/2}px solid transparent`;
-                    object.style.borderRight = `${size/2}px solid transparent`;
-                    object.style.borderBottom = `${size}px solid ${color}`;
-                    object.style.backgroundColor = 'transparent';
-                    break;
-                case 'rectangle':
-                    object.style.width = `${size}px`;
-                    object.style.height = `${size/2}px`;
-                    object.style.borderRadius = '0';
-                    break;
-                case 'pentagon':
-                    object.style.width = `${size}px`;
-                    object.style.height = `${size}px`;
-                    object.style.clipPath = 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)';
-                    break;
-            }
+switch(shape) {
+    case 'circle':
+        object.style.width = `${size}px`;
+        object.style.height = `${size}px`;
+        object.style.borderRadius = '50%';
+        break;
+    case 'square':
+        object.style.width = `${size}px`;
+        object.style.height = `${size}px`;
+        object.style.borderRadius = '10%'; // Bordes ligeramente redondeados
+        break;
+    case 'triangle':
+        object.style.width = `${size}px`;
+        object.style.height = `${size}px`;
+        object.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)'; // Triángulo equilátero
+        object.style.backgroundColor = color;
+        break;
+    case 'rectangle':
+        object.style.width = `${size}px`;
+        object.style.height = `${size * 0.6}px`; // Proporción más estética
+        object.style.borderRadius = '10%'; // Bordes redondeados
+        break;
+    case 'pentagon':
+        object.style.width = `${size}px`;
+        object.style.height = `${size}px`;
+        object.style.clipPath = 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)';
+        break;
+}
             
             if (shape !== 'triangle') {
                 object.style.backgroundColor = color;
