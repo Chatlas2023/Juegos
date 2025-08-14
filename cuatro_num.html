@@ -285,6 +285,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <script>
         // Configuración del juego
         const NUMBERS = [
@@ -757,6 +758,13 @@
                 winMessageEl.classList.remove('hidden');
                 checkBtn.classList.add('hidden');
                 newGameBtn.classList.remove('hidden');
+                
+                // Lanzar confeti cuando el jugador gana
+                confetti({
+                    particleCount: 150,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
                 return;
             }
             
