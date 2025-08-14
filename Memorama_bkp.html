@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Juego de Memoria</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <style>
         body {
             display: flex;
@@ -34,6 +35,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
             overflow: hidden;
             margin-bottom: 20px;
+            position: relative;
         }
         
         .grid {
@@ -221,6 +223,49 @@
             width: 100%;
         }
         
+        /* Animaciones para la victoria */
+        @keyframes pulse {
+            from { transform: translate(-50%, -50%) scale(1); }
+            to { transform: translate(-50%, -50%) scale(1.05); }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .victory-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(30, 136, 229, 0.9);
+            color: white;
+            padding: 30px 50px;
+            border-radius: 15px;
+            z-index: 1000;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.7);
+            font-size: 28px;
+            font-weight: bold;
+            animation: pulse 1s infinite alternate;
+        }
+        
+        .victory-message div:first-child {
+            font-size: 42px;
+            margin-bottom: 15px;
+        }
+        
+        .victory-message div:nth-child(2) {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        .victory-message div:last-child {
+            margin-top: 15px;
+            font-size: 20px;
+        }
+        
         @media (max-width: 480px) {
             #game-container {
                 height: 350px;
@@ -234,6 +279,20 @@
             #moves-display, #high-scores-btn {
                 width: 100%;
                 text-align: center;
+            }
+            
+            .victory-message {
+                width: 90%;
+                padding: 20px;
+                font-size: 24px;
+            }
+            
+            .victory-message div:first-child {
+                font-size: 32px;
+            }
+            
+            .victory-message div:nth-child(2) {
+                font-size: 28px;
             }
         }
     </style>
@@ -284,7 +343,7 @@
         const highScoresList = document.getElementById('high-scores-list');
         const closeHighScores = document.getElementById('close-high-scores');
         
-        // Imágenes disponibles (01.png a 08.png)
+        // Imágenes disponibles (01.png a 18.png)
         const images = [
             '01.png', '02.png', '03.png', '04.png', '05.png', '06.png', 
             '07.png', '08.png', '09.png', '10.png', '11.png', '12.png', 
@@ -302,22 +361,22 @@
         }
         
         // Crear las cartas del juego
-function createCards() {
-    cards = [];
-    // Seleccionar aleatoriamente 8 imágenes de las 18 disponibles
-    const shuffledImages = [...images].sort(() => Math.random() - 0.5);
-    const selectedImages = shuffledImages.slice(0, 8);
-    // Duplicamos las imágenes seleccionadas para hacer parejas
-    const cardValues = [...selectedImages, ...selectedImages];
-    cardValues.forEach((image, index) => {
-        cards.push({
-            id: index,
-            image: image,
-            isFlipped: false,
-            isMatched: false
-        });
-    });
-}
+        function createCards() {
+            cards = [];
+            // Seleccionar aleatoriamente 8 imágenes de las 18 disponibles
+            const shuffledImages = [...images].sort(() => Math.random() - 0.5);
+            const selectedImages = shuffledImages.slice(0, 8);
+            // Duplicamos las imágenes seleccionadas para hacer parejas
+            const cardValues = [...selectedImages, ...selectedImages];
+            cardValues.forEach((image, index) => {
+                cards.push({
+                    id: index,
+                    image: image,
+                    isFlipped: false,
+                    isMatched: false
+                });
+            });
+        }
         
         // Renderizar las cartas en el DOM
         function renderCards() {
@@ -392,10 +451,11 @@ function createCards() {
                     renderCards();
                     
                     // Comprobar si el juego ha terminado
-                    if (matchedPairs === images.length) {
+                    if (matchedPairs === 8) { // 8 parejas en total
                         isGameWon = true;
                         message.textContent = '¡Felicidades! Has ganado.';
                         updateHighScores(moves);
+                        showVictoryAnimation(moves);
                     }
                 } else {
                     // No son pareja, voltear de nuevo después de un breve retraso
@@ -432,6 +492,69 @@ function createCards() {
             createCards();
             shuffleCards();
             renderCards();
+        }
+        
+        // Mostrar animación de victoria con confeti
+        function showVictoryAnimation(moves) {
+            // Crear mensaje de victoria
+            const victoryMsg = document.createElement('div');
+            victoryMsg.className = 'victory-message';
+            victoryMsg.innerHTML = `
+                <div>🎉 ¡GANASTE! 🎉</div>
+                <div>${moves} movimientos</div>
+                <div>${getCongratulatoryMessage(moves)}</div>
+            `;
+            
+            document.body.appendChild(victoryMsg);
+            
+            // Configuración de los fuegos artificiales
+            const duration = 5 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+            
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+            
+            // Disparar confeti periódicamente
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+                
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+                
+                const particleCount = 50 * (timeLeft / duration);
+                // Confeti desde la izquierda
+                confetti({
+                    ...defaults,
+                    particleCount,
+                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+                });
+                // Confeti desde la derecha
+                confetti({
+                    ...defaults,
+                    particleCount,
+                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+                });
+            }, 250);
+            
+            // Eliminar mensaje después de 6 segundos
+            setTimeout(() => {
+                victoryMsg.style.transition = 'all 1s';
+                victoryMsg.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.removeChild(victoryMsg);
+                }, 1000);
+            }, 6000);
+        }
+        
+        // Obtener mensaje de felicitación según el puntaje
+        function getCongratulatoryMessage(moves) {
+            if (moves <= 16) return "¡Eres un genio de la memoria!";
+            if (moves <= 24) return "¡Excelente trabajo!";
+            if (moves <= 32) return "¡Buen resultado!";
+            return "¡Bien jugado!";
         }
         
         // Actualizar las mejores puntuaciones
