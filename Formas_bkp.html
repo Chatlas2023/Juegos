@@ -26,17 +26,34 @@
             background-color: #121212;
         }
         
-.object {
-    position: absolute;
-    cursor: pointer;
-    touch-action: manipulation;
-    transition: transform 0.2s ease-in-out; /* Transición suave para interacciones */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra para profundidad */
-    border: 2px solid rgba(255, 255, 255, 0.2); /* Borde sutil para contraste */
-}
-.object:hover {
-    transform: scale(1.1); /* Efecto al pasar el ratón/tocar */
-}
+        .object-container {
+            position: absolute;
+            cursor: pointer;
+            touch-action: manipulation;
+            transition: transform 0.2s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .object-hitbox {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            z-index: 2;
+        }
+        
+        .object-image {
+            position: relative;
+            z-index: 1;
+            pointer-events: none;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .object-container:hover {
+            transform: scale(1.1);
+        }
         
         #scorePanel {
             position: fixed;
@@ -118,6 +135,8 @@
         let objectsOnScreen = 0;
         const maxObjects = 10; // Máximo de objetos en pantalla simultáneamente
         const safeAreaMargin = 50; // Margen seguro para evitar bordes
+        const imageCount = 18; // Número de imágenes disponibles (01.png a 18.png)
+        const hitboxScale = 1.5; // Factor de escala para el área de toque
         
         // Elementos del DOM
         const gameArea = document.getElementById('gameArea');
@@ -132,9 +151,6 @@
         // Actualizar la mejor puntuación mostrada
         topScoreElement.textContent = topScore;
         
-        // Formas y colores posibles (colores más vibrantes para contraste con fondo oscuro)
-        const shapes = ['circle', 'square', 'triangle', 'rectangle', 'pentagon'];
-const colors = ['#FF6F61', '#6BFF8C', '#4B7BFF', '#FFD166', '#FF5EBF', '#66FFF9', '#FF9F9F', '#5CE1E6'];
         // Iniciar el juego
         startGame();
         
@@ -162,11 +178,11 @@ const colors = ['#FF6F61', '#6BFF8C', '#4B7BFF', '#FFD166', '#FF5EBF', '#66FFF9'
                 return;
             }
             
-            const object = document.createElement('div');
-            object.className = 'object';
+            const container = document.createElement('div');
+            container.className = 'object-container';
             
-            // Tamaño aleatorio
-            const size = Math.floor(Math.random() * 30) + 50;
+            // Tamaño aleatorio (más grande para mejor interacción táctil)
+            const size = Math.floor(Math.random() * 40) + 80;
             
             // Obtener dimensiones del área segura
             const safeAreaRect = safeArea.getBoundingClientRect();
@@ -185,57 +201,64 @@ const colors = ['#FF6F61', '#6BFF8C', '#4B7BFF', '#FFD166', '#FF5EBF', '#66FFF9'
             const startX = Math.floor(Math.random() * maxX) + safeAreaRect.left;
             const startY = Math.floor(Math.random() * maxY) + safeAreaRect.top;
             
-            // Forma y color aleatorios
-            const shape = shapes[Math.floor(Math.random() * shapes.length)];
-            const color = colors[Math.floor(Math.random() * colors.length)];
+            // Seleccionar imagen aleatoria
+            const imageNumber = Math.floor(Math.random() * imageCount) + 1;
+            const imageName = `${imageNumber.toString().padStart(2, '0')}.png`;
             
-            // Estilo según la forma
-switch(shape) {
-    case 'circle':
-        object.style.width = `${size}px`;
-        object.style.height = `${size}px`;
-        object.style.borderRadius = '50%';
-        break;
-    case 'square':
-        object.style.width = `${size}px`;
-        object.style.height = `${size}px`;
-        object.style.borderRadius = '10%'; // Bordes ligeramente redondeados
-        break;
-    case 'triangle':
-        object.style.width = `${size}px`;
-        object.style.height = `${size}px`;
-        object.style.clipPath = 'polygon(50% 0%, 0% 100%, 100% 100%)'; // Triángulo equilátero
-        object.style.backgroundColor = color;
-        break;
-    case 'rectangle':
-        object.style.width = `${size}px`;
-        object.style.height = `${size * 0.6}px`; // Proporción más estética
-        object.style.borderRadius = '10%'; // Bordes redondeados
-        break;
-    case 'pentagon':
-        object.style.width = `${size}px`;
-        object.style.height = `${size}px`;
-        object.style.clipPath = 'polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)';
-        break;
-}
+            // Crear elementos de imagen y área de toque
+            const hitbox = document.createElement('div');
+            hitbox.className = 'object-hitbox';
             
-            if (shape !== 'triangle') {
-                object.style.backgroundColor = color;
-            }
+            const img = document.createElement('img');
+            img.className = 'object-image';
+            img.src = imageName;
+            img.alt = `Objeto ${imageNumber}`;
             
-            object.style.left = `${startX}px`;
-            object.style.top = `${startY}px`;
+            // Establecer tamaño del contenedor
+            container.style.width = `${size}px`;
+            container.style.height = `${size}px`;
+            container.style.left = `${startX}px`;
+            container.style.top = `${startY}px`;
+            
+            // Hacer el área de toque más grande que la imagen
+            hitbox.style.width = `${size * hitboxScale}px`;
+            hitbox.style.height = `${size * hitboxScale}px`;
+            hitbox.style.marginLeft = `${-size * (hitboxScale - 1) / 2}px`;
+            hitbox.style.marginTop = `${-size * (hitboxScale - 1) / 2}px`;
+            
+            // Añadir elementos al contenedor
+            container.appendChild(img);
+            container.appendChild(hitbox);
             
             // Velocidad y dirección de movimiento aleatorios
             const speedX = (Math.random() - 0.5) * 4;
             const speedY = (Math.random() - 0.5) * 4;
             
             // Evento para eliminar el objeto al tocarlo
-            object.addEventListener('click', function() {
+            hitbox.addEventListener('click', function() {
                 if (!gameActive) return;
                 
                 // Eliminar el objeto
-                gameArea.removeChild(object);
+                gameArea.removeChild(container);
+                objectsOnScreen--;
+                
+                // Aumentar puntuación
+                score++;
+                scoreElement.textContent = score;
+                
+                // Aumentar dificultad gradualmente
+                if (score % 5 === 0 && gameSpeed > 200) {
+                    gameSpeed -= 50;
+                }
+            });
+            
+            // También permitir tocar en cualquier parte del contenedor
+            container.addEventListener('click', function(e) {
+                if (!gameActive) return;
+                e.stopPropagation();
+                
+                // Eliminar el objeto
+                gameArea.removeChild(container);
                 objectsOnScreen--;
                 
                 // Aumentar puntuación
@@ -249,7 +272,7 @@ switch(shape) {
             });
             
             // Añadir objeto al área de juego
-            gameArea.appendChild(object);
+            gameArea.appendChild(container);
             objectsOnScreen++;
             
             // Mover el objeto
@@ -274,8 +297,8 @@ switch(shape) {
                     posY = Math.max(safeAreaRect.top, Math.min(posY, safeAreaRect.top + safeAreaHeight - size));
                 }
                 
-                object.style.left = `${posX}px`;
-                object.style.top = `${posY}px`;
+                container.style.left = `${posX}px`;
+                container.style.top = `${posY}px`;
                 
                 requestAnimationFrame(moveObject);
             }
@@ -284,8 +307,8 @@ switch(shape) {
             
             // Eliminar objeto después de un tiempo si no se toca
             setTimeout(() => {
-                if (gameArea.contains(object)) {
-                    gameArea.removeChild(object);
+                if (gameArea.contains(container)) {
+                    gameArea.removeChild(container);
                     objectsOnScreen--;
                     endGame();
                 }
