@@ -210,9 +210,10 @@
 
         const deltaY = touchY - touchStartY;
         playerPaddle.targetY = paddleStartY + deltaY;
-
-        // Limitar y aplicar movimiento suavizado
-        playerPaddle.targetY = Math.max(0, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height));
+        
+        // Permitir movimiento hasta 50% de la altura de la paleta fuera del canvas
+        const maxOffset = playerPaddle.height * 0.5;
+        playerPaddle.targetY = Math.max(-maxOffset, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height + maxOffset));
         
         if (!ballLaunched) {
             ball.y = playerPaddle.y + playerPaddle.height / 2;
@@ -260,9 +261,10 @@
 
         const deltaY = mouseY - touchStartY;
         playerPaddle.targetY = paddleStartY + deltaY;
-
-        // Limitar y aplicar movimiento suavizado
-        playerPaddle.targetY = Math.max(0, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height));
+        
+        // Permitir movimiento hasta 50% de la altura de la paleta fuera del canvas
+        const maxOffset = playerPaddle.height * 0.5;
+        playerPaddle.targetY = Math.max(-maxOffset, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height + maxOffset));
         
         if (!ballLaunched) {
             ball.y = playerPaddle.y + playerPaddle.height / 2;
@@ -339,7 +341,16 @@
         // Dibujar paletas
         ctx.fillStyle = 'white';
         ctx.fillRect(machinePaddle.x, machinePaddle.y, machinePaddle.width, machinePaddle.height);
-        ctx.fillRect(playerPaddle.x, playerPaddle.y, playerPaddle.width, playerPaddle.height);
+        
+        // Dibujar solo la parte visible de la paleta del jugador
+        const visiblePlayerPaddleY = Math.max(0, playerPaddle.y);
+        const visiblePlayerPaddleHeight = Math.min(
+            playerPaddle.height,
+            canvas.height - visiblePlayerPaddleY,
+            playerPaddle.height + Math.min(0, playerPaddle.y)
+        );
+        
+        ctx.fillRect(playerPaddle.x, visiblePlayerPaddleY, playerPaddle.width, visiblePlayerPaddleHeight);
 
         // Dibujar pelota
         ctx.fillStyle = 'red';
@@ -392,11 +403,22 @@
             machinePaddle.y = Math.max(0, Math.min(machinePaddle.y, canvas.height - machinePaddle.height));
         }
 
-        // Colisión con bordes
-        if (ballLaunched && (ball.y - ball.size < 0 || ball.y + ball.size > canvas.height)) {
-            ball.speedY = -ball.speedY;
-            wallSound.currentTime = 0;
-            wallSound.play();
+        // Colisión con bordes superior e inferior
+        if (ballLaunched) {
+            // Rebote en borde superior
+            if (ball.y - ball.size < 0) {
+                ball.y = ball.size; // Ajustar posición
+                ball.speedY = Math.abs(ball.speedY); // Invertir dirección
+                wallSound.currentTime = 0;
+                wallSound.play();
+            }
+            // Rebote en borde inferior
+            else if (ball.y + ball.size > canvas.height) {
+                ball.y = canvas.height - ball.size; // Ajustar posición
+                ball.speedY = -Math.abs(ball.speedY); // Invertir dirección
+                wallSound.currentTime = 0;
+                wallSound.play();
+            }
         }
 
         // Colisión con paletas
