@@ -200,50 +200,57 @@
         }
     });
 
-canvas.addEventListener('touchmove', (e) => {
-    if (!gameActive || !isDragging) return;
+    canvas.addEventListener('touchmove', (e) => {
+        if (!gameActive || !isDragging) return;
 
-    const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    const touchY = touch.clientY - rect.top;
-    lastTouchY = touchY;
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const touchY = touch.clientY - rect.top;
+        lastTouchY = touchY;
 
-    const deltaY = touchY - touchStartY;
-    playerPaddle.targetY = paddleStartY + deltaY;
-    
-    // Permitir movimiento hasta 50% de la altura de la paleta fuera del canvas
-    const maxOffset = playerPaddle.height * 0.5;
-    playerPaddle.targetY = Math.max(-maxOffset, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height + maxOffset));
-    
-    if (!ballLaunched) {
-        ball.y = playerPaddle.y + playerPaddle.height / 2;
-        ball.x = playerPaddle.x - ball.size;
-    }
+        const deltaY = touchY - touchStartY;
+        playerPaddle.targetY = paddleStartY + deltaY;
+        
+        // Permitir movimiento hasta 50% de la altura de la paleta fuera del canvas
+        const maxOffset = playerPaddle.height * 0.5;
+        playerPaddle.targetY = Math.max(-maxOffset, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height + maxOffset));
+        
+        if (!ballLaunched) {
+            ball.y = playerPaddle.y + playerPaddle.height / 2;
+            ball.x = playerPaddle.x - ball.size;
+        }
 
-    e.preventDefault();
-});
+        e.preventDefault();
+    });
 
-canvas.addEventListener('mousemove', (e) => {
-    if (!gameActive || !isDragging) return;
+    canvas.addEventListener('touchend', (e) => {
+        isDragging = false;
+        touchActive = false;
+    });
 
-    const rect = canvas.getBoundingClientRect();
-    const mouseY = e.clientY - rect.top;
-    lastTouchY = mouseY;
+    // Eventos de ratón mejorados
+    canvas.addEventListener('mousedown', (e) => {
+        if (!gameActive) return;
+        
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
 
-    const deltaY = mouseY - touchStartY;
-    playerPaddle.targetY = paddleStartY + deltaY;
-    
-    // Permitir movimiento hasta 50% de la altura de la paleta fuera del canvas
-    const maxOffset = playerPaddle.height * 0.5;
-    playerPaddle.targetY = Math.max(-maxOffset, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height + maxOffset));
-    
-    if (!ballLaunched) {
-        ball.y = playerPaddle.y + playerPaddle.height / 2;
-        ball.x = playerPaddle.x - ball.size;
-    }
-
-    e.preventDefault();
-});
+        // Zona sensible ampliada en el lado derecho
+        if (mouseX > canvas.width - TOUCH_ZONE_WIDTH) {
+            isDragging = true;
+            touchStartY = mouseY;
+            lastTouchY = mouseY;
+            paddleStartY = playerPaddle.y;
+            touchActive = true;
+            e.preventDefault();
+            
+            // Lanzar la pelota al primer clic si no está lanzada
+            if (!ballLaunched) {
+                launchBall();
+            }
+        }
+    });
 
     canvas.addEventListener('mousemove', (e) => {
         if (!gameActive || !isDragging) return;
@@ -254,12 +261,10 @@ canvas.addEventListener('mousemove', (e) => {
 
         const deltaY = mouseY - touchStartY;
         playerPaddle.targetY = paddleStartY + deltaY;
-
-            const maxOffset = playerPaddle.height * 0.5;
-    playerPaddle.targetY = Math.max(-maxOffset, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height + maxOffset));
-
-        // Limitar y aplicar movimiento suavizado
-        playerPaddle.targetY = Math.max(0, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height));
+        
+        // Permitir movimiento hasta 50% de la altura de la paleta fuera del canvas
+        const maxOffset = playerPaddle.height * 0.5;
+        playerPaddle.targetY = Math.max(-maxOffset, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height + maxOffset));
         
         if (!ballLaunched) {
             ball.y = playerPaddle.y + playerPaddle.height / 2;
@@ -328,62 +333,40 @@ canvas.addEventListener('mousemove', (e) => {
     }
 
     // Función para dibujar elementos
-function draw() {
-    // Limpiar canvas
-    ctx.fillStyle = 'green';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    function draw() {
+        // Limpiar canvas
+        ctx.fillStyle = 'green';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Dibujar paletas
-    ctx.fillStyle = 'white';
-    ctx.fillRect(machinePaddle.x, machinePaddle.y, machinePaddle.width, machinePaddle.height);
-    
-    // Dibujar solo la parte visible de la paleta del jugador
-    const visiblePlayerPaddleY = Math.max(0, playerPaddle.y);
-    const visiblePlayerPaddleHeight = Math.min(
-        playerPaddle.height,
-        canvas.height - visiblePlayerPaddleY,
-        playerPaddle.height + Math.min(0, playerPaddle.y)
-    );
-    
-    ctx.fillRect(playerPaddle.x, visiblePlayerPaddleY, playerPaddle.width, visiblePlayerPaddleHeight);
+        // Dibujar paletas
+        ctx.fillStyle = 'white';
+        ctx.fillRect(machinePaddle.x, machinePaddle.y, machinePaddle.width, machinePaddle.height);
+        
+        // Dibujar solo la parte visible de la paleta del jugador
+        const visiblePlayerPaddleY = Math.max(0, playerPaddle.y);
+        const visiblePlayerPaddleHeight = Math.min(
+            playerPaddle.height,
+            canvas.height - visiblePlayerPaddleY,
+            playerPaddle.height + Math.min(0, playerPaddle.y)
+        );
+        
+        ctx.fillRect(playerPaddle.x, visiblePlayerPaddleY, playerPaddle.width, visiblePlayerPaddleHeight);
 
-    // Dibujar pelota
-    ctx.fillStyle = 'red';
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
-    ctx.fill();
+        // Dibujar pelota
+        ctx.fillStyle = 'red';
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
+        ctx.fill();
 
-    // Dibujar línea central
-    ctx.strokeStyle = 'white';
-    ctx.setLineDash([10, 10]);
-    ctx.beginPath();
-    ctx.moveTo(canvas.width / 2, 0);
-    ctx.lineTo(canvas.width / 2, canvas.height);
-    ctx.stroke();
-    ctx.setLineDash([]);
-}
-
-// Corrige la detección de colisión con los bordes en la función update:
-if (ballLaunched && (ball.y - ball.size < 0 || ball.y + ball.size > canvas.height)) {
-    ball.speedY = -ball.speedY;
-    wallSound.currentTime = 0;
-    wallSound.play();
-}
-
-// Corrige la detección de colisión con la paleta del jugador:
-if (ballLaunched && 
-    ball.x + ball.size > playerPaddle.x &&
-    ball.x - ball.size < playerPaddle.x + playerPaddle.width &&
-    ball.y > playerPaddle.y &&
-    ball.y < playerPaddle.y + playerPaddle.height) {
-
-    ball.speedX = -Math.abs(ball.speedX) * 1.03;
-    ball.speedY *= 1.03;
-    const hitPosition = (ball.y - (playerPaddle.y + playerPaddle.height / 2)) / (playerPaddle.height / 2);
-    ball.speedY = hitPosition * 5;
-    paddleSound.currentTime = 0;
-    paddleSound.play();
-}
+        // Dibujar línea central
+        ctx.strokeStyle = 'white';
+        ctx.setLineDash([10, 10]);
+        ctx.beginPath();
+        ctx.moveTo(canvas.width / 2, 0);
+        ctx.lineTo(canvas.width / 2, canvas.height);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
 
     // Función para actualizar la posición de los elementos con suavizado
     function update() {
@@ -420,14 +403,22 @@ if (ballLaunched &&
             machinePaddle.y = Math.max(0, Math.min(machinePaddle.y, canvas.height - machinePaddle.height));
         }
 
-        // Colisión con bordes
-       if (ballLaunched && 
-    ball.x + ball.size > playerPaddle.x &&
-    ball.y > Math.max(0, playerPaddle.y) &&
-    ball.y < Math.min(canvas.height, playerPaddle.y + playerPaddle.height)) {
-            ball.speedY = -ball.speedY;
-            wallSound.currentTime = 0;
-            wallSound.play();
+        // Colisión con bordes superior e inferior
+        if (ballLaunched) {
+            // Rebote en borde superior
+            if (ball.y - ball.size < 0) {
+                ball.y = ball.size; // Ajustar posición
+                ball.speedY = Math.abs(ball.speedY); // Invertir dirección
+                wallSound.currentTime = 0;
+                wallSound.play();
+            }
+            // Rebote en borde inferior
+            else if (ball.y + ball.size > canvas.height) {
+                ball.y = canvas.height - ball.size; // Ajustar posición
+                ball.speedY = -Math.abs(ball.speedY); // Invertir dirección
+                wallSound.currentTime = 0;
+                wallSound.play();
+            }
         }
 
         // Colisión con paletas
