@@ -210,6 +210,9 @@
 
         const deltaY = touchY - touchStartY;
         playerPaddle.targetY = paddleStartY + deltaY;
+            const maxOffset = playerPaddle.height * 0.5;
+    playerPaddle.targetY = Math.max(-maxOffset, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height + maxOffset));
+    
 
         // Limitar y aplicar movimiento suavizado
         playerPaddle.targetY = Math.max(0, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height));
@@ -260,6 +263,9 @@
 
         const deltaY = mouseY - touchStartY;
         playerPaddle.targetY = paddleStartY + deltaY;
+
+            const maxOffset = playerPaddle.height * 0.5;
+    playerPaddle.targetY = Math.max(-maxOffset, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height + maxOffset));
 
         // Limitar y aplicar movimiento suavizado
         playerPaddle.targetY = Math.max(0, Math.min(playerPaddle.targetY, canvas.height - playerPaddle.height));
@@ -355,6 +361,17 @@
         ctx.lineTo(canvas.width / 2, canvas.height);
         ctx.stroke();
         ctx.setLineDash([]);
+            const visiblePlayerPaddleY = Math.max(0, Math.min(playerPaddle.y, canvas.height - playerPaddle.height));
+    const visiblePlayerPaddleHeight = Math.min(
+        playerPaddle.height, 
+        playerPaddle.height - (0 - playerPaddle.y), // Parte superior que sobresale
+        playerPaddle.height - (playerPaddle.y + playerPaddle.height - canvas.height) // Parte inferior que sobresale
+
+            );
+    
+    ctx.fillStyle = 'white';
+    ctx.fillRect(machinePaddle.x, machinePaddle.y, machinePaddle.width, machinePaddle.height);
+    ctx.fillRect(playerPaddle.x, visiblePlayerPaddleY, playerPaddle.width, visiblePlayerPaddleHeight);
     }
 
     // Función para actualizar la posición de los elementos con suavizado
@@ -393,7 +410,10 @@
         }
 
         // Colisión con bordes
-        if (ballLaunched && (ball.y - ball.size < 0 || ball.y + ball.size > canvas.height)) {
+       if (ballLaunched && 
+    ball.x + ball.size > playerPaddle.x &&
+    ball.y > Math.max(0, playerPaddle.y) &&
+    ball.y < Math.min(canvas.height, playerPaddle.y + playerPaddle.height)) {
             ball.speedY = -ball.speedY;
             wallSound.currentTime = 0;
             wallSound.play();
