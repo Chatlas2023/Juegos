@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Snake Móvil v1.60</title>
+    <title>Snake Móvil v1.61</title>
     <style>
         body {
             margin: 0;
@@ -166,7 +166,7 @@
     </style>
 </head>
 <body>
-    <div class="version">v1.6</div>
+    <div class="version">v1.61</div>
     <h1>Snake Móvil</h1>
     <div id="score">Puntuación: 0</div>
     <div id="high-score">Máxima puntuación: 0</div>
@@ -188,7 +188,7 @@
     </div>
 
     <script>
-        // Configuración del juego - v1.6 con estela corta y comida progresiva
+        // Configuración del juego - v1.61 con comidas de diferentes colores
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d');
         const gameOverDiv = document.getElementById('game-over');
@@ -220,20 +220,31 @@
         const GRID_WIDTH = canvas.width / GRID_SIZE;
         const GRID_HEIGHT = canvas.height / GRID_SIZE;
         
+        // Colores para las comidas
+        const FOOD_COLORS = [
+            { fill: '#FF5252', border: '#D32F2F' }, // Rojo
+            { fill: '#FFD740', border: '#FFA000' }, // Amarillo
+            { fill: '#40C4FF', border: '#0091EA' }, // Azul
+            { fill: '#7C4DFF', border: '#651FFF' }, // Violeta
+            { fill: '#FF4081', border: '#D81B60' }, // Rosa
+            { fill: '#69F0AE', border: '#00C853' }, // Verde
+            { fill: '#FF6E40', border: '#FF3D00' }  // Naranja
+        ];
+        
         // Estado del juego
         let snake = [{x: 5, y: 5}];
         let snakeTrail = []; // Array para guardar la estela (más corta)
         let snakeDirection = {x: 1, y: 0};
         let nextDirection = {x: 1, y: 0};
-        let foods = []; // Ahora es un array de comidas
+        let foods = []; // Ahora es un array de comidas con colores
         let score = 0;
         let foodCount = 1; // Comienza con 1 comida
         let originalSpeed = 150;
         let gameInterval;
         let gameRunning = true;
-        let gameSpeed = originalSpeed; // Añade esta línea
+        let gameSpeed = originalSpeed;
         
-        // Generar comida en posición aleatoria
+        // Generar comida en posición aleatoria con color aleatorio
         function generateFood() {
             let newFood;
             let attempts = 0;
@@ -242,7 +253,8 @@
             do {
                 newFood = {
                     x: Math.floor(Math.random() * GRID_WIDTH),
-                    y: Math.floor(Math.random() * GRID_HEIGHT)
+                    y: Math.floor(Math.random() * GRID_HEIGHT),
+                    color: FOOD_COLORS[Math.floor(Math.random() * FOOD_COLORS.length)]
                 };
                 attempts++;
                 
@@ -258,7 +270,8 @@
             // Si no encuentra posición después de muchos intentos, devolver cualquier posición
             return {
                 x: Math.floor(Math.random() * GRID_WIDTH),
-                y: Math.floor(Math.random() * GRID_HEIGHT)
+                y: Math.floor(Math.random() * GRID_HEIGHT),
+                color: FOOD_COLORS[Math.floor(Math.random() * FOOD_COLORS.length)]
             };
         }
         
@@ -325,9 +338,9 @@
                 );
             });
             
-            // Dibujar las comidas
+            // Dibujar las comidas con sus colores asignados
             foods.forEach(food => {
-                ctx.fillStyle = '#FF5252';
+                ctx.fillStyle = food.color.fill;
                 ctx.beginPath();
                 ctx.arc(
                     food.x * GRID_SIZE + GRID_SIZE/2, 
@@ -339,54 +352,54 @@
                 ctx.fill();
                 
                 // Borde más oscuro para la comida
-                ctx.strokeStyle = '#D32F2F';
+                ctx.strokeStyle = food.color.border;
                 ctx.stroke();
             });
         }
         
         // Actualizar el estado del juego
-function update() {
-    // Guardar posición actual en la estela antes de mover
-    snakeTrail.unshift({...snake[0]});
-    
-    // Mantener solo los últimos 5 segmentos de estela (más corta)
-    if (snakeTrail.length > 5) {
-        snakeTrail.pop();
-    }
-    
-    // Actualizar dirección
-    snakeDirection = {...nextDirection};
-    
-    // Mover la serpiente
-    const head = {x: snake[0].x + snakeDirection.x, y: snake[0].y + snakeDirection.y};
-    snake.unshift(head);
-    
-    // Verificar si comió alguna comida
-    let foodEaten = false;
-    for (let i = 0; i < foods.length; i++) {
-        if (head.x === foods[i].x && head.y === foods[i].y) {
-            score++;
-            scoreDisplay.textContent = `Puntuación: ${score}`;
-            foods.splice(i, 1); // Eliminar la comida comida
-            foodEaten = true;
-            break;
+        function update() {
+            // Guardar posición actual en la estela antes de mover
+            snakeTrail.unshift({...snake[0]});
+            
+            // Mantener solo los últimos 5 segmentos de estela (más corta)
+            if (snakeTrail.length > 5) {
+                snakeTrail.pop();
+            }
+            
+            // Actualizar dirección
+            snakeDirection = {...nextDirection};
+            
+            // Mover la serpiente
+            const head = {x: snake[0].x + snakeDirection.x, y: snake[0].y + snakeDirection.y};
+            snake.unshift(head);
+            
+            // Verificar si comió alguna comida
+            let foodEaten = false;
+            for (let i = 0; i < foods.length; i++) {
+                if (head.x === foods[i].x && head.y === foods[i].y) {
+                    score++;
+                    scoreDisplay.textContent = `Puntuación: ${score}`;
+                    foods.splice(i, 1); // Eliminar la comida comida
+                    foodEaten = true;
+                    break;
+                }
+            }
+            
+            if (foodEaten) {
+                // Aumentar la cantidad de comida para la próxima generación
+                foodCount++;
+                
+                // Generar nuevas comidas (una más que antes)
+                generateFoods(foodCount);
+                
+                // Mantener la velocidad original sin cambios
+                clearInterval(gameInterval);
+                gameInterval = setInterval(gameLoop, originalSpeed);
+            } else {
+                snake.pop(); // Eliminar el último segmento cuando no come
+            }
         }
-    }
-    
-    if (foodEaten) {
-        // Aumentar la cantidad de comida para la próxima generación
-        foodCount++;
-        
-        // Generar nuevas comidas (una más que antes)
-        generateFoods(foodCount);
-        
-        // Mantener la velocidad original sin cambios
-        clearInterval(gameInterval);
-        gameInterval = setInterval(gameLoop, originalSpeed);
-    } else {
-        snake.pop(); // Eliminar el último segmento cuando no come
-    }
-}
         
         // Verificar colisiones
         function checkCollisions() {
@@ -444,14 +457,14 @@ function update() {
         }
         
         // Bucle principal del juego
-function gameLoop() {
-    if (!checkCollisions()) {
-        update();
-        draw();
-    } else {
-        gameOver();
-    }
-}
+        function gameLoop() {
+            if (!checkCollisions()) {
+                update();
+                draw();
+            } else {
+                gameOver();
+            }
+        }
         
         // Controles táctiles
         document.getElementById('up-btn').addEventListener('touchstart', (e) => {
