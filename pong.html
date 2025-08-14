@@ -89,6 +89,9 @@
     <audio id="scoreSound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3" preload="auto"></audio>
     <audio id="gameOverSound" src="https://assets.mixkit.co/sfx/preview/mixkit-retro-arcade-casino-notification-266.mp3" preload="auto"></audio>
 
+    <!-- Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
 <script>
     // Configuración del juego
     const canvas = document.getElementById('gameCanvas');
@@ -330,6 +333,15 @@
             : '¡La máquina ganó! Inténtalo de nuevo';
         gameOverElement.style.display = 'flex';
         gameOverSound.play();
+        
+        // Lanzar confeti solo si el jugador gana
+        if (winner === 'player') {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
     }
 
     // Función para dibujar elementos
