@@ -199,23 +199,6 @@
         </div>
     </div>
 
-    <!-- Audio elements for preloaded sounds -->
-    <audio id="green-sound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
-    </audio>
-    <audio id="red-sound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
-    </audio>
-    <audio id="yellow-sound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
-    </audio>
-    <audio id="blue-sound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
-    </audio>
-    <audio id="error-sound" preload="auto">
-        <source src="data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==" type="audio/wav">
-    </audio>
-
     <script>
         const buttons = document.querySelectorAll('.simon-button');
         const controlBtn = document.getElementById('control-btn');
@@ -231,162 +214,25 @@
         let isGameActive = false;
         let isPlayerTurn = false;
         let audioContext;
-        let sounds = {};
+        let gainNode;
+        const tones = {
+            green: 392,
+            red: 329.63,
+            yellow: 261.63,
+            blue: 196,
+            error: 110
+        };
 
         // Actualizar el récord al cargar la página
         highScoreDisplay.textContent = highScore;
 
-        // Preload sounds
-        function preloadSounds() {
-            const soundElements = {
-                'green': document.getElementById('green-sound'),
-                'red': document.getElementById('red-sound'),
-                'yellow': document.getElementById('yellow-sound'),
-                'blue': document.getElementById('blue-sound'),
-                'error': document.getElementById('error-sound')
-            };
-            
-            // Generate simple tones for each color
-            Object.keys(soundElements).forEach(color => {
-                const duration = color === 'error' ? 0.5 : 0.3;
-                const frequency = color === 'error' ? 110 : 
-                                 color === 'green' ? 392 :
-                                 color === 'red' ? 329.63 :
-                                 color === 'yellow' ? 261.63 : 196;
-                
-                // Generate the tone
-                generateTone(soundElements[color], frequency, duration);
-            });
-            
-            return soundElements;
-        }
-
-        // Generate a tone with fade-in and fade-out to prevent popping
-        function generateTone(audioElement, frequency, duration) {
-            try {
-                // Create offline audio context
-                const offlineCtx = new OfflineAudioContext(1, 44100 * duration, 44100);
-                const oscillator = offlineCtx.createOscillator();
-                const gainNode = offlineCtx.createGain();
-                
-                oscillator.type = 'sine';
-                oscillator.frequency.value = frequency;
-                
-                // Apply ADSR envelope to prevent popping
-                const now = offlineCtx.currentTime;
-                const attackTime = 0.005;
-                const decayTime = 0.1;
-                const releaseTime = 0.1;
-                const sustainLevel = 0.7;
-                
-                gainNode.gain.setValueAtTime(0, now);
-                gainNode.gain.linearRampToValueAtTime(1, now + attackTime);
-                gainNode.gain.linearRampToValueAtTime(sustainLevel, now + attackTime + decayTime);
-                gainNode.gain.setValueAtTime(sustainLevel, now + duration - releaseTime);
-                gainNode.gain.linearRampToValueAtTime(0, now + duration);
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(offlineCtx.destination);
-                
-                oscillator.start(0);
-                oscillator.stop(now + duration);
-                
-                // Render the audio
-                offlineCtx.startRendering().then(renderedBuffer => {
-                    const bufferSource = offlineCtx.createBufferSource();
-                    bufferSource.buffer = renderedBuffer;
-                    
-                    // Create a new audio context for playback if needed
-                    if (!audioContext) {
-                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    }
-                    
-                    // Create a media element source for the audio element
-                    const source = audioContext.createMediaElementSource(audioElement);
-                    source.connect(audioContext.destination);
-                    
-                    // Encode the buffer as WAV and set as audio element source
-                    encodeBufferToWav(renderedBuffer).then(wavBlob => {
-                        const url = URL.createObjectURL(wavBlob);
-                        audioElement.src = url;
-                    });
-                });
-            } catch (e) {
-                console.error("Error generating tone:", e);
-            }
-        }
-
-        // Encode audio buffer to WAV format
-        function encodeBufferToWav(buffer) {
-            return new Promise(resolve => {
-                const numOfChannels = buffer.numberOfChannels;
-                const length = buffer.length * numOfChannels * 2; // 2 bytes per sample
-                const sampleRate = buffer.sampleRate;
-                
-                // Create WAV header
-                const header = new ArrayBuffer(44);
-                const view = new DataView(header);
-                
-                // RIFF identifier
-                writeString(view, 0, 'RIFF');
-                // RIFF chunk length
-                view.setUint32(4, 36 + length, true);
-                // RIFF type
-                writeString(view, 8, 'WAVE');
-                // Format chunk identifier
-                writeString(view, 12, 'fmt ');
-                // Format chunk length
-                view.setUint32(16, 16, true);
-                // Sample format (raw PCM)
-                view.setUint16(20, 1, true);
-                // Channel count
-                view.setUint16(22, numOfChannels, true);
-                // Sample rate
-                view.setUint32(24, sampleRate, true);
-                // Byte rate (sample rate * block align)
-                view.setUint32(28, sampleRate * numOfChannels * 2, true);
-                // Block align (channel count * bytes per sample)
-                view.setUint16(32, numOfChannels * 2, true);
-                // Bits per sample
-                view.setUint16(34, 16, true);
-                // Data chunk identifier
-                writeString(view, 36, 'data');
-                // Data chunk length
-                view.setUint32(40, length, true);
-                
-                // Interleave the audio data
-                const interleaved = new Int16Array(length / 2);
-                for (let channel = 0; channel < numOfChannels; channel++) {
-                    const channelData = buffer.getChannelData(channel);
-                    for (let i = 0; i < buffer.length; i++) {
-                        interleaved[i * numOfChannels + channel] = Math.max(-1, Math.min(1, channelData[i])) * 0x7FFF;
-                    }
-                }
-                
-                // Create the WAV file
-                const wavBuffer = new Uint8Array(header.byteLength + interleaved.buffer.byteLength);
-                wavBuffer.set(new Uint8Array(header), 0);
-                wavBuffer.set(new Uint8Array(interleaved.buffer), header.byteLength);
-                
-                resolve(new Blob([wavBuffer], { type: 'audio/wav' }));
-            });
-        }
-
-        function writeString(view, offset, string) {
-            for (let i = 0; i < string.length; i++) {
-                view.setUint8(offset + i, string.charCodeAt(i));
-            }
-        }
-
         // Inicializar audio (solo una vez)
         function initAudio() {
             try {
-                if (!audioContext) {
-                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                }
-                
-                // Preload all sounds
-                sounds = preloadSounds();
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                gainNode = audioContext.createGain();
+                gainNode.connect(audioContext.destination);
+                gainNode.gain.value = 0.5; // Volumen moderado
             } catch (e) {
                 console.error("Error inicializando audio:", e);
             }
@@ -399,7 +245,7 @@
             }
         }, { once: true });
 
-        // Resaltar un botón
+        // Resaltar un botón con sonido mejorado
         function highlightButton(color) {
             const button = document.getElementById(color);
             button.classList.add('active');
@@ -407,11 +253,29 @@
             if (!audioContext) initAudio();
             
             try {
-                // Play the preloaded sound
-                if (sounds[color]) {
-                    sounds[color].currentTime = 0;
-                    sounds[color].play().catch(e => console.error("Error playing sound:", e));
-                }
+                const oscillator = audioContext.createOscillator();
+                const noteGain = audioContext.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = tones[color];
+                oscillator.connect(noteGain);
+                noteGain.connect(gainNode);
+                
+                // Aplicar envolvente ADSR para evitar pops
+                const now = audioContext.currentTime;
+                const attackTime = 0.005;
+                const decayTime = 0.1;
+                const releaseTime = 0.1;
+                const sustainLevel = 0.7;
+                
+                noteGain.gain.setValueAtTime(0, now);
+                noteGain.gain.linearRampToValueAtTime(1, now + attackTime);
+                noteGain.gain.linearRampToValueAtTime(sustainLevel, now + attackTime + decayTime);
+                noteGain.gain.setValueAtTime(sustainLevel, now + 0.3 - releaseTime);
+                noteGain.gain.linearRampToValueAtTime(0, now + 0.3);
+                
+                oscillator.start();
+                oscillator.stop(now + 0.3);
             } catch (e) {
                 console.error("Error reproduciendo sonido:", e);
             }
@@ -420,9 +284,6 @@
                 button.classList.remove('active');
             }, 300);
         }
-
-        // Resto del código del juego (sin cambios)
-        // ... [El resto del código JavaScript permanece igual]
 
         // Generar el siguiente paso en la secuencia
         function nextStep() {
@@ -466,12 +327,7 @@
                     document.body.style.backgroundColor = '#2c3e50';
                 }, 200);
                 
-                // Play error sound
-                if (sounds.error) {
-                    sounds.error.currentTime = 0;
-                    sounds.error.play().catch(e => console.error("Error playing sound:", e));
-                }
-                
+                playErrorSound();
                 gameOver();
                 return;
             }
@@ -489,6 +345,37 @@
             }
         }
 
+        // Reproducir sonido de error mejorado
+        function playErrorSound() {
+            if (!audioContext) initAudio();
+            
+            try {
+                const oscillator = audioContext.createOscillator();
+                const errorGain = audioContext.createGain();
+                
+                oscillator.type = 'square';
+                oscillator.frequency.value = tones.error;
+                oscillator.connect(errorGain);
+                errorGain.connect(audioContext.destination);
+                
+                // Aplicar envolvente para evitar pops
+                const now = audioContext.currentTime;
+                const attackTime = 0.01;
+                const releaseTime = 0.4;
+                
+                errorGain.gain.setValueAtTime(0, now);
+                errorGain.gain.linearRampToValueAtTime(0.5, now + attackTime);
+                errorGain.gain.exponentialRampToValueAtTime(0.01, now + releaseTime);
+                
+                oscillator.frequency.exponentialRampToValueAtTime(55, now + 0.5);
+                
+                oscillator.start();
+                oscillator.stop(now + 0.5);
+            } catch (e) {
+                console.error("Error en sonido de error:", e);
+            }
+        }
+
         // Game over
         function gameOver() {
             isGameActive = false;
@@ -501,15 +388,10 @@
                 highScoreDisplay.textContent = highScore;
                 localStorage.setItem('simonHighScore', highScore);
             }
-            
-            score = 0;
-            scoreDisplay.textContent = score;
         }
 
         // Iniciar juego
         function startGame() {
-            if (sequence.length > 0) return;
-            
             messageDisplay.textContent = "Comenzando juego...";
             score = 0;
             scoreDisplay.textContent = score;
@@ -524,21 +406,24 @@
 
         // Reiniciar juego
         function restartGame() {
-            sequence = [];
-            playerSequence = [];
+            // Solo reinicia las variables, no inicia el juego
             score = 0;
             scoreDisplay.textContent = score;
+            sequence = [];
+            playerSequence = [];
             isGameActive = false;
             isPlayerTurn = false;
-            messageDisplay.textContent = "Presiona Iniciar para jugar";
             controlBtn.textContent = "Iniciar";
+            messageDisplay.textContent = "Presiona Iniciar para jugar";
         }
 
         // Manejar el clic del botón único
         function handleControlClick() {
-            if (isGameActive || sequence.length > 0) {
+            if (isGameActive) {
+                // Si el juego está activo, reiniciar
                 restartGame();
             } else {
+                // Si el juego no está activo, iniciar nuevo juego
                 startGame();
             }
         }
