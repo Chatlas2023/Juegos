@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-        <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-N4J8MM9R5N');
-</script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-N4J8MM9R5N');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     <title>Juego de Secuencias Numéricas</title>
     <style>
+        /* Estilos permanecen igual */
         body {
             font-family: Arial, sans-serif;
             background-color: #2c3e50;
@@ -383,11 +383,23 @@
 
         // Inicializar el juego
         function initGame() {
-            // Generar código secreto
+            // Generar código secreto SIN números repetidos
             secretCode = [];
+            const availableNumbers = [...NUMBERS.map(n => n.id)]; // Copia de todos los números disponibles
+            
             for (let i = 0; i < CODE_LENGTH; i++) {
-                const randomIndex = Math.floor(Math.random() * NUMBERS.length);
-                secretCode.push(NUMBERS[randomIndex].id);
+                // Verificar que aún hay números disponibles
+                if (availableNumbers.length === 0) {
+                    // Esto no debería pasar si CODE_LENGTH <= NUMBERS.length
+                    break;
+                }
+                
+                const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+                const selectedNumber = availableNumbers[randomIndex];
+                secretCode.push(selectedNumber);
+                
+                // Eliminar el número seleccionado para evitar repeticiones
+                availableNumbers.splice(randomIndex, 1);
             }
             
             // Limpiar tablero y mensajes
