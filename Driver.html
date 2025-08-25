@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-        <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-N4J8MM9R5N');
-</script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-N4J8MM9R5N');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Night Driver - Ruta Continua</title>
@@ -89,7 +89,7 @@
 </head>
 <body>
 <div id="ui">
-    <div id="left-ui">Ver 2.22 VIDAS: <span id="lives">3</span></div>
+    <div id="left-ui">Ver 2.24 VIDAS: <span id="lives">3</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -113,15 +113,15 @@
         const startScreen = document.getElementById('startScreen');
         const startButton = document.getElementById('startButton');
 
-        // Configuración optimizada
-        const POST_COUNT = 14;
-        const POST_SPACING = 0.1;
-        const MAX_DISTANCE = 1.4;
+        // Configuración optimizada para transición continua
+        const POST_COUNT = 20; // Aumentado para más postes en pantalla
+        const POST_SPACING = 0.07; // Reducido para menor espacio entre postes
+        const MAX_DISTANCE = 1.2; // Ajustado para mejor transición
         const INITIAL_DISTANCE = 0.0;
         const SEPARATION_FACTOR = 1.5;
 
-        // 🔹 Nueva constante para separación entre postes
-        const FIXED_GAP = 20 / window.innerWidth; // ≈ 20px convertido a proporción del canvas
+        // Separación entre postes
+        const FIXED_GAP = 20 / window.innerWidth;
 
         // Track data
         const TRACKS = [
@@ -188,30 +188,28 @@
                 const distance = INITIAL_DISTANCE + i * POST_SPACING;
                 segments.push(createSegment(distance));
             }
-            collisionCooldown = 60; // Mayor cooldown inicial
+            collisionCooldown = 60;
         }
 
-function createSegment(distance) {
-    const progress = distance / MAX_DISTANCE;
-    const widthFactor = progress * progress * SEPARATION_FACTOR;
+        function createSegment(distance) {
+            const progress = distance / MAX_DISTANCE;
+            const widthFactor = progress * progress * SEPARATION_FACTOR;
 
-    // 🔹 Agregamos la separación fija al poste derecho
-    const leftPos = originX - widthFactor;
-    const rightPos = originX + widthFactor + FIXED_GAP;
+            const leftPos = originX - widthFactor;
+            const rightPos = originX + widthFactor + FIXED_GAP;
 
-    // 🔹 Altura un 80% más grande
-    const height = (10 + progress * 100) * 1.8;
-    const width = 2 + progress * 10;
+            const height = (10 + progress * 100) * 1.8;
+            const width = 2 + progress * 10;
 
-    return {
-        distance: distance,
-        leftPos: leftPos,
-        rightPos: rightPos,
-        height: height,
-        width: width,
-        progress: progress
-    };
-}
+            return {
+                distance: distance,
+                leftPos: leftPos,
+                rightPos: rightPos,
+                height: height,
+                width: width,
+                progress: progress
+            };
+        }
 
         // Dibujar ruta
         function drawRoad() {
@@ -241,8 +239,6 @@ function createSegment(distance) {
             ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 5, canvas.height - 20, 10, 10);
         }
 
-        // ... resto del código sin cambios ...
-
         function updateRoad() {
             const STEER_SPEED = 0.001;
             steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
@@ -257,18 +253,23 @@ function createSegment(distance) {
                 cs = currentTrack[trackSegmentIndex].cs;
                 dist = currentTrack[trackSegmentIndex].dist;
             }
+            
+            // Actualizar segmentos existentes
             segments.forEach(seg => {
                 seg.distance += segmentSpeed;
                 seg.progress = seg.distance / MAX_DISTANCE;
                 const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
                 seg.leftPos = originX - widthFactor;
-                seg.rightPos = originX + widthFactor + FIXED_GAP; // 🔹 aplicamos separación fija
-                seg.height = (5 + seg.progress * 50) * 1.8;       // 🔹 altura +80%
+                seg.rightPos = originX + widthFactor + FIXED_GAP;
+                seg.height = (5 + seg.progress * 50) * 1.8;
                 seg.width = 5 + seg.progress * 20;
             });
-            if (segments[0].distance >= MAX_DISTANCE) {
+            
+            // Reciclar segmentos que salen de la pantalla
+            while (segments[0].distance >= MAX_DISTANCE) {
                 const lastSeg = segments[segments.length - 1];
-                const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
+                const newDistance = lastSeg.distance - POST_SPACING;
+                
                 const recycledSeg = segments.shift();
                 recycledSeg.distance = newDistance;
                 recycledSeg.progress = newDistance / MAX_DISTANCE;
@@ -280,8 +281,6 @@ function createSegment(distance) {
                 segments.push(recycledSeg);
             }
         }
-
-        // Resto igual...
 
         function updateGame(timestamp) {
             if (!gameRunning) return;
