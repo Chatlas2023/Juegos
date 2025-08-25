@@ -1,14 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-N4J8MM9R5N');
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Night Driver - Ruta Continua</title>
@@ -35,12 +27,6 @@
             padding: 0 20px;
             box-sizing: border-box;
             font-size: 20px;
-        }
-        #left-ui {
-            text-align: left;
-        }
-        #right-ui {
-            text-align: right;
         }
         #controls {
             position: fixed;
@@ -89,266 +75,210 @@
 </head>
 <body>
 <div id="ui">
-    <div id="left-ui">Ver 2.24 VIDAS: <span id="lives">3</span></div>
-    <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
+    <div>Ver 2.25 VIDAS: <span id="lives">3</span></div>
+    <div>TIEMPO: <span id="time">0</span>s</div>
 </div>
-    <canvas id="gameCanvas"></canvas>
-    <div id="controls">
-        <div class="arrow-btn" id="leftBtn">←</div>
-        <div class="arrow-btn" id="rightBtn">→</div>
-    </div>
-    <div id="startScreen">
-        <h1>NIGHT DRIVER</h1>
-        <p>Use las flechas</p>
-        <button id="startButton">COMENZAR</button>
-    </div>
+<canvas id="gameCanvas"></canvas>
+<div id="controls">
+    <div class="arrow-btn" id="leftBtn">←</div>
+    <div class="arrow-btn" id="rightBtn">→</div>
+</div>
+<div id="startScreen">
+    <h1>NIGHT DRIVER</h1>
+    <p>Use las flechas</p>
+    <button id="startButton">COMENZAR</button>
+</div>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const timeElement = document.getElementById('time');
-        const livesElement = document.getElementById('lives');
-        const leftBtn = document.getElementById('leftBtn');
-        const rightBtn = document.getElementById('rightBtn');
-        const startScreen = document.getElementById('startScreen');
-        const startButton = document.getElementById('startButton');
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const timeElement = document.getElementById('time');
+const livesElement = document.getElementById('lives');
+const leftBtn = document.getElementById('leftBtn');
+const rightBtn = document.getElementById('rightBtn');
+const startScreen = document.getElementById('startScreen');
+const startButton = document.getElementById('startButton');
 
-        // Configuración optimizada para transición continua
-        const POST_COUNT = 20; // Aumentado para más postes en pantalla
-        const POST_SPACING = 0.07; // Reducido para menor espacio entre postes
-        const MAX_DISTANCE = 1.2; // Ajustado para mejor transición
-        const INITIAL_DISTANCE = 0.0;
-        const SEPARATION_FACTOR = 1.5;
+// Ajustes de perspectiva y postes
+const POST_COUNT = 40;     
+const POST_SPACING = 0.035; 
+const MAX_DISTANCE = 1.2; 
+const INITIAL_DISTANCE = 0.0;
+const SEPARATION_FACTOR = 1.5;
+const FIXED_GAP = 20 / window.innerWidth;
 
-        // Separación entre postes
-        const FIXED_GAP = 20 / window.innerWidth;
+// Track simple (se puede ampliar)
+const TRACKS = [
+    [
+        { cs: 0, dist: 0.5 },
+        { cs: 0.02, dist: 0.3 },
+        { cs: -0.02, dist: 0.3 },
+        { cs: 0.01, dist: 0.4 },
+        { cs: -0.01, dist: 0.4 },
+        { cs: 0, dist: 0.5 }
+    ]
+];
 
-        // Track data
-        const TRACKS = [
-            // Novice Track: gentle curves
-            [
-                { cs: 0, dist: 0.5 },
-                { cs: 0.02, dist: 0.3 },
-                { cs: -0.02, dist: 0.3 },
-                { cs: 0.01, dist: 0.4 },
-                { cs: -0.01, dist: 0.4 },
-                { cs: 0, dist: 0.5 }
-            ],
-            // Expert Track: sharper curves
-            [
-                { cs: 0, dist: 0.4 },
-                { cs: 0.03, dist: 0.2 },
-                { cs: -0.03, dist: 0.2 },
-                { cs: 0.02, dist: 0.3 },
-                { cs: -0.02, dist: 0.3 },
-                { cs: 0.015, dist: 0.2 },
-                { cs: -0.015, dist: 0.2 }
-            ],
-            // Pro Track: very sharp curves
-            [
-                { cs: 0, dist: 0.3 },
-                { cs: 0.04, dist: 0.15 },
-                { cs: -0.04, dist: 0.15 },
-                { cs: 0.03, dist: 0.2 },
-                { cs: -0.03, dist: 0.2 },
-                { cs: 0.02, dist: 0.25 },
-                { cs: -0.02, dist: 0.25 }
-            ]
-        ];
+let gameRunning = false;
+let time = 0;
+let lives = 3;
+let playerPos = 0;
+let steer = 0;
+let segments = [];
+let velocity = 0.002;
+let segmentSpeed = velocity;
+let originX = 0;
+let trackIndex = 0;
+let currentTrack = TRACKS[trackIndex];
+let trackSegmentIndex = 0;
+let turnDistance = 0;
+let cs = currentTrack[trackSegmentIndex].cs;
+let dist = currentTrack[trackSegmentIndex].dist;
+let lastTime = 0;
+let gameLoopId = null;
 
-        // Variables del juego
-        let gameRunning = false;
-        let time = 0;
-        let lives = 3;
-        let playerPos = 0;
-        let steer = 0;
-        let segments = [];
-        let velocity = 0.002;
-        let segmentSpeed = velocity;
-        let originX = 0;
-        let trackIndex = 0;
-        let currentTrack = TRACKS[trackIndex];
-        let trackSegmentIndex = 0;
-        let turnDistance = 0;
-        let cs = currentTrack[trackSegmentIndex].cs;
-        let dist = currentTrack[trackSegmentIndex].dist;
-        let lastTime = 0;
-        let gameLoopId = null;
-        let collisionCooldown = 0;
+// Crear segmento con perspectiva realista
+function createSegment(distance) {
+    const progress = distance / MAX_DISTANCE;
+    const widthFactor = Math.pow(progress, 1.5) * SEPARATION_FACTOR;
+    const leftPos = originX - widthFactor;
+    const rightPos = originX + widthFactor + FIXED_GAP;
+    const height = 10 + (1 - progress) * 80;
+    const width = 3 + (1 - progress) * 10;
 
-        // Inicializar ruta
-        function initRoad() {
-            segments = [];
-            originX = 0;
-            trackSegmentIndex = 0;
-            turnDistance = 0;
-            cs = currentTrack[trackSegmentIndex].cs;
-            dist = currentTrack[trackSegmentIndex].dist;
-            for (let i = 0; i < POST_COUNT; i++) {
-                const distance = INITIAL_DISTANCE + i * POST_SPACING;
-                segments.push(createSegment(distance));
-            }
-            collisionCooldown = 60;
+    return { distance, leftPos, rightPos, height, width, progress };
+}
+
+function initRoad() {
+    segments = [];
+    originX = 0;
+    trackSegmentIndex = 0;
+    turnDistance = 0;
+    cs = currentTrack[trackSegmentIndex].cs;
+    dist = currentTrack[trackSegmentIndex].dist;
+    for (let i = 0; i < POST_COUNT; i++) {
+        const distance = INITIAL_DISTANCE + i * POST_SPACING;
+        segments.push(createSegment(distance));
+    }
+}
+
+function drawRoad() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const offsetY = 45;
+    for (let seg of segments) {
+        const yPos = (canvas.height * seg.progress) + (offsetY * 1.25);
+        const leftX = canvas.width * (0.5 + seg.leftPos);
+        const rightX = canvas.width * (0.5 + seg.rightPos);
+
+        if (yPos >= 0 && yPos <= canvas.height) {
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(leftX - seg.width/2, yPos - seg.height, seg.width, seg.height);
+            ctx.fillRect(rightX - seg.width/2, yPos - seg.height, seg.width, seg.height);
         }
+    }
 
-        function createSegment(distance) {
-            const progress = distance / MAX_DISTANCE;
-            const widthFactor = progress * progress * SEPARATION_FACTOR;
+    ctx.fillStyle = 'red';
+    ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 5, canvas.height - 20, 10, 10);
+}
 
-            const leftPos = originX - widthFactor;
-            const rightPos = originX + widthFactor + FIXED_GAP;
+function updateRoad() {
+    const STEER_SPEED = 0.001;
+    steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
+    const stc = steer * velocity * 50;
+    const crv = cs * velocity * 50;
+    originX += (stc + crv);
+    originX = Math.max(-0.5, Math.min(0.5, originX));
+    turnDistance += velocity;
+    if (turnDistance >= dist) {
+        turnDistance = 0;
+        trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
+        cs = currentTrack[trackSegmentIndex].cs;
+        dist = currentTrack[trackSegmentIndex].dist;
+    }
 
-            const height = (10 + progress * 100) * 1.8;
-            const width = 2 + progress * 10;
+    // Actualizar posiciones de los postes
+    segments.forEach(seg => {
+        seg.distance += segmentSpeed;
+        seg.progress = seg.distance / MAX_DISTANCE;
+        const widthFactor = Math.pow(seg.progress, 1.5) * SEPARATION_FACTOR;
+        seg.leftPos = originX - widthFactor;
+        seg.rightPos = originX + widthFactor + FIXED_GAP;
+        seg.height = 10 + (1 - seg.progress) * 80;
+        seg.width = 3 + (1 - seg.progress) * 10;
+    });
 
-            return {
-                distance: distance,
-                leftPos: leftPos,
-                rightPos: rightPos,
-                height: height,
-                width: width,
-                progress: progress
-            };
-        }
+    // Reciclar postes antes de que desaparezcan
+    while (segments[0].progress > 1.05) {
+        const lastSeg = segments[segments.length - 1];
+        const recycledSeg = segments.shift();
+        recycledSeg.distance = lastSeg.distance - POST_SPACING;
+        recycledSeg.progress = recycledSeg.distance / MAX_DISTANCE;
+        const widthFactor = Math.pow(recycledSeg.progress, 1.5) * SEPARATION_FACTOR;
+        recycledSeg.leftPos = originX - widthFactor;
+        recycledSeg.rightPos = originX + widthFactor + FIXED_GAP;
+        recycledSeg.height = 10 + (1 - recycledSeg.progress) * 80;
+        recycledSeg.width = 3 + (1 - recycledSeg.progress) * 10;
+        segments.push(recycledSeg);
+    }
+}
 
-        // Dibujar ruta
-        function drawRoad() {
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+function updateGame(timestamp) {
+    if (!gameRunning) return;
+    if (!lastTime) lastTime = timestamp;
+    lastTime = timestamp;
+    updateRoad();
+    time += segmentSpeed * 25;
+    timeElement.textContent = time.toFixed(1);
+    drawRoad();
+    gameLoopId = requestAnimationFrame(updateGame);
+}
 
-            const offsetY = 45;
-            for (let i = 0; i < segments.length; i++) {
-                const seg = segments[i];
-                const yPos = (canvas.height * seg.progress) + (offsetY * 1.25);
-                const leftX = canvas.width * (0.5 + seg.leftPos);
-                const rightX = canvas.width * (0.5 + seg.rightPos);
-                const postWidth = seg.width;
-                const postHeight = seg.height;
+function startGame() {
+    if (gameLoopId) cancelAnimationFrame(gameLoopId);
+    initRoad();
+    time = 0;
+    lives = 3;
+    steer = 0;
+    playerPos = 0;
+    livesElement.textContent = lives;
+    timeElement.textContent = "0";
+    startScreen.style.display = 'none';
+    gameRunning = true;
+    lastTime = 0;
+    gameLoopId = requestAnimationFrame(updateGame);
+    drawRoad();
+}
 
-                if (yPos >= 0 && yPos <= canvas.height) {
-                    ctx.fillStyle = '#FFF';
-                    // Poste izquierdo
-                    ctx.fillRect(leftX - postWidth/2, yPos - postHeight, postWidth, postHeight);
-                    // Poste derecho
-                    ctx.fillRect(rightX - postWidth/2, yPos - postHeight, postWidth, postHeight);
-                }
-            }
+leftBtn.addEventListener('touchstart', () => playerPos = -0.5);
+leftBtn.addEventListener('touchend', () => playerPos = 0);
+rightBtn.addEventListener('touchstart', () => playerPos = 0.5);
+rightBtn.addEventListener('touchend', () => playerPos = 0);
 
-            // Player
-            ctx.fillStyle = 'red';
-            ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 5, canvas.height - 20, 10, 10);
-        }
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') playerPos = -0.5;
+    if (e.key === 'ArrowRight') playerPos = 0.5;
+});
+document.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') playerPos = 0;
+});
 
-        function updateRoad() {
-            const STEER_SPEED = 0.001;
-            steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
-            const stc = steer * velocity * 50;
-            const crv = cs * velocity * 50;
-            originX += (stc + crv);
-            originX = Math.max(-0.5, Math.min(0.5, originX));
-            turnDistance += velocity;
-            if (turnDistance >= dist) {
-                turnDistance = 0;
-                trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
-                cs = currentTrack[trackSegmentIndex].cs;
-                dist = currentTrack[trackSegmentIndex].dist;
-            }
-            
-            // Actualizar segmentos existentes
-            segments.forEach(seg => {
-                seg.distance += segmentSpeed;
-                seg.progress = seg.distance / MAX_DISTANCE;
-                const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
-                seg.leftPos = originX - widthFactor;
-                seg.rightPos = originX + widthFactor + FIXED_GAP;
-                seg.height = (5 + seg.progress * 50) * 1.8;
-                seg.width = 5 + seg.progress * 20;
-            });
-            
-            // Reciclar segmentos que salen de la pantalla
-            while (segments[0].distance >= MAX_DISTANCE) {
-                const lastSeg = segments[segments.length - 1];
-                const newDistance = lastSeg.distance - POST_SPACING;
-                
-                const recycledSeg = segments.shift();
-                recycledSeg.distance = newDistance;
-                recycledSeg.progress = newDistance / MAX_DISTANCE;
-                const widthFactor = recycledSeg.progress * recycledSeg.progress * SEPARATION_FACTOR;
-                recycledSeg.leftPos = originX - widthFactor;
-                recycledSeg.rightPos = originX + widthFactor + FIXED_GAP;
-                recycledSeg.height = (5 + recycledSeg.progress * 50) * 1.8;
-                recycledSeg.width = 5 + recycledSeg.progress * 20;
-                segments.push(recycledSeg);
-            }
-        }
+startButton.addEventListener('click', startGame);
 
-        function updateGame(timestamp) {
-            if (!gameRunning) return;
-            if (!lastTime) lastTime = timestamp;
-            lastTime = timestamp;
-            updateRoad();
-            time += segmentSpeed * 25;
-            timeElement.textContent = time.toFixed(1);
-            drawRoad();
-            gameLoopId = requestAnimationFrame(updateGame);
-        }
-
-        function gameOver() {
-            gameRunning = false;
-            if (gameLoopId) {
-                cancelAnimationFrame(gameLoopId);
-                gameLoopId = null;
-            }
-            startScreen.style.display = 'flex';
-        }
-
-        function startGame() {
-            if (gameLoopId) {
-                cancelAnimationFrame(gameLoopId);
-            }
-            initRoad();
-            time = 0;
-            lives = 3;
-            steer = 0;
-            playerPos = 0;
-            livesElement.textContent = lives;
-            timeElement.textContent = "0";
-            startScreen.style.display = 'none';
-            gameRunning = true;
-            lastTime = 0;
-            gameLoopId = requestAnimationFrame(updateGame);
-            drawRoad();
-        }
-
-        leftBtn.addEventListener('touchstart', () => playerPos = -0.5);
-        leftBtn.addEventListener('touchend', () => playerPos = 0);
-        rightBtn.addEventListener('touchstart', () => playerPos = 0.5);
-        rightBtn.addEventListener('touchend', () => playerPos = 0);
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') playerPos = -0.5;
-            if (e.key === 'ArrowRight') playerPos = 0.5;
-        });
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') playerPos = 0;
-        });
-
-        startButton.addEventListener('click', startGame);
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            if (gameRunning) {
-                drawRoad();
-            } else {
-                ctx.fillStyle = '#000';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    if (gameRunning) drawRoad();
+    else {
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-    </script>
+    }
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+ctx.fillStyle = '#000';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+</script>
 </body>
 </html>
