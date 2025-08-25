@@ -89,7 +89,7 @@
 </head>
 <body>
 <div id="ui">
-    <div id="left-ui">Ver 2.23 VIDAS: <span id="lives">3</span></div>
+    <div id="left-ui">Ver 2.22 VIDAS: <span id="lives">3</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -114,7 +114,7 @@
         const startButton = document.getElementById('startButton');
 
         // Configuración optimizada
-        const POST_COUNT = 30;
+        const POST_COUNT = 14;
         const POST_SPACING = 0.1;
         const MAX_DISTANCE = 1.4;
         const INITIAL_DISTANCE = 0.0;
@@ -177,19 +177,19 @@
         let collisionCooldown = 0;
 
         // Inicializar ruta
-function initRoad() {
-    segments = [];
-    originX = 0;
-    trackSegmentIndex = 0;
-    turnDistance = 0;
-    cs = currentTrack[trackSegmentIndex].cs;
-    dist = currentTrack[trackSegmentIndex].dist;
-    for (let i = 0; i < POST_COUNT; i++) {
-        const distance = INITIAL_DISTANCE + i * POST_SPACING;
-        segments.push(createSegment(distance));
-    }
-    collisionCooldown = 60;
-}
+        function initRoad() {
+            segments = [];
+            originX = 0;
+            trackSegmentIndex = 0;
+            turnDistance = 0;
+            cs = currentTrack[trackSegmentIndex].cs;
+            dist = currentTrack[trackSegmentIndex].dist;
+            for (let i = 0; i < POST_COUNT; i++) {
+                const distance = INITIAL_DISTANCE + i * POST_SPACING;
+                segments.push(createSegment(distance));
+            }
+            collisionCooldown = 60; // Mayor cooldown inicial
+        }
 
 function createSegment(distance) {
     const progress = distance / MAX_DISTANCE;
@@ -243,47 +243,43 @@ function createSegment(distance) {
 
         // ... resto del código sin cambios ...
 
-function updateRoad() {
-    const STEER_SPEED = 0.001;
-    steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
-    const stc = steer * velocity * 50;
-    const crv = cs * velocity * 50;
-    originX += (stc + crv);
-    originX = Math.max(-0.5, Math.min(0.5, originX));
-
-    turnDistance += velocity;
-    if (turnDistance >= dist) {
-        turnDistance = 0;
-        trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
-        cs = currentTrack[trackSegmentIndex].cs;
-        dist = currentTrack[trackSegmentIndex].dist;
-    }
-
-    // Actualizamos posiciones de todos los segmentos
-    segments.forEach(seg => {
-        seg.distance += segmentSpeed;
-        seg.progress = seg.distance / MAX_DISTANCE;
-        const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
-        seg.leftPos = originX - widthFactor;
-        seg.rightPos = originX + widthFactor + FIXED_GAP;
-        seg.height = (5 + seg.progress * 50) * 1.8;
-        seg.width = 5 + seg.progress * 20;
-    });
-
-    // Reciclaje mejorado para aparición continua
-    while (segments.length && segments[0].distance >= MAX_DISTANCE) {
-        const recycledSeg = segments.shift();
-        // En lugar de crear detrás, lo ponemos arriba (distance cercano a 0)
-        recycledSeg.distance = 0; 
-        recycledSeg.progress = recycledSeg.distance / MAX_DISTANCE;
-        const widthFactor = recycledSeg.progress * recycledSeg.progress * SEPARATION_FACTOR;
-        recycledSeg.leftPos = originX - widthFactor;
-        recycledSeg.rightPos = originX + widthFactor + FIXED_GAP;
-        recycledSeg.height = (5 + recycledSeg.progress * 50) * 1.8;
-        recycledSeg.width = 5 + recycledSeg.progress * 20;
-        segments.push(recycledSeg);
-    }
-}
+        function updateRoad() {
+            const STEER_SPEED = 0.001;
+            steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
+            const stc = steer * velocity * 50;
+            const crv = cs * velocity * 50;
+            originX += (stc + crv);
+            originX = Math.max(-0.5, Math.min(0.5, originX));
+            turnDistance += velocity;
+            if (turnDistance >= dist) {
+                turnDistance = 0;
+                trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
+                cs = currentTrack[trackSegmentIndex].cs;
+                dist = currentTrack[trackSegmentIndex].dist;
+            }
+            segments.forEach(seg => {
+                seg.distance += segmentSpeed;
+                seg.progress = seg.distance / MAX_DISTANCE;
+                const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
+                seg.leftPos = originX - widthFactor;
+                seg.rightPos = originX + widthFactor + FIXED_GAP; // 🔹 aplicamos separación fija
+                seg.height = (5 + seg.progress * 50) * 1.8;       // 🔹 altura +80%
+                seg.width = 5 + seg.progress * 20;
+            });
+            if (segments[0].distance >= MAX_DISTANCE) {
+                const lastSeg = segments[segments.length - 1];
+                const newDistance = Math.max(INITIAL_DISTANCE, lastSeg.distance - POST_SPACING);
+                const recycledSeg = segments.shift();
+                recycledSeg.distance = newDistance;
+                recycledSeg.progress = newDistance / MAX_DISTANCE;
+                const widthFactor = recycledSeg.progress * recycledSeg.progress * SEPARATION_FACTOR;
+                recycledSeg.leftPos = originX - widthFactor;
+                recycledSeg.rightPos = originX + widthFactor + FIXED_GAP;
+                recycledSeg.height = (5 + recycledSeg.progress * 50) * 1.8;
+                recycledSeg.width = 5 + recycledSeg.progress * 20;
+                segments.push(recycledSeg);
+            }
+        }
 
         // Resto igual...
 
