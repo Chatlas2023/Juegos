@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-        <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-N4J8MM9R5N');
-</script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-N4J8MM9R5N');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Night Driver - Ruta Continua</title>
@@ -89,7 +89,7 @@
 </head>
 <body>
 <div id="ui">
-    <div id="left-ui">Ver 2.23 VIDAS: <span id="lives">3</span></div>
+    <div id="left-ui">Ver 2.3 VIDAS: <span id="lives">3</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -112,38 +112,35 @@
         const startScreen = document.getElementById('startScreen');
         const startButton = document.getElementById('startButton');
 
-        const POST_COUNT = 14;
-        const POST_SPACING = 0.1;
-        const MAX_DISTANCE = 1.4;
-        const SEPARATION_FACTOR = 1.5;
-        const FIXED_GAP = 20 / window.innerWidth;
+        // Ajustes para parecerse más al juego original
+        const POST_COUNT = 10; // Menos postes como en el original
+        const POST_SPACING = 0.15; // Más espaciados
+        const MAX_DISTANCE = 2.0; // Mayor distancia máxima
+        const SEPARATION_FACTOR = 1.2; // Menor factor de separación
+        const FIXED_GAP = 15 / window.innerWidth; // Hueco más estrecho
 
+        // Pistas más simples como en el original
         const TRACKS = [
             [
-                { cs: 0, dist: 0.5 },
-                { cs: 0.02, dist: 0.3 },
-                { cs: -0.02, dist: 0.3 },
-                { cs: 0.01, dist: 0.4 },
-                { cs: -0.01, dist: 0.4 },
-                { cs: 0, dist: 0.5 }
+                { cs: 0, dist: 0.8 },
+                { cs: 0.015, dist: 0.6 },
+                { cs: -0.015, dist: 0.6 },
+                { cs: 0.01, dist: 0.7 },
+                { cs: -0.01, dist: 0.7 }
             ],
             [
-                { cs: 0, dist: 0.4 },
-                { cs: 0.03, dist: 0.2 },
-                { cs: -0.03, dist: 0.2 },
-                { cs: 0.02, dist: 0.3 },
-                { cs: -0.02, dist: 0.3 },
-                { cs: 0.015, dist: 0.2 },
-                { cs: -0.015, dist: 0.2 }
+                { cs: 0, dist: 0.7 },
+                { cs: 0.02, dist: 0.5 },
+                { cs: -0.02, dist: 0.5 },
+                { cs: 0.015, dist: 0.4 },
+                { cs: -0.015, dist: 0.4 }
             ],
             [
-                { cs: 0, dist: 0.3 },
-                { cs: 0.04, dist: 0.15 },
-                { cs: -0.04, dist: 0.15 },
-                { cs: 0.03, dist: 0.2 },
-                { cs: -0.03, dist: 0.2 },
-                { cs: 0.02, dist: 0.25 },
-                { cs: -0.02, dist: 0.25 }
+                { cs: 0, dist: 0.6 },
+                { cs: 0.025, dist: 0.4 },
+                { cs: -0.025, dist: 0.4 },
+                { cs: 0.02, dist: 0.3 },
+                { cs: -0.02, dist: 0.3 }
             ]
         ];
 
@@ -168,11 +165,13 @@
 
         function createSegment(distance) {
             const progress = distance / MAX_DISTANCE;
+            // Curvatura más pronunciada al acercarse, como en el original
             const widthFactor = progress * progress * SEPARATION_FACTOR;
             const leftPos = originX - widthFactor;
             const rightPos = originX + widthFactor + FIXED_GAP;
-            const height = (10 + progress * 100) * 1.8;
-            const width = 2 + progress * 10;
+            // Postes más altos y delgados como en el original
+            const height = (5 + progress * 120) * 1.5;
+            const width = 1 + progress * 8; // Postes más delgados
             return {
                 distance,
                 leftPos,
@@ -191,9 +190,8 @@
             cs = currentTrack[trackSegmentIndex].cs;
             dist = currentTrack[trackSegmentIndex].dist;
 
-            // Mayor separación inicial para evitar solapamientos y desapariciones
             for (let i = 0; i < POST_COUNT; i++) {
-                const distance = i * POST_SPACING * 1.1;
+                const distance = i * POST_SPACING;
                 segments.push(createSegment(distance));
             }
             collisionCooldown = 60;
@@ -202,22 +200,64 @@
         function drawRoad() {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            const offsetY = 45;
+            
+            // Dibujar línea central como en el original
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            const centerLineY = canvas.height - 20;
+            ctx.fillRect(canvas.width / 2 - 1, centerLineY, 2, 5);
+            
+            const offsetY = 30; // Ajuste para la perspectiva del original
+            
             for (let i = 0; i < segments.length; i++) {
                 const seg = segments[i];
-                const yPos = (canvas.height * seg.progress) + (offsetY * 1.25);
+                const yPos = (canvas.height * seg.progress) + (offsetY * 1.5);
                 if (yPos < 0 || yPos > canvas.height) continue;
+                
                 const leftX = canvas.width * (0.5 + seg.leftPos);
                 const rightX = canvas.width * (0.5 + seg.rightPos);
                 const postWidth = seg.width;
                 const postHeight = seg.height;
 
-                ctx.fillStyle = '#FFF';
+                // Postes con efecto de luz como en el original
+                const alpha = 0.2 + seg.progress * 0.8;
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                
+                // Poste izquierdo
                 ctx.fillRect(leftX - postWidth / 2, yPos - postHeight, postWidth, postHeight);
+                
+                // Poste derecho
                 ctx.fillRect(rightX - postWidth / 2, yPos - postHeight, postWidth, postHeight);
+                
+                // Conectar postes con líneas (como en el original)
+                if (i > 0) {
+                    const prevSeg = segments[i-1];
+                    const prevYPos = (canvas.height * prevSeg.progress) + (offsetY * 1.5);
+                    const prevLeftX = canvas.width * (0.5 + prevSeg.leftPos);
+                    const prevRightX = canvas.width * (0.5 + prevSeg.rightPos);
+                    
+                    if (prevYPos > 0 && yPos > 0 && prevYPos < canvas.height && yPos < canvas.height) {
+                        ctx.beginPath();
+                        ctx.moveTo(prevLeftX, prevYPos - prevSeg.height);
+                        ctx.lineTo(leftX, yPos - postHeight);
+                        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.7})`;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(prevRightX, prevYPos - prevSeg.height);
+                        ctx.lineTo(rightX, yPos - postHeight);
+                        ctx.stroke();
+                    }
+                }
             }
+            
+            // Dibujar coche (más simple como en el original)
             ctx.fillStyle = 'red';
-            ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 5, canvas.height - 20, 10, 10);
+            const carWidth = 12;
+            const carHeight = 8;
+            const carX = canvas.width * (0.5 + playerPos * 0.1) - carWidth / 2;
+            const carY = canvas.height - 25;
+            ctx.fillRect(carX, carY, carWidth, carHeight);
         }
 
         function updateRoad() {
@@ -243,11 +283,10 @@
                 const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
                 seg.leftPos = originX - widthFactor;
                 seg.rightPos = originX + widthFactor + FIXED_GAP;
-                seg.height = (5 + seg.progress * 50) * 1.8;
-                seg.width = 5 + seg.progress * 20;
+                seg.height = (5 + seg.progress * 120) * 1.5;
+                seg.width = 1 + seg.progress * 8;
             });
 
-            // Ordena segmentos para mantener orden lógico
             segments.sort((a, b) => a.distance - b.distance);
         }
 
