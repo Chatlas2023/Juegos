@@ -89,7 +89,7 @@
 </head>
 <body>
 <div id="ui">
-    <div id="left-ui">Ver 2.23 VIDAS: <span id="lives">3</span></div>
+    <div id="left-ui">Ver 2.22 VIDAS: <span id="lives">3</span></div>
     <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
 </div>
     <canvas id="gameCanvas"></canvas>
@@ -112,38 +112,31 @@
         const startScreen = document.getElementById('startScreen');
         const startButton = document.getElementById('startButton');
 
-        const POST_COUNT = 14;
-        const POST_SPACING = 0.1;
+        // Menor cantidad de postes para parecerse al original
+        const POST_COUNT = 10; 
+        const POST_SPACING = 0.15;  // Espacio mayor para menos postes y más separado visualmente
         const MAX_DISTANCE = 1.4;
-        const SEPARATION_FACTOR = 1.5;
-        const FIXED_GAP = 20 / window.innerWidth;
+        const SEPARATION_FACTOR = 1.2; // Menos separación para postes más juntos
+        const FIXED_GAP = 12 / window.innerWidth; // Menor separación entre postes, 12px aprox.
 
+        // Curvas con progresión más suave y marcada para simular la del juego original
         const TRACKS = [
+            // Track con curvas más amplias, progresión de giros distinta
+            [
+                { cs: 0, dist: 0.6 },
+                { cs: 0.015, dist: 0.4 },
+                { cs: -0.015, dist: 0.4 },
+                { cs: 0.02, dist: 0.5 },
+                { cs: -0.02, dist: 0.5 },
+                { cs: 0, dist: 0.6 }
+            ],
             [
                 { cs: 0, dist: 0.5 },
                 { cs: 0.02, dist: 0.3 },
                 { cs: -0.02, dist: 0.3 },
-                { cs: 0.01, dist: 0.4 },
-                { cs: -0.01, dist: 0.4 },
+                { cs: 0.015, dist: 0.4 },
+                { cs: -0.015, dist: 0.4 },
                 { cs: 0, dist: 0.5 }
-            ],
-            [
-                { cs: 0, dist: 0.4 },
-                { cs: 0.03, dist: 0.2 },
-                { cs: -0.03, dist: 0.2 },
-                { cs: 0.02, dist: 0.3 },
-                { cs: -0.02, dist: 0.3 },
-                { cs: 0.015, dist: 0.2 },
-                { cs: -0.015, dist: 0.2 }
-            ],
-            [
-                { cs: 0, dist: 0.3 },
-                { cs: 0.04, dist: 0.15 },
-                { cs: -0.04, dist: 0.15 },
-                { cs: 0.03, dist: 0.2 },
-                { cs: -0.03, dist: 0.2 },
-                { cs: 0.02, dist: 0.25 },
-                { cs: -0.02, dist: 0.25 }
             ]
         ];
 
@@ -164,15 +157,17 @@
         let dist = currentTrack[trackSegmentIndex].dist;
         let lastTime = 0;
         let gameLoopId = null;
-        let collisionCooldown = 0;
 
         function createSegment(distance) {
             const progress = distance / MAX_DISTANCE;
-            const widthFactor = progress * progress * SEPARATION_FACTOR;
-            const leftPos = originX - widthFactor;
-            const rightPos = originX + widthFactor + FIXED_GAP;
-            const height = (10 + progress * 100) * 1.8;
-            const width = 2 + progress * 10;
+            const curveAmount = 0.6; // Factor para dar curvatura más marcada similar al original
+            // Fórmula ajustada para lateralidad y progresión más suave
+            const widthFactor = Math.sin(progress * Math.PI) * curveAmount;
+            const leftPos = originX - (progress * SEPARATION_FACTOR) - widthFactor;
+            const rightPos = originX + (progress * SEPARATION_FACTOR) + widthFactor + FIXED_GAP;
+            // Altura y ancho de postes más pequeños, proporcionales a la imagen original
+            const height = 25 + progress * 60;
+            const width = 3 + progress * 8;
             return {
                 distance,
                 leftPos,
@@ -191,33 +186,28 @@
             cs = currentTrack[trackSegmentIndex].cs;
             dist = currentTrack[trackSegmentIndex].dist;
 
-            // Mayor separación inicial para evitar solapamientos y desapariciones
             for (let i = 0; i < POST_COUNT; i++) {
-                const distance = i * POST_SPACING * 1.1;
+                const distance = i * POST_SPACING;
                 segments.push(createSegment(distance));
             }
-            collisionCooldown = 60;
         }
 
         function drawRoad() {
             ctx.fillStyle = '#000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            const offsetY = 45;
-            for (let i = 0; i < segments.length; i++) {
-                const seg = segments[i];
-                const yPos = (canvas.height * seg.progress) + (offsetY * 1.25);
+            const offsetY = 40;
+            for (let seg of segments) {
+                const yPos = (canvas.height * (1 - seg.progress)) + offsetY;
                 if (yPos < 0 || yPos > canvas.height) continue;
                 const leftX = canvas.width * (0.5 + seg.leftPos);
                 const rightX = canvas.width * (0.5 + seg.rightPos);
-                const postWidth = seg.width;
-                const postHeight = seg.height;
 
                 ctx.fillStyle = '#FFF';
-                ctx.fillRect(leftX - postWidth / 2, yPos - postHeight, postWidth, postHeight);
-                ctx.fillRect(rightX - postWidth / 2, yPos - postHeight, postWidth, postHeight);
+                ctx.fillRect(leftX - seg.width / 2, yPos - seg.height, seg.width, seg.height);
+                ctx.fillRect(rightX - seg.width / 2, yPos - seg.height, seg.width, seg.height);
             }
             ctx.fillStyle = 'red';
-            ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 5, canvas.height - 20, 10, 10);
+            ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 6, canvas.height - 22, 16, 16);
         }
 
         function updateRoad() {
@@ -234,20 +224,23 @@
                 cs = currentTrack[trackSegmentIndex].cs;
                 dist = currentTrack[trackSegmentIndex].dist;
             }
-            segments.forEach(seg => {
+
+            for (let seg of segments) {
                 seg.distance += segmentSpeed;
                 if (seg.distance > MAX_DISTANCE) {
                     seg.distance -= MAX_DISTANCE;
                 }
                 seg.progress = seg.distance / MAX_DISTANCE;
-                const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
-                seg.leftPos = originX - widthFactor;
-                seg.rightPos = originX + widthFactor + FIXED_GAP;
-                seg.height = (5 + seg.progress * 50) * 1.8;
-                seg.width = 5 + seg.progress * 20;
-            });
 
-            // Ordena segmentos para mantener orden lógico
+                // Recalcular la posición lateral con fórmula ajustada para la curva
+                const curveAmount = 0.6;
+                const widthFactor = Math.sin(seg.progress * Math.PI) * curveAmount;
+                seg.leftPos = originX - (seg.progress * SEPARATION_FACTOR) - widthFactor;
+                seg.rightPos = originX + (seg.progress * SEPARATION_FACTOR) + widthFactor + FIXED_GAP;
+
+                seg.height = 25 + seg.progress * 60;
+                seg.width = 3 + seg.progress * 8;
+            }
             segments.sort((a, b) => a.distance - b.distance);
         }
 
