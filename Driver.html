@@ -1,363 +1,508 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-N4J8MM9R5N');
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Night Driver - Ruta Continua</title>
+    <title>Night Driver Mobile</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #000;
+            color: #fff;
             overflow: hidden;
-            background: #000;
-            touch-action: none;
-            font-family: 'Courier New', monospace;
-            color: white;
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
         }
-        #gameCanvas {
-            display: block;
-            background: #000;
-        }
-        #ui {
-            position: absolute;
-            top: 10px;
+        
+        #game-container {
+            position: relative;
             width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #score-board {
             display: flex;
             justify-content: space-between;
-            padding: 0 20px;
-            box-sizing: border-box;
-            font-size: 20px;
+            padding: 10px 15px;
+            background-color: #222;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            z-index: 10;
         }
-        #left-ui {
-            text-align: left;
-        }
-        #right-ui {
-            text-align: right;
-        }
-        #controls {
-            position: fixed;
-            bottom: 20px;
+        
+        #game-canvas {
+            flex-grow: 1;
+            background-color: #000;
             width: 100%;
-            display: flex;
-            justify-content: center;
-            gap: 50px;
+            image-rendering: pixelated;
         }
-        .arrow-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid white;
-            color: white;
-            font-size: 30px;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
+        
+        #controls {
             display: flex;
-            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background-color: #222;
+        }
+        
+        .control-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: #444;
+            border: 2px solid #666;
+            display: flex;
             justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: white;
             user-select: none;
         }
-        #startScreen {
+        
+        #left-btn {
+            margin-right: 10px;
+        }
+        
+        #right-btn {
+            margin-left: 10px;
+        }
+        
+        #menu-screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background-color: rgba(0, 0, 0, 0.8);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10;
+            z-index: 20;
         }
-        #startButton {
-            padding: 15px 30px;
-            background: #FF0;
-            color: #000;
-            border: none;
-            font-size: 20px;
+        
+        .menu-title {
+            font-size: 36px;
+            color: #ff0;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #ff0;
+            font-family: 'Arial Black', sans-serif;
+        }
+        
+        .menu-item {
+            font-size: 24px;
+            margin: 15px 0;
+            padding: 10px 20px;
+            background-color: #333;
+            border: 2px solid #666;
+            border-radius: 10px;
+            width: 80%;
+            text-align: center;
             cursor: pointer;
-            border-radius: 5px;
+        }
+        
+        .menu-item:active {
+            background-color: #555;
+        }
+        
+        #level-info {
+            font-size: 20px;
+            margin-top: 20px;
+            color: #0f0;
         }
     </style>
 </head>
 <body>
-<div id="ui">
-    <div id="left-ui">Ver 2.23 VIDAS: <span id="lives">3</span></div>
-    <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
-</div>
-    <canvas id="gameCanvas"></canvas>
-    <div id="controls">
-        <div class="arrow-btn" id="leftBtn">←</div>
-        <div class="arrow-btn" id="rightBtn">→</div>
+    <div id="game-container">
+        <div id="score-board">
+            <div>SCORE <span id="score">000</span></div>
+            <div>SPEED <span id="speed">000</span></div>
+            <div>TIME <span id="time">000</span></div>
+        </div>
+        
+        <canvas id="game-canvas"></canvas>
+        
+        <div id="controls">
+            <div class="control-btn" id="left-btn">←</div>
+            <div class="control-btn" id="brake-btn">BRAKE</div>
+            <div class="control-btn" id="right-btn">→</div>
+        </div>
+        
+        <div id="menu-screen">
+            <div class="menu-title">NIGHT DRIVER</div>
+            <div class="menu-item" id="start-btn">START GAME</div>
+            <div class="menu-item" id="level-btn">LEVEL: NOVICE</div>
+            <div id="level-info">Use arrows to avoid obstacles</div>
+        </div>
     </div>
-    <div id="startScreen">
-        <h1>NIGHT DRIVER</h1>
-        <p>Use las flechas</p>
-        <button id="startButton">COMENZAR</button>
-    </div>
+
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const timeElement = document.getElementById('time');
-        const livesElement = document.getElementById('lives');
-        const leftBtn = document.getElementById('leftBtn');
-        const rightBtn = document.getElementById('rightBtn');
-        const startScreen = document.getElementById('startScreen');
-        const startButton = document.getElementById('startButton');
-
-        // Ajustes para parecerse más al juego original
-        const POST_COUNT = 10; // Menos postes como en el original
-        const POST_SPACING = 0.15; // Más espaciados
-        const MAX_DISTANCE = 2.0; // Mayor distancia máxima
-        const SEPARATION_FACTOR = 1.2; // Menor factor de separación
-        const FIXED_GAP = 15 / window.innerWidth; // Hueco más estrecho
-
-        // Pistas más simples como en el original
-        const TRACKS = [
-            [
-                { cs: 0, dist: 0.8 },
-                { cs: 0.015, dist: 0.6 },
-                { cs: -0.015, dist: 0.6 },
-                { cs: 0.01, dist: 0.7 },
-                { cs: -0.01, dist: 0.7 }
-            ],
-            [
-                { cs: 0, dist: 0.7 },
-                { cs: 0.02, dist: 0.5 },
-                { cs: -0.02, dist: 0.5 },
-                { cs: 0.015, dist: 0.4 },
-                { cs: -0.015, dist: 0.4 }
-            ],
-            [
-                { cs: 0, dist: 0.6 },
-                { cs: 0.025, dist: 0.4 },
-                { cs: -0.025, dist: 0.4 },
-                { cs: 0.02, dist: 0.3 },
-                { cs: -0.02, dist: 0.3 }
-            ]
-        ];
-
-        let gameRunning = false;
+        // Variables del juego
+        let score = 0;
+        let speed = 0;
         let time = 0;
-        let lives = 3;
-        let playerPos = 0;
-        let steer = 0;
-        let segments = [];
-        let velocity = 0.002;
-        let segmentSpeed = velocity;
-        let originX = 0;
-        let trackIndex = 0;
-        let currentTrack = TRACKS[trackIndex];
-        let trackSegmentIndex = 0;
-        let turnDistance = 0;
-        let cs = currentTrack[trackSegmentIndex].cs;
-        let dist = currentTrack[trackSegmentIndex].dist;
-        let lastTime = 0;
-        let gameLoopId = null;
-        let collisionCooldown = 0;
-
-        function createSegment(distance) {
-            const progress = distance / MAX_DISTANCE;
-            // Curvatura más pronunciada al acercarse, como en el original
-            const widthFactor = progress * progress * SEPARATION_FACTOR;
-            const leftPos = originX - widthFactor;
-            const rightPos = originX + widthFactor + FIXED_GAP;
-            // Postes más altos y delgados como en el original
-            const height = (5 + progress * 120) * 1.5;
-            const width = 1 + progress * 8; // Postes más delgados
-            return {
-                distance,
-                leftPos,
-                rightPos,
-                height,
-                width,
-                progress
-            };
-        }
-
-        function initRoad() {
-            segments = [];
-            originX = 0;
-            trackSegmentIndex = 0;
-            turnDistance = 0;
-            cs = currentTrack[trackSegmentIndex].cs;
-            dist = currentTrack[trackSegmentIndex].dist;
-
-            for (let i = 0; i < POST_COUNT; i++) {
-                const distance = i * POST_SPACING;
-                segments.push(createSegment(distance));
+        let gameRunning = false;
+        let currentLevel = 'NOVICE';
+        let roadWidth = 100;
+        let playerX = 0;
+        let obstacles = [];
+        let gameInterval;
+        
+        // Elementos del DOM
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const speedElement = document.getElementById('speed');
+        const timeElement = document.getElementById('time');
+        const menuScreen = document.getElementById('menu-screen');
+        const startBtn = document.getElementById('start-btn');
+        const levelBtn = document.getElementById('level-btn');
+        const leftBtn = document.getElementById('left-btn');
+        const rightBtn = document.getElementById('right-btn');
+        const brakeBtn = document.getElementById('brake-btn');
+        
+        // Ajustar tamaño del canvas
+        function resizeCanvas() {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+            if (gameRunning) {
+                drawGame();
             }
-            collisionCooldown = 60;
         }
-
+        
+        // Inicializar el juego
+        function initGame() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Event listeners para controles táctiles
+            startBtn.addEventListener('click', startGame);
+            levelBtn.addEventListener('click', changeLevel);
+            
+            leftBtn.addEventListener('touchstart', () => moveLeft());
+            leftBtn.addEventListener('touchend', () => stopMove());
+            
+            rightBtn.addEventListener('touchstart', () => moveRight());
+            rightBtn.addEventListener('touchend', () => stopMove());
+            
+            brakeBtn.addEventListener('touchstart', () => brake());
+            brakeBtn.addEventListener('touchend', () => releaseBrake());
+            
+            // Controles de teclado para navegadores de escritorio
+            document.addEventListener('keydown', (e) => {
+                if (!gameRunning) return;
+                
+                if (e.key === 'ArrowLeft') {
+                    moveLeft();
+                } else if (e.key === 'ArrowRight') {
+                    moveRight();
+                } else if (e.key === 'ArrowDown') {
+                    brake();
+                }
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                    stopMove();
+                } else if (e.key === 'ArrowDown') {
+                    releaseBrake();
+                }
+            });
+            
+            drawMenu();
+        }
+        
+        // Dibujar menú principal
+        function drawMenu() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // No es necesario dibujar nada aquí porque tenemos el div del menú
+        }
+        
+        // Cambiar nivel de dificultad
+        function changeLevel() {
+            const levels = ['NOVICE', 'EASY', 'PRO'];
+            const currentIndex = levels.indexOf(currentLevel);
+            currentLevel = levels[(currentIndex + 1) % levels.length];
+            levelBtn.textContent = `LEVEL: ${currentLevel}`;
+        }
+        
+        // Iniciar el juego
+        function startGame() {
+            menuScreen.style.display = 'none';
+            gameRunning = true;
+            score = 0;
+            speed = 0;
+            time = 0;
+            playerX = 0;
+            obstacles = [];
+            
+            updateScoreboard();
+            
+            // Iniciar bucle del juego
+            gameInterval = setInterval(() => {
+                updateGame();
+                drawGame();
+            }, 50);
+        }
+        
+        // Actualizar lógica del juego
+        function updateGame() {
+            // Incrementar tiempo
+            time++;
+            
+            // Aumentar velocidad gradualmente
+            if (speed < 35) {
+                speed += 0.2;
+            }
+            
+            // Generar obstáculos aleatorios
+            if (Math.random() < 0.05) {
+                generateObstacle();
+            }
+            
+            // Actualizar posición de obstáculos
+            updateObstacles();
+            
+            // Actualizar marcadores
+            updateScoreboard();
+        }
+        
+        // Generar un nuevo obstáculo
+        function generateObstacle() {
+            const obstacle = {
+                x: Math.random() * roadWidth - roadWidth/2,
+                y: canvas.height,
+                width: 30,
+                height: 30,
+                type: Math.random() > 0.5 ? 'cone' : 'car'
+            };
+            obstacles.push(obstacle);
+        }
+        
+        // Actualizar posición de obstáculos
+        function updateObstacles() {
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].y -= speed / 2;
+                
+                // Detectar colisiones
+                if (detectCollision(obstacles[i])) {
+                    gameOver();
+                    return;
+                }
+                
+                // Eliminar obstáculos que salieron de la pantalla
+                if (obstacles[i].y < -30) {
+                    obstacles.splice(i, 1);
+                    score += 10;
+                }
+            }
+        }
+        
+        // Detectar colisiones
+        function detectCollision(obstacle) {
+            // Simplificación: el jugador es un punto en el centro inferior de la pantalla
+            const playerCenterX = canvas.width / 2 + playerX;
+            const playerY = canvas.height - 50;
+            
+            return (
+                playerCenterX > obstacle.x - obstacle.width/2 &&
+                playerCenterX < obstacle.x + obstacle.width/2 &&
+                playerY > obstacle.y - obstacle.height/2 &&
+                playerY < obstacle.y + obstacle.height/2
+            );
+        }
+        
+        // Dibujar el juego
+        function drawGame() {
+            // Limpiar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Dibujar camino
+            drawRoad();
+            
+            // Dibujar obstáculos
+            drawObstacles();
+            
+            // Dibujar coche del jugador
+            drawPlayer();
+        }
+        
+        // Dibujar camino
         function drawRoad() {
-            ctx.fillStyle = '#000';
+            const centerX = canvas.width / 2;
+            const perspective = 0.8;
+            
+            // Dibujar camino
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.moveTo(centerX - roadWidth/2, 0);
+            ctx.lineTo(centerX + roadWidth/2, 0);
+            ctx.lineTo(centerX + roadWidth/4, canvas.height);
+            ctx.lineTo(centerX - roadWidth/4, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Dibujar líneas de la carretera
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([20, 20]);
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+            
+            // Dibujar bordes de la carretera
+            ctx.strokeStyle = '#ff0';
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX - roadWidth/2, 0);
+            ctx.lineTo(centerX - roadWidth/4, canvas.height);
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX + roadWidth/2, 0);
+            ctx.lineTo(centerX + roadWidth/4, canvas.height);
+            ctx.stroke();
+        }
+        
+        // Dibujar obstáculos
+        function drawObstacles() {
+            for (const obstacle of obstacles) {
+                const centerX = canvas.width / 2;
+                
+                if (obstacle.type === 'cone') {
+                    // Dibujar cono
+                    ctx.fillStyle = '#ff9900';
+                    ctx.beginPath();
+                    ctx.moveTo(centerX + obstacle.x, obstacle.y);
+                    ctx.lineTo(centerX + obstacle.x - 10, obstacle.y + 20);
+                    ctx.lineTo(centerX + obstacle.x + 10, obstacle.y + 20);
+                    ctx.closePath();
+                    ctx.fill();
+                } else {
+                    // Dibujar coche
+                    ctx.fillStyle = '#f00';
+                    ctx.fillRect(centerX + obstacle.x - 15, obstacle.y - 10, 30, 20);
+                }
+            }
+        }
+        
+        // Dibujar jugador
+        function drawPlayer() {
+            const centerX = canvas.width / 2;
+            const playerY = canvas.height - 50;
+            
+            // Dibujar coche del jugador
+            ctx.fillStyle = '#0f0';
+            ctx.fillRect(centerX + playerX - 15, playerY - 10, 30, 20);
+            
+            // Faros
+            ctx.fillStyle = '#ff0';
+            ctx.beginPath();
+            ctx.moveTo(centerX + playerX - 15, playerY - 10);
+            ctx.lineTo(centerX + playerX - 20, playerY - 20);
+            ctx.lineTo(centerX + playerX - 10, playerY - 10);
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX + playerX + 15, playerY - 10);
+            ctx.lineTo(centerX + playerX + 20, playerY - 20);
+            ctx.lineTo(centerX + playerX + 10, playerY - 10);
+            ctx.fill();
+        }
+        
+        // Actualizar marcadores
+        function updateScoreboard() {
+            scoreElement.textContent = Math.floor(score).toString().padStart(3, '0');
+            speedElement.textContent = Math.floor(speed).toString().padStart(3, '0');
+            timeElement.textContent = Math.floor(time/20).toString().padStart(3, '0');
+        }
+        
+        // Movimiento a la izquierda
+        function moveLeft() {
+            playerX = Math.max(playerX - 5, -roadWidth/4 + 15);
+        }
+        
+        // Movimiento a la derecha
+        function moveRight() {
+            playerX = Math.min(playerX + 5, roadWidth/4 - 15);
+        }
+        
+        // Detener movimiento
+        function stopMove() {
+            // En esta implementación básica, el coche no tiene inercia
+        }
+        
+        // Frenar
+        function brake() {
+            speed = Math.max(speed - 1, 0);
+        }
+        
+        // Soltar freno
+        function releaseBrake() {
+            // No hacer nada especial
+        }
+        
+        // Game over
+        function gameOver() {
+            clearInterval(gameInterval);
+            gameRunning = false;
+            
+            // Mostrar mensaje de game over
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Dibujar línea central como en el original
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            const centerLineY = canvas.height - 20;
-            ctx.fillRect(canvas.width / 2 - 1, centerLineY, 2, 5);
+            ctx.fillStyle = '#f00';
+            ctx.font = '30px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 30);
             
-            const offsetY = 30; // Ajuste para la perspectiva del original
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px Arial';
+            ctx.fillText(`SCORE: ${Math.floor(score).toString().padStart(3, '0')}`, canvas.width / 2, canvas.height / 2 + 20);
             
-            for (let i = 0; i < segments.length; i++) {
-                const seg = segments[i];
-                const yPos = (canvas.height * seg.progress) + (offsetY * 1.5);
-                if (yPos < 0 || yPos > canvas.height) continue;
-                
-                const leftX = canvas.width * (0.5 + seg.leftPos);
-                const rightX = canvas.width * (0.5 + seg.rightPos);
-                const postWidth = seg.width;
-                const postHeight = seg.height;
-
-                // Postes con efecto de luz como en el original
-                const alpha = 0.2 + seg.progress * 0.8;
-                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-                
-                // Poste izquierdo
-                ctx.fillRect(leftX - postWidth / 2, yPos - postHeight, postWidth, postHeight);
-                
-                // Poste derecho
-                ctx.fillRect(rightX - postWidth / 2, yPos - postHeight, postWidth, postHeight);
-                
-                // Conectar postes con líneas (como en el original)
-                if (i > 0) {
-                    const prevSeg = segments[i-1];
-                    const prevYPos = (canvas.height * prevSeg.progress) + (offsetY * 1.5);
-                    const prevLeftX = canvas.width * (0.5 + prevSeg.leftPos);
-                    const prevRightX = canvas.width * (0.5 + prevSeg.rightPos);
-                    
-                    if (prevYPos > 0 && yPos > 0 && prevYPos < canvas.height && yPos < canvas.height) {
-                        ctx.beginPath();
-                        ctx.moveTo(prevLeftX, prevYPos - prevSeg.height);
-                        ctx.lineTo(leftX, yPos - postHeight);
-                        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.7})`;
-                        ctx.lineWidth = 1;
-                        ctx.stroke();
-                        
-                        ctx.beginPath();
-                        ctx.moveTo(prevRightX, prevYPos - prevSeg.height);
-                        ctx.lineTo(rightX, yPos - postHeight);
-                        ctx.stroke();
-                    }
-                }
-            }
+            // Botón para reiniciar
+            ctx.fillStyle = '#0f0';
+            ctx.fillRect(canvas.width / 2 - 60, canvas.height / 2 + 50, 120, 40);
+            ctx.fillStyle = '#000';
+            ctx.font = '18px Arial';
+            ctx.fillText('PLAY AGAIN', canvas.width / 2, canvas.height / 2 + 75);
             
-            // Dibujar coche (más simple como en el original)
-            ctx.fillStyle = 'red';
-            const carWidth = 12;
-            const carHeight = 8;
-            const carX = canvas.width * (0.5 + playerPos * 0.1) - carWidth / 2;
-            const carY = canvas.height - 25;
-            ctx.fillRect(carX, carY, carWidth, carHeight);
+            // Esperar a que el usuario toque para reiniciar
+            canvas.addEventListener('touchstart', restartOnTouch, { once: true });
         }
-
-        function updateRoad() {
-            const STEER_SPEED = 0.001;
-            steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
-            const stc = steer * velocity * 50;
-            const crv = cs * velocity * 50;
-            originX += (stc + crv);
-            originX = Math.max(-0.5, Math.min(0.5, originX));
-            turnDistance += velocity;
-            if (turnDistance >= dist) {
-                turnDistance = 0;
-                trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
-                cs = currentTrack[trackSegmentIndex].cs;
-                dist = currentTrack[trackSegmentIndex].dist;
-            }
-            segments.forEach(seg => {
-                seg.distance += segmentSpeed;
-                if (seg.distance > MAX_DISTANCE) {
-                    seg.distance -= MAX_DISTANCE;
-                }
-                seg.progress = seg.distance / MAX_DISTANCE;
-                const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
-                seg.leftPos = originX - widthFactor;
-                seg.rightPos = originX + widthFactor + FIXED_GAP;
-                seg.height = (5 + seg.progress * 120) * 1.5;
-                seg.width = 1 + seg.progress * 8;
-            });
-
-            segments.sort((a, b) => a.distance - b.distance);
-        }
-
-        function updateGame(timestamp) {
-            if (!gameRunning) return;
-            if (!lastTime) lastTime = timestamp;
-            lastTime = timestamp;
-            updateRoad();
-            time += segmentSpeed * 25;
-            timeElement.textContent = time.toFixed(1);
-            drawRoad();
-            gameLoopId = requestAnimationFrame(updateGame);
-        }
-
-        function gameOver() {
-            gameRunning = false;
-            if (gameLoopId) {
-                cancelAnimationFrame(gameLoopId);
-                gameLoopId = null;
-            }
-            startScreen.style.display = 'flex';
-        }
-
-        function startGame() {
-            if (gameLoopId) {
-                cancelAnimationFrame(gameLoopId);
-            }
-            initRoad();
-            time = 0;
-            lives = 3;
-            steer = 0;
-            playerPos = 0;
-            livesElement.textContent = lives;
-            timeElement.textContent = "0";
-            startScreen.style.display = 'none';
-            gameRunning = true;
-            lastTime = 0;
-            gameLoopId = requestAnimationFrame(updateGame);
-            drawRoad();
-        }
-
-        leftBtn.addEventListener('touchstart', () => playerPos = -0.5);
-        leftBtn.addEventListener('touchend', () => playerPos = 0);
-        rightBtn.addEventListener('touchstart', () => playerPos = 0.5);
-        rightBtn.addEventListener('touchend', () => playerPos = 0);
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') playerPos = -0.5;
-            if (e.key === 'ArrowRight') playerPos = 0.5;
-        });
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') playerPos = 0;
-        });
-
-        startButton.addEventListener('click', startGame);
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            if (gameRunning) {
-                drawRoad();
+        
+        // Reiniciar al tocar después de game over
+        function restartOnTouch(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.touches[0].clientX - rect.left;
+            const y = e.touches[0].clientY - rect.top;
+            
+            // Comprobar si se tocó el botón de reinicio
+            if (x >= canvas.width / 2 - 60 && x <= canvas.width / 2 + 60 &&
+                y >= canvas.height / 2 + 50 && y <= canvas.height / 2 + 90) {
+                startGame();
             } else {
-                ctx.fillStyle = '#000';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // Si no se tocó el botón, volver a esperar
+                canvas.addEventListener('touchstart', restartOnTouch, { once: true });
             }
         }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Inicializar el juego cuando se carga la página
+        window.onload = initGame;
     </script>
 </body>
 </html>
