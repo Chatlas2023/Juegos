@@ -36,7 +36,7 @@
             display: flex;
             justify-content: space-around;
             width: 300px;
-            margin-top: 20px;
+            margin-top: 15px; /* Ajuste para subir los botones */
         }
 
         .control-button {
@@ -71,7 +71,7 @@
         const carHeight = 50;
         let carX = (canvas.width - carWidth) / 2;
         const carY = canvas.height - carHeight - 10;
-        const carSpeed = 5;
+        const carSpeed = 5; // Velocidad de movimiento del coche
 
         // Configuración de obstáculos
         const obstacleWidth = 20;
@@ -84,6 +84,14 @@
         function gameLoop() {
             // Borrar el lienzo
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Movimiento del coche basado en el estado de los botones
+            if (isMovingLeft) {
+                carX = Math.max(0, carX - carSpeed);
+            }
+            if (isMovingRight) {
+                carX = Math.min(canvas.width - carWidth, carX + carSpeed);
+            }
 
             // Dibujar el coche
             drawCar();
@@ -167,35 +175,21 @@
 
         let isMovingLeft = false;
         let isMovingRight = false;
-        let moveInterval;
-
-        function moveCar() {
-            if (isMovingLeft) {
-                carX = Math.max(0, carX - carSpeed);
-            }
-            if (isMovingRight) {
-                carX = Math.min(canvas.width - carWidth, carX + carSpeed);
-            }
-        }
 
         // Botón Izquierda
         leftButton.addEventListener('touchstart', () => {
             isMovingLeft = true;
-            moveInterval = setInterval(moveCar, 10);
         });
         leftButton.addEventListener('touchend', () => {
             isMovingLeft = false;
-            clearInterval(moveInterval);
         });
 
         // Botón Derecha
         rightButton.addEventListener('touchstart', () => {
             isMovingRight = true;
-            moveInterval = setInterval(moveCar, 10);
         });
         rightButton.addEventListener('touchend', () => {
             isMovingRight = false;
-            clearInterval(moveInterval);
         });
 
         // Iniciar el juego
