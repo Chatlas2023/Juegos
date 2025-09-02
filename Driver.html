@@ -201,26 +201,9 @@
         leftButton.addEventListener('touchend', () => { isMovingLeft = false; });
         rightButton.addEventListener('touchstart', () => { isMovingRight = true; });
         rightButton.addEventListener('touchend', () => { isMovingRight = false; });
-
-        // Esperar a que las imágenes se carguen antes de iniciar el juego
-        let imagesLoaded = 0;
-        const totalImages = obstacleImages.length + 1;
-
-        playerCarImage.onload = () => {
-            imagesLoaded++;
-            if (imagesLoaded === totalImages) {
-                gameLoop();
-            }
-        };
-
-        obstacleImages.forEach(img => {
-            img.onload = () => {
-                imagesLoaded++;
-                if (imagesLoaded === totalImages) {
-                    gameLoop();
-                }
-            };
-        });
+        
+        // Iniciar el juego
+        gameLoop();
     </script>
 </body>
 </html>
