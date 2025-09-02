@@ -128,23 +128,6 @@
             text-align: center;
             max-width: 300px;
         }
-
-        .sensitivity-control {
-            margin-top: 15px;
-            width: 300px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .sensitivity-control label {
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-
-        .sensitivity-control input {
-            width: 80%;
-        }
     </style>
 </head>
 <body>
@@ -152,11 +135,6 @@
         <div id="top-score">Mejor Puntuación: 0</div>
         <canvas id="gameCanvas" width="300" height="500"></canvas>
         <div id="score">Puntuación: 0</div>
-        
-        <div class="sensitivity-control">
-            <label for="sensitivity">Sensibilidad de controles:</label>
-            <input type="range" id="sensitivity" min="1" max="10" value="3">
-        </div>
         
         <div class="instructions">
             Usa los botones o las flechas del teclado para esquivar los coches
@@ -183,7 +161,6 @@
         const gameOverScreen = document.getElementById('game-over');
         const finalScoreDisplay = document.getElementById('final-score');
         const startButton = document.getElementById('start-button');
-        const sensitivityControl = document.getElementById('sensitivity');
 
         // Crear imágenes programáticamente
         function createCarImage(color) {
@@ -241,7 +218,7 @@
         const carHeight = 50;
         let carX = (canvas.width - carWidth) / 2;
         const carY = canvas.height - carHeight - 10;
-        let carSpeed = 2; // Velocidad base reducida
+        let carSpeed = 3; // Velocidad base ajustada
 
         // Configuración de obstáculos
         const obstacleWidth = 30;
@@ -257,7 +234,7 @@
         let isMovingLeft = false;
         let isMovingRight = false;
         let lastMoveTime = 0;
-        const moveDelay = 50; // Milisegundos entre movimientos (mayor = menos sensible)
+        const moveDelay = 80; // Milisegundos entre movimientos (mayor = menos sensible)
         
         // Bucle del juego
         function gameLoop() {
@@ -268,14 +245,13 @@
             
             // Movimiento del coche con control de sensibilidad
             const currentTime = Date.now();
-            const sensitivity = parseInt(sensitivityControl.value);
             
             if (isMovingLeft && currentTime - lastMoveTime > moveDelay) {
-                carX = Math.max(0, carX - (carSpeed * sensitivity / 5));
+                carX = Math.max(0, carX - carSpeed);
                 lastMoveTime = currentTime;
             }
             if (isMovingRight && currentTime - lastMoveTime > moveDelay) {
-                carX = Math.min(canvas.width - carWidth, carX + (carSpeed * sensitivity / 5));
+                carX = Math.min(canvas.width - carWidth, carX + carSpeed);
                 lastMoveTime = currentTime;
             }
 
