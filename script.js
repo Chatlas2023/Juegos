@@ -13,7 +13,7 @@ canvas.height = gameHeight;
 
 let score = 0;
 let time = 60;
-let gameSpeed = 50; 
+let gameSpeed = 5; // Velocidad ajustada para que las líneas se vean bien
 
 // Coche del jugador
 const player = {
@@ -87,18 +87,27 @@ function drawRoad() {
         ctx.fillStyle = '#333';
         ctx.fill();
 
-        // Dibujar las líneas blancas discontinuas
+        // Dibujar los postes
         ctx.fillStyle = '#fff';
-        if (i % 5 === 0) {
+        if (i % 10 === 0) {
             const lineW1 = 10 * scale;
             const lineW2 = 10 * nextScale;
             
-            // Línea del centro
+            // Postes izquierdos
             ctx.beginPath();
-            ctx.moveTo(x1 - lineW1/2, y1);
-            ctx.lineTo(x2 - lineW2/2, y2);
-            ctx.lineTo(x2 + lineW2/2, y2);
-            ctx.lineTo(x1 + lineW1/2, y1);
+            ctx.moveTo(x1 - w1 / 2, y1);
+            ctx.lineTo(x2 - w2 / 2, y2);
+            ctx.lineTo(x2 - w2 / 2 - 5, y2);
+            ctx.lineTo(x1 - w1 / 2 - 5, y1);
+            ctx.closePath();
+            ctx.fill();
+
+            // Postes derechos
+            ctx.beginPath();
+            ctx.moveTo(x1 + w1 / 2, y1);
+            ctx.lineTo(x2 + w2 / 2, y2);
+            ctx.lineTo(x2 + w2 / 2 + 5, y2);
+            ctx.lineTo(x1 + w1 / 2 + 5, y1);
             ctx.closePath();
             ctx.fill();
         }
