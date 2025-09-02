@@ -15,7 +15,7 @@
             color: white;
             font-family: 'Courier New', Courier, monospace;
             flex-direction: column;
-            user-select: none; /* Evita que el usuario pueda seleccionar texto */
+            user-select: none;
         }
 
         canvas {
@@ -24,19 +24,23 @@
         }
 
         h1 {
-            margin-bottom: 10px;
+            margin: 10px;
         }
 
         #score {
-            margin-top: 10px;
             font-size: 24px;
+        }
+
+        #top-score {
+            font-size: 20px;
+            margin-bottom: 10px;
         }
         
         #controls {
             display: flex;
             justify-content: space-around;
             width: 300px;
-            margin-top: 15px; /* Ajuste para subir los botones */
+            margin-top: 15px;
         }
 
         .control-button {
@@ -47,14 +51,16 @@
             background-color: #555;
             color: white;
             border-radius: 10px;
-            -webkit-tap-highlight-color: transparent; /* Elimina el resaltado azul al tocar en iOS */
+            -webkit-tap-highlight-color: transparent;
         }
     </style>
 </head>
 <body>
-    <h1>Juego de Carreras</h1>
-    <canvas id="gameCanvas" width="300" height="500"></canvas>
-    <div id="score">Puntuación: 0</div>
+    <div id="top-score">Mejor Puntuación: 0</div>
+    <div id="game-info">
+        <canvas id="gameCanvas" width="300" height="500"></canvas>
+        <div id="score">Puntuación: 0</div>
+    </div>
     <div id="controls">
         <button id="leftButton" class="control-button">Izquierda</button>
         <button id="rightButton" class="control-button">Derecha</button>
@@ -65,27 +71,41 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreDisplay = document.getElementById('score');
+        const topScoreDisplay = document.getElementById('top-score');
+
+        // Imágenes del juego
+        const playerCarImage = new Image();
+        playerCarImage.src = 'coche_jugador.png';
+
+        const obstacleImages = [
+            new Image(),
+            new Image()
+        ];
+        obstacleImages[0].src = 'coche_enemigo1.png';
+        obstacleImages[1].src = 'coche_enemigo2.png';
 
         // Configuración del coche
         const carWidth = 30;
         const carHeight = 50;
         let carX = (canvas.width - carWidth) / 2;
         const carY = canvas.height - carHeight - 10;
-        const carSpeed = 5; // Velocidad de movimiento del coche
+        const carSpeed = 2; // Velocidad de movimiento del coche
 
         // Configuración de obstáculos
-        const obstacleWidth = 20;
-        const obstacleHeight = 40;
+        const obstacleWidth = 30;
+        const obstacleHeight = 60;
         let obstacles = [];
         let obstacleSpeed = 2;
         let score = 0;
+        let topScore = localStorage.getItem('topScore') || 0;
+        topScoreDisplay.textContent = `Mejor Puntuación: ${topScore}`;
 
         // Bucle del juego
         function gameLoop() {
             // Borrar el lienzo
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Movimiento del coche basado en el estado de los botones
+            // Movimiento del coche
             if (isMovingLeft) {
                 carX = Math.max(0, carX - carSpeed);
             }
@@ -93,10 +113,8 @@
                 carX = Math.min(canvas.width - carWidth, carX + carSpeed);
             }
 
-            // Dibujar el coche
+            // Dibujar el coche y los obstáculos
             drawCar();
-
-            // Actualizar y dibujar obstáculos
             updateObstacles();
 
             // Dibujar línea de la carretera
@@ -105,19 +123,16 @@
             // Actualizar puntuación
             scoreDisplay.textContent = `Puntuación: ${score}`;
 
-            // Solicitar el siguiente fotograma
             requestAnimationFrame(gameLoop);
         }
 
         // Funciones de dibujo
         function drawCar() {
-            ctx.fillStyle = 'yellow';
-            ctx.fillRect(carX, carY, carWidth, carHeight);
+            ctx.drawImage(playerCarImage, carX, carY, carWidth, carHeight);
         }
 
-        function drawObstacle(x, y) {
-            ctx.fillStyle = 'red';
-            ctx.fillRect(x, y, obstacleWidth, obstacleHeight);
+        function drawObstacle(x, y, image) {
+            ctx.drawImage(image, x, y, obstacleWidth, obstacleHeight);
         }
 
         function drawRoadLines() {
@@ -137,7 +152,7 @@
         function updateObstacles() {
             for (let i = 0; i < obstacles.length; i++) {
                 obstacles[i].y += obstacleSpeed;
-                drawObstacle(obstacles[i].x, obstacles[i].y);
+                drawObstacle(obstacles[i].x, obstacles[i].y, obstacles[i].image);
 
                 if (
                     carX < obstacles[i].x + obstacleWidth &&
@@ -146,6 +161,11 @@
                     carY + carHeight > obstacles[i].y
                 ) {
                     alert(`¡Fin del juego! Tu puntuación es: ${score}`);
+                    if (score > topScore) {
+                        topScore = score;
+                        localStorage.setItem('topScore', topScore);
+                        topScoreDisplay.textContent = `Mejor Puntuación: ${topScore}`;
+                    }
                     resetGame();
                     return;
                 }
@@ -155,7 +175,8 @@
 
             if (Math.random() < 0.02) {
                 const newObstacleX = Math.random() * (canvas.width - obstacleWidth);
-                obstacles.push({ x: newObstacleX, y: -obstacleHeight });
+                const randomImage = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
+                obstacles.push({ x: newObstacleX, y: -obstacleHeight, image: randomImage });
             }
 
             score++;
@@ -176,24 +197,30 @@
         let isMovingLeft = false;
         let isMovingRight = false;
 
-        // Botón Izquierda
-        leftButton.addEventListener('touchstart', () => {
-            isMovingLeft = true;
-        });
-        leftButton.addEventListener('touchend', () => {
-            isMovingLeft = false;
-        });
+        leftButton.addEventListener('touchstart', () => { isMovingLeft = true; });
+        leftButton.addEventListener('touchend', () => { isMovingLeft = false; });
+        rightButton.addEventListener('touchstart', () => { isMovingRight = true; });
+        rightButton.addEventListener('touchend', () => { isMovingRight = false; });
 
-        // Botón Derecha
-        rightButton.addEventListener('touchstart', () => {
-            isMovingRight = true;
-        });
-        rightButton.addEventListener('touchend', () => {
-            isMovingRight = false;
-        });
+        // Esperar a que las imágenes se carguen antes de iniciar el juego
+        let imagesLoaded = 0;
+        const totalImages = obstacleImages.length + 1;
 
-        // Iniciar el juego
-        gameLoop();
+        playerCarImage.onload = () => {
+            imagesLoaded++;
+            if (imagesLoaded === totalImages) {
+                gameLoop();
+            }
+        };
+
+        obstacleImages.forEach(img => {
+            img.onload = () => {
+                imagesLoaded++;
+                if (imagesLoaded === totalImages) {
+                    gameLoop();
+                }
+            };
+        });
     </script>
 </body>
 </html>
