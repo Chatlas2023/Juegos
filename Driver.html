@@ -15,6 +15,7 @@
             color: white;
             font-family: 'Courier New', Courier, monospace;
             flex-direction: column;
+            user-select: none; /* Evita que el usuario pueda seleccionar texto */
         }
 
         canvas {
@@ -30,12 +31,34 @@
             margin-top: 10px;
             font-size: 24px;
         }
+        
+        #controls {
+            display: flex;
+            justify-content: space-around;
+            width: 300px;
+            margin-top: 20px;
+        }
+
+        .control-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            border: 2px solid white;
+            background-color: #555;
+            color: white;
+            border-radius: 10px;
+            -webkit-tap-highlight-color: transparent; /* Elimina el resaltado azul al tocar en iOS */
+        }
     </style>
 </head>
 <body>
     <h1>Juego de Carreras</h1>
     <canvas id="gameCanvas" width="300" height="500"></canvas>
     <div id="score">Puntuación: 0</div>
+    <div id="controls">
+        <button id="leftButton" class="control-button">Izquierda</button>
+        <button id="rightButton" class="control-button">Derecha</button>
+    </div>
 
     <script>
         // Variables del juego
@@ -94,25 +117,20 @@
             const lineGap = 50;
             const lineLength = 20;
             const lineThickness = 5;
-            // Ajuste para que las líneas estén más alejadas
             const roadMargin = canvas.width * 0.15;
 
             for (let i = 0; i < canvas.height; i += lineGap) {
-                // Línea izquierda
                 ctx.fillRect(roadMargin, i + (score % lineGap), lineThickness, lineLength);
-                // Línea derecha
                 ctx.fillRect(canvas.width - roadMargin - lineThickness, i + (score % lineGap), lineThickness, lineLength);
             }
         }
 
         // Lógica del juego
         function updateObstacles() {
-            // Mover obstáculos existentes
             for (let i = 0; i < obstacles.length; i++) {
                 obstacles[i].y += obstacleSpeed;
                 drawObstacle(obstacles[i].x, obstacles[i].y);
 
-                // Detectar colisiones
                 if (
                     carX < obstacles[i].x + obstacleWidth &&
                     carX + carWidth > obstacles[i].x &&
@@ -125,16 +143,13 @@
                 }
             }
 
-            // Eliminar obstáculos que están fuera de la pantalla
             obstacles = obstacles.filter(obstacle => obstacle.y < canvas.height);
 
-            // Generar nuevos obstáculos
             if (Math.random() < 0.02) {
                 const newObstacleX = Math.random() * (canvas.width - obstacleWidth);
                 obstacles.push({ x: newObstacleX, y: -obstacleHeight });
             }
 
-            // Incrementar puntuación
             score++;
         }
 
@@ -146,13 +161,41 @@
             obstacleSpeed = 2;
         }
 
-        // Manejar eventos de teclado
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') {
-                carX = Math.max(0, carX - carSpeed * 5);
-            } else if (e.key === 'ArrowRight') {
-                carX = Math.min(canvas.width - carWidth, carX + carSpeed * 5);
+        // Manejar botones táctiles
+        const leftButton = document.getElementById('leftButton');
+        const rightButton = document.getElementById('rightButton');
+
+        let isMovingLeft = false;
+        let isMovingRight = false;
+        let moveInterval;
+
+        function moveCar() {
+            if (isMovingLeft) {
+                carX = Math.max(0, carX - carSpeed);
             }
+            if (isMovingRight) {
+                carX = Math.min(canvas.width - carWidth, carX + carSpeed);
+            }
+        }
+
+        // Botón Izquierda
+        leftButton.addEventListener('touchstart', () => {
+            isMovingLeft = true;
+            moveInterval = setInterval(moveCar, 10);
+        });
+        leftButton.addEventListener('touchend', () => {
+            isMovingLeft = false;
+            clearInterval(moveInterval);
+        });
+
+        // Botón Derecha
+        rightButton.addEventListener('touchstart', () => {
+            isMovingRight = true;
+            moveInterval = setInterval(moveCar, 10);
+        });
+        rightButton.addEventListener('touchend', () => {
+            isMovingRight = false;
+            clearInterval(moveInterval);
         });
 
         // Iniciar el juego
