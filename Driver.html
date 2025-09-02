@@ -23,19 +23,16 @@
             border: 2px solid white;
         }
 
-        h1 {
-            margin: 10px;
-        }
-
-        #score {
-            font-size: 24px;
-        }
-
         #top-score {
             font-size: 20px;
             margin-bottom: 10px;
         }
         
+        #score {
+            font-size: 24px;
+            margin-top: 10px;
+        }
+
         #controls {
             display: flex;
             justify-content: space-around;
@@ -99,7 +96,7 @@
         let score = 0;
         let topScore = localStorage.getItem('topScore') || 0;
         topScoreDisplay.textContent = `Mejor Puntuación: ${topScore}`;
-
+        
         // Bucle del juego
         function gameLoop() {
             // Borrar el lienzo
@@ -202,8 +199,26 @@
         rightButton.addEventListener('touchstart', () => { isMovingRight = true; });
         rightButton.addEventListener('touchend', () => { isMovingRight = false; });
         
-        // Iniciar el juego
-        gameLoop();
+        // Lógica para iniciar el juego cuando las imágenes estén cargadas
+        let imagesLoaded = 0;
+        const totalImages = 1 + obstacleImages.length;
+
+        function checkImages() {
+            imagesLoaded++;
+            if (imagesLoaded === totalImages) {
+                gameLoop();
+            }
+        }
+
+        playerCarImage.onload = checkImages;
+        obstacleImages.forEach(img => {
+            img.onload = checkImages;
+        });
+
+        // En caso de que las imágenes se carguen desde la caché del navegador
+        if (playerCarImage.complete && obstacleImages.every(img => img.complete)) {
+            gameLoop();
+        }
     </script>
 </body>
 </html>
