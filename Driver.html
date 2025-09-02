@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Carreras - Controles Mejorados</title>
+    <title>Juego de Carreras - Modificado</title>
     <style>
         body {
             display: flex;
@@ -48,7 +48,7 @@
             display: flex;
             justify-content: space-between;
             width: 300px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .control-button {
@@ -122,7 +122,7 @@
         }
 
         .instructions {
-            margin-top: 15px;
+            margin-top: 10px;
             font-size: 14px;
             color: #AAA;
             text-align: center;
@@ -133,7 +133,7 @@
 <body>
     <div class="game-container">
         <div id="top-score">Mejor Puntuación: 0</div>
-        <canvas id="gameCanvas" width="300" height="500"></canvas>
+        <canvas id="gameCanvas" width="300" height="400"></canvas>
         <div id="score">Puntuación: 0</div>
         
         <div class="instructions">
@@ -218,7 +218,7 @@
         const carHeight = 50;
         let carX = (canvas.width - carWidth) / 2;
         const carY = canvas.height - carHeight - 10;
-        let carSpeed = 3; // Velocidad base ajustada
+        let carSpeed = 3.3; // Aumentado en 10% (de 3 a 3.3)
 
         // Configuración de obstáculos
         const obstacleWidth = 30;
@@ -289,12 +289,13 @@
             const lineThickness = 5;
             const roadMargin = canvas.width * 0.15;
 
+            // Líneas de los bordes
             for (let i = 0; i < canvas.height; i += lineGap) {
                 ctx.fillRect(roadMargin, i + (score % lineGap), lineThickness, lineLength);
                 ctx.fillRect(canvas.width - roadMargin - lineThickness, i + (score % lineGap), lineThickness, lineLength);
             }
             
-            // Dibujar división central
+            // Línea central (ahora se mueve como las de los bordes)
             ctx.setLineDash([10, 20]);
             ctx.beginPath();
             ctx.moveTo(canvas.width / 2, 0);
@@ -303,6 +304,12 @@
             ctx.lineWidth = 2;
             ctx.stroke();
             ctx.setLineDash([]);
+            
+            // Líneas discontinuas centrales (se mueven como las de los bordes)
+            ctx.fillStyle = 'yellow';
+            for (let i = 0; i < canvas.height; i += lineGap * 2) {
+                ctx.fillRect(canvas.width / 2 - lineThickness/2, i + (score % (lineGap * 2)), lineThickness, lineLength);
+            }
         }
 
         // Lógica del juego
@@ -325,10 +332,10 @@
 
             obstacles = obstacles.filter(obstacle => obstacle.y < canvas.height);
 
-            // Generar nuevos obstáculos con menor frecuencia
+            // Generar nuevos obstáculos en posiciones más aleatorias
             if (Math.random() < 0.015) {
-                const laneWidth = (canvas.width - obstacleWidth) / 3;
-                const newObstacleX = Math.floor(Math.random() * 3) * laneWidth + (laneWidth / 2) - (obstacleWidth / 2);
+                // Posición totalmente aleatoria en lugar de por carriles
+                const newObstacleX = Math.random() * (canvas.width - obstacleWidth - 40) + 20;
                 const randomImage = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
                 obstacles.push({ x: newObstacleX, y: -obstacleHeight, image: randomImage });
             }
