@@ -27,7 +27,7 @@ const player = {
 // Pista (road)
 let roadPoints = [];
 const numSegments = 500;
-const segmentLength = 10; // Longitud de cada segmento del camino
+const segmentLength = 10; 
 
 // Función para generar la pista
 function generateRoad() {
@@ -39,18 +39,17 @@ function generateRoad() {
     for (let i = 0; i < numSegments; i++) {
         const segment = {
             x: x,
-            z: z, // 'z' representa la distancia desde la cámara
+            z: z,
             curve: curve
         };
         roadPoints.push(segment);
 
-        // Cambiar la curva del camino de forma suave
         if (i % 50 === 0) {
             curve += (Math.random() - 0.5) * 0.5;
         }
         x += curve;
         if (x < gameWidth * 0.2 || x > gameWidth * 0.8) {
-            curve *= -1; // Invertir la curva si se acerca a los bordes
+            curve *= -1;
         }
         z += segmentLength;
     }
@@ -62,48 +61,50 @@ const roadWidth = 200;
 
 // Función para dibujar la pista con perspectiva
 function drawRoad() {
-    ctx.fillStyle = '#000'; // Fondo
+    ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, gameWidth, gameHeight);
 
-    // Dibuja los segmentos de la carretera desde el más lejano al más cercano
     for (let i = roadPoints.length - 1; i >= 0; i--) {
         const p = roadPoints[i];
-        const nextP = roadPoints[i + 1];
         
         // Proyección de perspectiva
         const scale = camDepth / p.z;
-        const nextScale = camDepth / (nextP ? nextP.z : p.z + segmentLength);
+        const x_screen = gameWidth / 2 + (p.x - gameWidth / 2) * scale;
+        const y_screen = gameHeight - p.z * scale;
+        const w_screen = roadWidth * scale;
 
-        // Coordenadas en pantalla
-        const x1 = gameWidth / 2 + (p.x - gameWidth / 2) * scale;
-        const x2 = gameWidth / 2 + (nextP ? (nextP.x - gameWidth / 2) * nextScale : (p.x - gameWidth / 2) * scale);
-        const y1 = gameHeight - p.z * scale * 2;
-        const y2 = gameHeight - (nextP ? nextP.z * nextScale * 2 : p.z * scale * 2);
+        // Dibuja los postes solo si están en la pantalla
+        if (y_screen > 0 && y_screen < gameHeight) {
+            ctx.fillStyle = '#fff';
+            if (i % 5 === 0) { // Dibuja postes cada 5 segmentos para que sean más densos
+                const postWidth = 5 * scale;
+                const postHeight = 30 * scale; // Aumenta la altura de los postes
+                
+                // Poste izquierdo
+                ctx.fillRect(x_screen - w_screen / 2 - postWidth * 2, y_screen, postWidth, postHeight);
+                
+                // Poste derecho
+                ctx.fillRect(x_screen + w_screen / 2 + postWidth, y_screen, postWidth, postHeight);
+            }
+        }
 
-        const w1 = roadWidth * scale;
-        const w2 = roadWidth * nextScale;
+        // Dibuja el camino (solo para conectar los puntos de la carretera)
+        if (i < roadPoints.length - 1) {
+            const nextP = roadPoints[i + 1];
+            const nextScale = camDepth / nextP.z;
 
-        // Dibujar el camino (carretera gris)
-        ctx.beginPath();
-        ctx.moveTo(x1 - w1 / 2, y1);
-        ctx.lineTo(x2 - w2 / 2, y2);
-        ctx.lineTo(x2 + w2 / 2, y2);
-        ctx.lineTo(x1 + w1 / 2, y1);
-        ctx.closePath();
-        ctx.fillStyle = '#333';
-        ctx.fill();
+            const x_next = gameWidth / 2 + (nextP.x - gameWidth / 2) * nextScale;
+            const y_next = gameHeight - nextP.z * nextScale;
+            const w_next = roadWidth * nextScale;
 
-        // Dibujar los postes
-        ctx.fillStyle = '#fff';
-        if (i % 10 === 0) { // Dibuja postes cada 10 segmentos
-            const postHeight = 10 * scale;
-            const postWidth = 5 * scale;
-            
-            // Poste izquierdo
-            ctx.fillRect(x1 - w1 / 2 - 10, y1, postWidth, postHeight);
-            
-            // Poste derecho
-            ctx.fillRect(x1 + w1 / 2 + 5, y1, postWidth, postHeight);
+            ctx.beginPath();
+            ctx.moveTo(x_screen - w_screen / 2, y_screen);
+            ctx.lineTo(x_next - w_next / 2, y_next);
+            ctx.lineTo(x_next + w_next / 2, y_next);
+            ctx.lineTo(x_screen + w_screen / 2, y_screen);
+            ctx.closePath();
+            ctx.fillStyle = '#333';
+            ctx.fill();
         }
     }
 }
@@ -112,10 +113,8 @@ function drawRoad() {
 function drawPlayer() {
     ctx.fillStyle = '#ffc800';
     ctx.fillRect(player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
-    // Dibujar el parabrisas
     ctx.fillStyle = '#444';
     ctx.fillRect(player.x - player.width / 2 + 5, player.y - player.height / 2 + 10, player.width - 10, 15);
-    // Dibujar los faros
     ctx.fillStyle = '#fff';
     ctx.fillRect(player.x - player.width / 2 + 5, player.y + player.height / 2 - 10, 10, 5);
     ctx.fillRect(player.x + player.width / 2 - 15, player.y + player.height / 2 - 10, 10, 5);
@@ -143,7 +142,7 @@ function update() {
     }
 
     // Remueve los segmentos que ya pasaron
-    while (roadPoints[0].z < 0) {
+    while (roadPoints[0] && roadPoints[0].z < -100) { // Un pequeño ajuste en la condición
         roadPoints.shift();
     }
     // Añade nuevos segmentos si es necesario
