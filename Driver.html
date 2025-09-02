@@ -3,21 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Night Driver</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Juego de Carreras Retro</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            background-color: #333;
+            border: 2px solid #fff;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 1.5em;
+        }
+    </style>
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-        <div id="ui">
-            <div id="score">SCORE: 0</div>
-            <div id="time">TIME: 60</div>
-        </div>
+    <div id="info">
+        <div>SCORE: <span id="score">0</span></div>
+        <div>SPEED: <span id="speed">0</span></div>
     </div>
-    <div id="controls">
-        <button id="left-btn">Izquierda</button>
-        <button id="right-btn">Derecha</button>
-    </div>
-    <script src="script.js"></script>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 400;
+        canvas.height = 600;
+
+        // Variables del juego
+        let score = 0;
+        let speed = 5;
+        let road = [];
+        let player = {
+            x: canvas.width / 2,
+            y: canvas.height - 100,
+            width: 50,
+            height: 80,
+            speed: 5
+        };
+
+        // Generar la carretera
+        function generateRoad() {
+            road = [];
+            for (let i = 0; i < 20; i++) {
+                road.push({
+                    x: Math.random() * (canvas.width - 20) + 10,
+                    y: -i * 100,
+                    width: Math.random() * 10 + 5,
+                    height: Math.random() * 10 + 5
+                });
+            }
+        }
+
+        // Dibujar el coche del jugador
+        function drawPlayer() {
+            ctx.fillStyle = '#ffcc00';
+            ctx.fillRect(player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(player.x - 15, player.y + 10, 30, 10); // Techo
+            ctx.fillRect(player.x - 25, player.y + 20, 10, 10); // Faros
+            ctx.fillRect(player.x + 15, player.y + 20, 10, 10);
+        }
+
+        // Dibujar la carretera
+        function drawRoad() {
+            ctx.fillStyle = '#fff';
+            road.forEach(segment => {
+                ctx.fillRect(segment.x, segment.y, segment.width, segment.height);
+            });
+        }
+
+        // Actualizar el estado del juego
+        function update() {
+            // Mover la carretera
+            road.forEach(segment => {
+                segment.y += speed;
+                if (segment.y > canvas.height) {
+                    segment.y = -10;
+                    segment.x = Math.random() * (canvas.width - 20) + 10;
+                    score += 1;
+                    speed += 0.05; // Aumentar la velocidad
+                }
+            });
+            
+            // Actualizar el HUD
+            document.getElementById('score').innerText = score;
+            document.getElementById('speed').innerText = Math.round(speed * 10);
+
+            // Control del jugador
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    player.x -= player.speed * 2;
+                } else if (e.key === 'ArrowRight') {
+                    player.x += player.speed * 2;
+                }
+            });
+
+            // Limitar el movimiento del jugador
+            if (player.x < player.width / 2) player.x = player.width / 2;
+            if (player.x > canvas.width - player.width / 2) player.x = canvas.width - player.width / 2;
+        }
+
+        // Bucle principal del juego
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            update();
+            drawRoad();
+            drawPlayer();
+            requestAnimationFrame(gameLoop);
+        }
+
+        generateRoad();
+        gameLoop();
+    </script>
 </body>
 </html>
