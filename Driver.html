@@ -94,12 +94,14 @@
             const lineGap = 50;
             const lineLength = 20;
             const lineThickness = 5;
+            // Ajuste para que las líneas estén más alejadas
+            const roadMargin = canvas.width * 0.15;
 
             for (let i = 0; i < canvas.height; i += lineGap) {
                 // Línea izquierda
-                ctx.fillRect(canvas.width * 0.25, i + (score % lineGap), lineThickness, lineLength);
+                ctx.fillRect(roadMargin, i + (score % lineGap), lineThickness, lineLength);
                 // Línea derecha
-                ctx.fillRect(canvas.width * 0.75, i + (score % lineGap), lineThickness, lineLength);
+                ctx.fillRect(canvas.width - roadMargin - lineThickness, i + (score % lineGap), lineThickness, lineLength);
             }
         }
 
