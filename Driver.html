@@ -3,129 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Carreras Retro</title>
+    <title>Juego de Carreras</title>
     <style>
         body {
-            background-color: #000;
-            color: #fff;
-            font-family: 'Courier New', Courier, monospace;
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
             height: 100vh;
             margin: 0;
-            overflow: hidden;
-        }
-        canvas {
             background-color: #333;
-            border: 2px solid #fff;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            flex-direction: column;
         }
-        #info {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            font-size: 1.5em;
+
+        canvas {
+            background-color: #000;
+            border: 2px solid white;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        #score {
+            margin-top: 10px;
+            font-size: 24px;
         }
     </style>
 </head>
 <body>
-    <div id="info">
-        <div>SCORE: <span id="score">0</span></div>
-        <div>SPEED: <span id="speed">0</span></div>
-    </div>
-    <canvas id="gameCanvas"></canvas>
+    <h1>Juego de Carreras</h1>
+    <canvas id="gameCanvas" width="300" height="500"></canvas>
+    <div id="score">Puntuación: 0</div>
 
     <script>
+        // Variables del juego
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        canvas.width = 400;
-        canvas.height = 600;
+        const scoreDisplay = document.getElementById('score');
 
-        // Variables del juego
+        // Configuración del coche
+        const carWidth = 30;
+        const carHeight = 50;
+        let carX = (canvas.width - carWidth) / 2;
+        const carY = canvas.height - carHeight - 10;
+        const carSpeed = 5;
+
+        // Configuración de obstáculos
+        const obstacleWidth = 20;
+        const obstacleHeight = 40;
+        let obstacles = [];
+        let obstacleSpeed = 2;
         let score = 0;
-        let speed = 5;
-        let road = [];
-        let player = {
-            x: canvas.width / 2,
-            y: canvas.height - 100,
-            width: 50,
-            height: 80,
-            speed: 5
-        };
 
-        // Generar la carretera
-        function generateRoad() {
-            road = [];
-            for (let i = 0; i < 20; i++) {
-                road.push({
-                    x: Math.random() * (canvas.width - 20) + 10,
-                    y: -i * 100,
-                    width: Math.random() * 10 + 5,
-                    height: Math.random() * 10 + 5
-                });
-            }
-        }
-
-        // Dibujar el coche del jugador
-        function drawPlayer() {
-            ctx.fillStyle = '#ffcc00';
-            ctx.fillRect(player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(player.x - 15, player.y + 10, 30, 10); // Techo
-            ctx.fillRect(player.x - 25, player.y + 20, 10, 10); // Faros
-            ctx.fillRect(player.x + 15, player.y + 20, 10, 10);
-        }
-
-        // Dibujar la carretera
-        function drawRoad() {
-            ctx.fillStyle = '#fff';
-            road.forEach(segment => {
-                ctx.fillRect(segment.x, segment.y, segment.width, segment.height);
-            });
-        }
-
-        // Actualizar el estado del juego
-        function update() {
-            // Mover la carretera
-            road.forEach(segment => {
-                segment.y += speed;
-                if (segment.y > canvas.height) {
-                    segment.y = -10;
-                    segment.x = Math.random() * (canvas.width - 20) + 10;
-                    score += 1;
-                    speed += 0.05; // Aumentar la velocidad
-                }
-            });
-            
-            // Actualizar el HUD
-            document.getElementById('score').innerText = score;
-            document.getElementById('speed').innerText = Math.round(speed * 10);
-
-            // Control del jugador
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'ArrowLeft') {
-                    player.x -= player.speed * 2;
-                } else if (e.key === 'ArrowRight') {
-                    player.x += player.speed * 2;
-                }
-            });
-
-            // Limitar el movimiento del jugador
-            if (player.x < player.width / 2) player.x = player.width / 2;
-            if (player.x > canvas.width - player.width / 2) player.x = canvas.width - player.width / 2;
-        }
-
-        // Bucle principal del juego
+        // Bucle del juego
         function gameLoop() {
+            // Borrar el lienzo
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            update();
-            drawRoad();
-            drawPlayer();
+
+            // Dibujar el coche
+            drawCar();
+
+            // Actualizar y dibujar obstáculos
+            updateObstacles();
+
+            // Dibujar línea de la carretera
+            drawRoadLines();
+
+            // Actualizar puntuación
+            scoreDisplay.textContent = `Puntuación: ${score}`;
+
+            // Solicitar el siguiente fotograma
             requestAnimationFrame(gameLoop);
         }
 
-        generateRoad();
+        // Funciones de dibujo
+        function drawCar() {
+            ctx.fillStyle = 'yellow';
+            ctx.fillRect(carX, carY, carWidth, carHeight);
+        }
+
+        function drawObstacle(x, y) {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(x, y, obstacleWidth, obstacleHeight);
+        }
+
+        function drawRoadLines() {
+            ctx.fillStyle = 'white';
+            const lineGap = 50;
+            const lineLength = 20;
+            const lineThickness = 5;
+
+            for (let i = 0; i < canvas.height; i += lineGap) {
+                // Línea izquierda
+                ctx.fillRect(canvas.width * 0.25, i + (score % lineGap), lineThickness, lineLength);
+                // Línea derecha
+                ctx.fillRect(canvas.width * 0.75, i + (score % lineGap), lineThickness, lineLength);
+            }
+        }
+
+        // Lógica del juego
+        function updateObstacles() {
+            // Mover obstáculos existentes
+            for (let i = 0; i < obstacles.length; i++) {
+                obstacles[i].y += obstacleSpeed;
+                drawObstacle(obstacles[i].x, obstacles[i].y);
+
+                // Detectar colisiones
+                if (
+                    carX < obstacles[i].x + obstacleWidth &&
+                    carX + carWidth > obstacles[i].x &&
+                    carY < obstacles[i].y + obstacleHeight &&
+                    carY + carHeight > obstacles[i].y
+                ) {
+                    alert(`¡Fin del juego! Tu puntuación es: ${score}`);
+                    resetGame();
+                    return;
+                }
+            }
+
+            // Eliminar obstáculos que están fuera de la pantalla
+            obstacles = obstacles.filter(obstacle => obstacle.y < canvas.height);
+
+            // Generar nuevos obstáculos
+            if (Math.random() < 0.02) {
+                const newObstacleX = Math.random() * (canvas.width - obstacleWidth);
+                obstacles.push({ x: newObstacleX, y: -obstacleHeight });
+            }
+
+            // Incrementar puntuación
+            score++;
+        }
+
+        // Reiniciar el juego
+        function resetGame() {
+            obstacles = [];
+            score = 0;
+            carX = (canvas.width - carWidth) / 2;
+            obstacleSpeed = 2;
+        }
+
+        // Manejar eventos de teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                carX = Math.max(0, carX - carSpeed * 5);
+            } else if (e.key === 'ArrowRight') {
+                carX = Math.min(canvas.width - carWidth, carX + carSpeed * 5);
+            }
+        });
+
+        // Iniciar el juego
         gameLoop();
     </script>
 </body>
