@@ -1,324 +1,226 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-        <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-N4J8MM9R5N');
-</script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Night Driver - Ruta Continua</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Carreras</title>
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background: #000;
-            touch-action: none;
-            font-family: 'Courier New', monospace;
-            color: white;
-        }
-        #gameCanvas {
-            display: block;
-            background: #000;
-        }
-        #ui {
-            position: absolute;
-            top: 10px;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 20px;
-            box-sizing: border-box;
-            font-size: 20px;
-        }
-        #left-ui {
-            text-align: left;
-        }
-        #right-ui {
-            text-align: right;
-        }
-        #controls {
-            position: fixed;
-            bottom: 20px;
-            width: 100%;
             display: flex;
             justify-content: center;
-            gap: 50px;
-        }
-        .arrow-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid white;
-            color: white;
-            font-size: 30px;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
             align-items: center;
-            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #333;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            flex-direction: column;
             user-select: none;
         }
-        #startScreen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
+
+        canvas {
+            background-color: #000;
+            border: 2px solid white;
         }
-        #startButton {
-            padding: 15px 30px;
-            background: #FF0;
-            color: #000;
-            border: none;
+
+        h1 {
+            margin: 10px;
+        }
+
+        #score {
+            font-size: 24px;
+        }
+
+        #top-score {
             font-size: 20px;
+            margin-bottom: 10px;
+        }
+        
+        #controls {
+            display: flex;
+            justify-content: space-around;
+            width: 300px;
+            margin-top: 15px;
+        }
+
+        .control-button {
+            padding: 15px 30px;
+            font-size: 18px;
             cursor: pointer;
-            border-radius: 5px;
+            border: 2px solid white;
+            background-color: #555;
+            color: white;
+            border-radius: 10px;
+            -webkit-tap-highlight-color: transparent;
         }
     </style>
 </head>
 <body>
-<div id="ui">
-    <div id="left-ui">Ver 2.23 VIDAS: <span id="lives">3</span></div>
-    <div id="right-ui">TIEMPO: <span id="time">0</span>s</div>
-</div>
-    <canvas id="gameCanvas"></canvas>
+    <div id="top-score">Mejor Puntuación: 0</div>
+    <div id="game-info">
+        <canvas id="gameCanvas" width="300" height="500"></canvas>
+        <div id="score">Puntuación: 0</div>
+    </div>
     <div id="controls">
-        <div class="arrow-btn" id="leftBtn">←</div>
-        <div class="arrow-btn" id="rightBtn">→</div>
+        <button id="leftButton" class="control-button">Izquierda</button>
+        <button id="rightButton" class="control-button">Derecha</button>
     </div>
-    <div id="startScreen">
-        <h1>NIGHT DRIVER</h1>
-        <p>Use las flechas</p>
-        <button id="startButton">COMENZAR</button>
-    </div>
+
     <script>
+        // Variables del juego
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const timeElement = document.getElementById('time');
-        const livesElement = document.getElementById('lives');
-        const leftBtn = document.getElementById('leftBtn');
-        const rightBtn = document.getElementById('rightBtn');
-        const startScreen = document.getElementById('startScreen');
-        const startButton = document.getElementById('startButton');
+        const scoreDisplay = document.getElementById('score');
+        const topScoreDisplay = document.getElementById('top-score');
 
-        const POST_COUNT = 14;
-        const POST_SPACING = 0.1;
-        const MAX_DISTANCE = 1.4;
-        const SEPARATION_FACTOR = 1.5;
-        const FIXED_GAP = 20 / window.innerWidth;
+        // Imágenes del juego
+        const playerCarImage = new Image();
+        playerCarImage.src = 'coche_jugador.png';
 
-        const TRACKS = [
-            [
-                { cs: 0, dist: 0.5 },
-                { cs: 0.02, dist: 0.3 },
-                { cs: -0.02, dist: 0.3 },
-                { cs: 0.01, dist: 0.4 },
-                { cs: -0.01, dist: 0.4 },
-                { cs: 0, dist: 0.5 }
-            ],
-            [
-                { cs: 0, dist: 0.4 },
-                { cs: 0.03, dist: 0.2 },
-                { cs: -0.03, dist: 0.2 },
-                { cs: 0.02, dist: 0.3 },
-                { cs: -0.02, dist: 0.3 },
-                { cs: 0.015, dist: 0.2 },
-                { cs: -0.015, dist: 0.2 }
-            ],
-            [
-                { cs: 0, dist: 0.3 },
-                { cs: 0.04, dist: 0.15 },
-                { cs: -0.04, dist: 0.15 },
-                { cs: 0.03, dist: 0.2 },
-                { cs: -0.03, dist: 0.2 },
-                { cs: 0.02, dist: 0.25 },
-                { cs: -0.02, dist: 0.25 }
-            ]
+        const obstacleImages = [
+            new Image(),
+            new Image()
         ];
+        obstacleImages[0].src = 'coche_enemigo1.png';
+        obstacleImages[1].src = 'coche_enemigo2.png';
 
-        let gameRunning = false;
-        let time = 0;
-        let lives = 3;
-        let playerPos = 0;
-        let steer = 0;
-        let segments = [];
-        let velocity = 0.002;
-        let segmentSpeed = velocity;
-        let originX = 0;
-        let trackIndex = 0;
-        let currentTrack = TRACKS[trackIndex];
-        let trackSegmentIndex = 0;
-        let turnDistance = 0;
-        let cs = currentTrack[trackSegmentIndex].cs;
-        let dist = currentTrack[trackSegmentIndex].dist;
-        let lastTime = 0;
-        let gameLoopId = null;
-        let collisionCooldown = 0;
+        // Configuración del coche
+        const carWidth = 30;
+        const carHeight = 50;
+        let carX = (canvas.width - carWidth) / 2;
+        const carY = canvas.height - carHeight - 10;
+        const carSpeed = 2; // Velocidad de movimiento del coche
 
-        function createSegment(distance) {
-            const progress = distance / MAX_DISTANCE;
-            const widthFactor = progress * progress * SEPARATION_FACTOR;
-            const leftPos = originX - widthFactor;
-            const rightPos = originX + widthFactor + FIXED_GAP;
-            const height = (10 + progress * 100) * 1.8;
-            const width = 2 + progress * 10;
-            return {
-                distance,
-                leftPos,
-                rightPos,
-                height,
-                width,
-                progress
-            };
+        // Configuración de obstáculos
+        const obstacleWidth = 30;
+        const obstacleHeight = 60;
+        let obstacles = [];
+        let obstacleSpeed = 2;
+        let score = 0;
+        let topScore = localStorage.getItem('topScore') || 0;
+        topScoreDisplay.textContent = `Mejor Puntuación: ${topScore}`;
+
+        // Bucle del juego
+        function gameLoop() {
+            // Borrar el lienzo
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Movimiento del coche
+            if (isMovingLeft) {
+                carX = Math.max(0, carX - carSpeed);
+            }
+            if (isMovingRight) {
+                carX = Math.min(canvas.width - carWidth, carX + carSpeed);
+            }
+
+            // Dibujar el coche y los obstáculos
+            drawCar();
+            updateObstacles();
+
+            // Dibujar línea de la carretera
+            drawRoadLines();
+
+            // Actualizar puntuación
+            scoreDisplay.textContent = `Puntuación: ${score}`;
+
+            requestAnimationFrame(gameLoop);
         }
 
-        function initRoad() {
-            segments = [];
-            originX = 0;
-            trackSegmentIndex = 0;
-            turnDistance = 0;
-            cs = currentTrack[trackSegmentIndex].cs;
-            dist = currentTrack[trackSegmentIndex].dist;
-
-            // Mayor separación inicial para evitar solapamientos y desapariciones
-            for (let i = 0; i < POST_COUNT; i++) {
-                const distance = i * POST_SPACING * 1.1;
-                segments.push(createSegment(distance));
-            }
-            collisionCooldown = 60;
+        // Funciones de dibujo
+        function drawCar() {
+            ctx.drawImage(playerCarImage, carX, carY, carWidth, carHeight);
         }
 
-        function drawRoad() {
-            ctx.fillStyle = '#000';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            const offsetY = 45;
-            for (let i = 0; i < segments.length; i++) {
-                const seg = segments[i];
-                const yPos = (canvas.height * seg.progress) + (offsetY * 1.25);
-                if (yPos < 0 || yPos > canvas.height) continue;
-                const leftX = canvas.width * (0.5 + seg.leftPos);
-                const rightX = canvas.width * (0.5 + seg.rightPos);
-                const postWidth = seg.width;
-                const postHeight = seg.height;
-
-                ctx.fillStyle = '#FFF';
-                ctx.fillRect(leftX - postWidth / 2, yPos - postHeight, postWidth, postHeight);
-                ctx.fillRect(rightX - postWidth / 2, yPos - postHeight, postWidth, postHeight);
-            }
-            ctx.fillStyle = 'red';
-            ctx.fillRect(canvas.width * (0.5 + playerPos * 0.1) - 5, canvas.height - 20, 10, 10);
+        function drawObstacle(x, y, image) {
+            ctx.drawImage(image, x, y, obstacleWidth, obstacleHeight);
         }
 
-        function updateRoad() {
-            const STEER_SPEED = 0.001;
-            steer = Math.max(-0.05, Math.min(0.05, steer - playerPos * STEER_SPEED));
-            const stc = steer * velocity * 50;
-            const crv = cs * velocity * 50;
-            originX += (stc + crv);
-            originX = Math.max(-0.5, Math.min(0.5, originX));
-            turnDistance += velocity;
-            if (turnDistance >= dist) {
-                turnDistance = 0;
-                trackSegmentIndex = (trackSegmentIndex + 1) % currentTrack.length;
-                cs = currentTrack[trackSegmentIndex].cs;
-                dist = currentTrack[trackSegmentIndex].dist;
+        function drawRoadLines() {
+            ctx.fillStyle = 'white';
+            const lineGap = 50;
+            const lineLength = 20;
+            const lineThickness = 5;
+            const roadMargin = canvas.width * 0.15;
+
+            for (let i = 0; i < canvas.height; i += lineGap) {
+                ctx.fillRect(roadMargin, i + (score % lineGap), lineThickness, lineLength);
+                ctx.fillRect(canvas.width - roadMargin - lineThickness, i + (score % lineGap), lineThickness, lineLength);
             }
-            segments.forEach(seg => {
-                seg.distance += segmentSpeed;
-                if (seg.distance > MAX_DISTANCE) {
-                    seg.distance -= MAX_DISTANCE;
+        }
+
+        // Lógica del juego
+        function updateObstacles() {
+            for (let i = 0; i < obstacles.length; i++) {
+                obstacles[i].y += obstacleSpeed;
+                drawObstacle(obstacles[i].x, obstacles[i].y, obstacles[i].image);
+
+                if (
+                    carX < obstacles[i].x + obstacleWidth &&
+                    carX + carWidth > obstacles[i].x &&
+                    carY < obstacles[i].y + obstacleHeight &&
+                    carY + carHeight > obstacles[i].y
+                ) {
+                    alert(`¡Fin del juego! Tu puntuación es: ${score}`);
+                    if (score > topScore) {
+                        topScore = score;
+                        localStorage.setItem('topScore', topScore);
+                        topScoreDisplay.textContent = `Mejor Puntuación: ${topScore}`;
+                    }
+                    resetGame();
+                    return;
                 }
-                seg.progress = seg.distance / MAX_DISTANCE;
-                const widthFactor = seg.progress * seg.progress * SEPARATION_FACTOR;
-                seg.leftPos = originX - widthFactor;
-                seg.rightPos = originX + widthFactor + FIXED_GAP;
-                seg.height = (5 + seg.progress * 50) * 1.8;
-                seg.width = 5 + seg.progress * 20;
-            });
-
-            // Ordena segmentos para mantener orden lógico
-            segments.sort((a, b) => a.distance - b.distance);
-        }
-
-        function updateGame(timestamp) {
-            if (!gameRunning) return;
-            if (!lastTime) lastTime = timestamp;
-            lastTime = timestamp;
-            updateRoad();
-            time += segmentSpeed * 25;
-            timeElement.textContent = time.toFixed(1);
-            drawRoad();
-            gameLoopId = requestAnimationFrame(updateGame);
-        }
-
-        function gameOver() {
-            gameRunning = false;
-            if (gameLoopId) {
-                cancelAnimationFrame(gameLoopId);
-                gameLoopId = null;
             }
-            startScreen.style.display = 'flex';
-        }
 
-        function startGame() {
-            if (gameLoopId) {
-                cancelAnimationFrame(gameLoopId);
+            obstacles = obstacles.filter(obstacle => obstacle.y < canvas.height);
+
+            if (Math.random() < 0.02) {
+                const newObstacleX = Math.random() * (canvas.width - obstacleWidth);
+                const randomImage = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
+                obstacles.push({ x: newObstacleX, y: -obstacleHeight, image: randomImage });
             }
-            initRoad();
-            time = 0;
-            lives = 3;
-            steer = 0;
-            playerPos = 0;
-            livesElement.textContent = lives;
-            timeElement.textContent = "0";
-            startScreen.style.display = 'none';
-            gameRunning = true;
-            lastTime = 0;
-            gameLoopId = requestAnimationFrame(updateGame);
-            drawRoad();
+
+            score++;
         }
 
-        leftBtn.addEventListener('touchstart', () => playerPos = -0.5);
-        leftBtn.addEventListener('touchend', () => playerPos = 0);
-        rightBtn.addEventListener('touchstart', () => playerPos = 0.5);
-        rightBtn.addEventListener('touchend', () => playerPos = 0);
+        // Reiniciar el juego
+        function resetGame() {
+            obstacles = [];
+            score = 0;
+            carX = (canvas.width - carWidth) / 2;
+            obstacleSpeed = 2;
+        }
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') playerPos = -0.5;
-            if (e.key === 'ArrowRight') playerPos = 0.5;
+        // Manejar botones táctiles
+        const leftButton = document.getElementById('leftButton');
+        const rightButton = document.getElementById('rightButton');
+
+        let isMovingLeft = false;
+        let isMovingRight = false;
+
+        leftButton.addEventListener('touchstart', () => { isMovingLeft = true; });
+        leftButton.addEventListener('touchend', () => { isMovingLeft = false; });
+        rightButton.addEventListener('touchstart', () => { isMovingRight = true; });
+        rightButton.addEventListener('touchend', () => { isMovingRight = false; });
+
+        // Esperar a que las imágenes se carguen antes de iniciar el juego
+        let imagesLoaded = 0;
+        const totalImages = obstacleImages.length + 1;
+
+        playerCarImage.onload = () => {
+            imagesLoaded++;
+            if (imagesLoaded === totalImages) {
+                gameLoop();
+            }
+        };
+
+        obstacleImages.forEach(img => {
+            img.onload = () => {
+                imagesLoaded++;
+                if (imagesLoaded === totalImages) {
+                    gameLoop();
+                }
+            };
         });
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') playerPos = 0;
-        });
-
-        startButton.addEventListener('click', startGame);
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            if (gameRunning) {
-                drawRoad();
-            } else {
-                ctx.fillStyle = '#000';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
     </script>
 </body>
 </html>
