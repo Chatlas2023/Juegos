@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Carreras</title>
+    <title>Juego de Carreras - Controles Mejorados</title>
     <style>
         body {
             display: flex;
@@ -11,45 +11,76 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #333;
+            background-color: #222;
             color: white;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Arial', sans-serif;
             flex-direction: column;
             user-select: none;
             overflow: hidden;
         }
 
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
         canvas {
             background-color: #000;
-            border: 2px solid white;
+            border: 2px solid #444;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
         }
 
         #top-score {
-            font-size: 20px;
+            font-size: 18px;
             margin-bottom: 10px;
+            color: #FFD700;
         }
         
         #score {
-            font-size: 24px;
+            font-size: 20px;
             margin-top: 10px;
+            color: #FFF;
         }
 
         #controls {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             width: 300px;
-            margin-top: 15px;
+            margin-top: 20px;
         }
 
         .control-button {
-            padding: 15px 30px;
-            font-size: 18px;
+            padding: 15px 25px;
+            font-size: 16px;
             cursor: pointer;
-            border: 2px solid white;
-            background-color: #555;
+            border: none;
+            background: linear-gradient(to bottom, #555, #333);
             color: white;
-            border-radius: 10px;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            transition: all 0.1s;
             -webkit-tap-highlight-color: transparent;
+        }
+
+        .control-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(to bottom, #444, #222);
+        }
+
+        #leftButton {
+            margin-right: 30px;
+        }
+
+        #rightButton {
+            margin-left: 30px;
         }
 
         #game-over {
@@ -57,34 +88,84 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            padding: 20px;
-            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.85);
+            padding: 25px;
+            border-radius: 15px;
             text-align: center;
             display: none;
+            border: 2px solid #FFD700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            width: 80%;
+            max-width: 300px;
         }
 
         #start-button {
-            padding: 15px 30px;
-            font-size: 18px;
+            padding: 12px 25px;
+            font-size: 16px;
             cursor: pointer;
-            border: 2px solid white;
-            background-color: #4CAF50;
+            border: none;
+            background: linear-gradient(to bottom, #4CAF50, #2E8B57);
             color: white;
-            border-radius: 10px;
+            border-radius: 30px;
             margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+        }
+
+        #start-button:hover {
+            background: linear-gradient(to bottom, #45a049, #2d7a4e);
+        }
+
+        #start-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .instructions {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #AAA;
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .sensitivity-control {
+            margin-top: 15px;
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sensitivity-control label {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .sensitivity-control input {
+            width: 80%;
         }
     </style>
 </head>
 <body>
-    <div id="top-score">Mejor Puntuación: 0</div>
-    <div id="game-info">
+    <div class="game-container">
+        <div id="top-score">Mejor Puntuación: 0</div>
         <canvas id="gameCanvas" width="300" height="500"></canvas>
         <div id="score">Puntuación: 0</div>
+        
+        <div class="sensitivity-control">
+            <label for="sensitivity">Sensibilidad de controles:</label>
+            <input type="range" id="sensitivity" min="1" max="10" value="3">
+        </div>
+        
+        <div class="instructions">
+            Usa los botones o las flechas del teclado para esquivar los coches
+        </div>
     </div>
+
     <div id="controls">
-        <button id="leftButton" class="control-button">Izquierda</button>
-        <button id="rightButton" class="control-button">Derecha</button>
+        <button id="leftButton" class="control-button">←</button>
+        <button id="rightButton" class="control-button">→</button>
     </div>
 
     <div id="game-over">
@@ -102,8 +183,9 @@
         const gameOverScreen = document.getElementById('game-over');
         const finalScoreDisplay = document.getElementById('final-score');
         const startButton = document.getElementById('start-button');
+        const sensitivityControl = document.getElementById('sensitivity');
 
-        // Crear imágenes programáticamente en lugar de cargarlas desde archivos
+        // Crear imágenes programáticamente
         function createCarImage(color) {
             const size = 30;
             const offscreen = document.createElement('canvas');
@@ -149,7 +231,9 @@
         const playerCarImage = createCarImage('red');
         const obstacleImages = [
             createCarImage('blue'),
-            createCarImage('green')
+            createCarImage('green'),
+            createCarImage('yellow'),
+            createCarImage('purple')
         ];
 
         // Configuración del coche
@@ -157,7 +241,7 @@
         const carHeight = 50;
         let carX = (canvas.width - carWidth) / 2;
         const carY = canvas.height - carHeight - 10;
-        const carSpeed = 5; // Velocidad de movimiento del coche
+        let carSpeed = 2; // Velocidad base reducida
 
         // Configuración de obstáculos
         const obstacleWidth = 30;
@@ -169,6 +253,12 @@
         let gameRunning = false;
         topScoreDisplay.textContent = `Mejor Puntuación: ${topScore}`;
         
+        // Control de movimiento suavizado
+        let isMovingLeft = false;
+        let isMovingRight = false;
+        let lastMoveTime = 0;
+        const moveDelay = 50; // Milisegundos entre movimientos (mayor = menos sensible)
+        
         // Bucle del juego
         function gameLoop() {
             if (!gameRunning) return;
@@ -176,12 +266,17 @@
             // Borrar el lienzo
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Movimiento del coche
-            if (isMovingLeft) {
-                carX = Math.max(0, carX - carSpeed);
+            // Movimiento del coche con control de sensibilidad
+            const currentTime = Date.now();
+            const sensitivity = parseInt(sensitivityControl.value);
+            
+            if (isMovingLeft && currentTime - lastMoveTime > moveDelay) {
+                carX = Math.max(0, carX - (carSpeed * sensitivity / 5));
+                lastMoveTime = currentTime;
             }
-            if (isMovingRight) {
-                carX = Math.min(canvas.width - carWidth, carX + carSpeed);
+            if (isMovingRight && currentTime - lastMoveTime > moveDelay) {
+                carX = Math.min(canvas.width - carWidth, carX + (carSpeed * sensitivity / 5));
+                lastMoveTime = currentTime;
             }
 
             // Dibujar el coche y los obstáculos
@@ -194,9 +289,9 @@
             // Actualizar puntuación
             scoreDisplay.textContent = `Puntuación: ${score}`;
 
-            // Aumentar dificultad
+            // Aumentar dificultad gradualmente
             if (score % 500 === 0 && score > 0) {
-                obstacleSpeed += 0.5;
+                obstacleSpeed += 0.2;
             }
 
             requestAnimationFrame(gameLoop);
@@ -222,6 +317,16 @@
                 ctx.fillRect(roadMargin, i + (score % lineGap), lineThickness, lineLength);
                 ctx.fillRect(canvas.width - roadMargin - lineThickness, i + (score % lineGap), lineThickness, lineLength);
             }
+            
+            // Dibujar división central
+            ctx.setLineDash([10, 20]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.strokeStyle = 'yellow';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
         }
 
         // Lógica del juego
@@ -244,8 +349,10 @@
 
             obstacles = obstacles.filter(obstacle => obstacle.y < canvas.height);
 
-            if (Math.random() < 0.02) {
-                const newObstacleX = Math.random() * (canvas.width - obstacleWidth);
+            // Generar nuevos obstáculos con menor frecuencia
+            if (Math.random() < 0.015) {
+                const laneWidth = (canvas.width - obstacleWidth) / 3;
+                const newObstacleX = Math.floor(Math.random() * 3) * laneWidth + (laneWidth / 2) - (obstacleWidth / 2);
                 const randomImage = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
                 obstacles.push({ x: newObstacleX, y: -obstacleHeight, image: randomImage });
             }
@@ -279,12 +386,9 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Manejar botones táctiles
+        // Manejar botones táctiles con menor sensibilidad
         const leftButton = document.getElementById('leftButton');
         const rightButton = document.getElementById('rightButton');
-
-        let isMovingLeft = false;
-        let isMovingRight = false;
 
         leftButton.addEventListener('touchstart', (e) => { 
             e.preventDefault();
@@ -300,7 +404,7 @@
         rightButton.addEventListener('touchend', () => { isMovingRight = false; });
         rightButton.addEventListener('touchcancel', () => { isMovingRight = false; });
 
-        // También agregar soporte para eventos de mouse
+        // Eventos de mouse
         leftButton.addEventListener('mousedown', () => { isMovingLeft = true; });
         leftButton.addEventListener('mouseup', () => { isMovingLeft = false; });
         leftButton.addEventListener('mouseleave', () => { isMovingLeft = false; });
@@ -309,10 +413,21 @@
         rightButton.addEventListener('mouseup', () => { isMovingRight = false; });
         rightButton.addEventListener('mouseleave', () => { isMovingRight = false; });
 
-        // Soporte para teclado
+        // Soporte para teclado con menor sensibilidad
+        let keyCooldown = false;
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft') isMovingLeft = true;
-            if (e.key === 'ArrowRight') isMovingRight = true;
+            if (keyCooldown) return;
+            
+            if (e.key === 'ArrowLeft') {
+                isMovingLeft = true;
+                keyCooldown = true;
+                setTimeout(() => { keyCooldown = false; }, moveDelay);
+            }
+            if (e.key === 'ArrowRight') {
+                isMovingRight = true;
+                keyCooldown = true;
+                setTimeout(() => { keyCooldown = false; }, moveDelay);
+            }
         });
 
         document.addEventListener('keyup', (e) => {
@@ -330,7 +445,6 @@
         function checkImages() {
             imagesLoaded++;
             if (imagesLoaded === totalImages) {
-                // Mostrar pantalla de inicio en lugar de iniciar automáticamente
                 gameOverScreen.style.display = 'block';
                 finalScoreDisplay.textContent = 'Presiona "Jugar de nuevo" para comenzar';
             }
