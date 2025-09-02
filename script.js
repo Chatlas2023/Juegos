@@ -13,43 +13,41 @@ canvas.height = gameHeight;
 
 let score = 0;
 let time = 60;
-let gameSpeed = 50; // Velocidad ajustada para mejor perspectiva
+let gameSpeed = 50; 
 
 // Coche del jugador
 const player = {
     x: gameWidth / 2,
-    y: gameHeight - 50,
-    width: 30,
-    height: 40,
+    y: gameHeight - 70,
+    width: 60,
+    height: 80,
     speed: 5
 };
 
 // Pista (road)
 let roadPoints = [];
-const numSegments = 500; // Número de segmentos de la carretera
+const numSegments = 500;
 
 // Función para generar la pista
 function generateRoad() {
     roadPoints = [];
     let x = gameWidth / 2;
-    let y = 0;
     let curve = 0;
 
     for (let i = 0; i < numSegments; i++) {
         const segment = {
             x: x,
-            z: i, // 'z' representa la distancia, creando la profundidad
+            z: i,
             curve: curve
         };
         roadPoints.push(segment);
 
-        // Cambiar la curva del camino de forma suave
         if (i % 50 === 0) {
             curve += (Math.random() - 0.5) * 0.5;
         }
         x += curve;
         if (x < gameWidth * 0.2 || x > gameWidth * 0.8) {
-            curve *= -1; // Invertir la curva si se acerca a los bordes
+            curve *= -1;
         }
     }
 }
@@ -67,7 +65,6 @@ function drawRoad() {
         const p = roadPoints[(i + gameSpeed) % numSegments];
         const nextP = roadPoints[(i + gameSpeed + 1) % numSegments];
         
-        // Proyección de perspectiva
         const scale = camDepth / (p.z + 0.001);
         const nextScale = camDepth / (nextP.z + 0.001);
 
@@ -80,24 +77,26 @@ function drawRoad() {
         const y1 = gameHeight - i * 10;
         const y2 = gameHeight - (i + 1) * 10;
 
-        // Dibujar el camino
+        // Dibujar el camino (carretera gris)
         ctx.beginPath();
         ctx.moveTo(x1 - w1 / 2, y1);
         ctx.lineTo(x2 - w2 / 2, y2);
         ctx.lineTo(x2 + w2 / 2, y2);
         ctx.lineTo(x1 + w1 / 2, y1);
         ctx.closePath();
-        ctx.fillStyle = '#444';
+        ctx.fillStyle = '#333';
         ctx.fill();
 
-        // Dibujar la línea central y las líneas laterales
+        // Dibujar las líneas blancas discontinuas
         ctx.fillStyle = '#fff';
-        if (i % 5 === 0) { // Líneas blancas
+        if (i % 5 === 0) {
             const lineW1 = 10 * scale;
             const lineW2 = 10 * nextScale;
+            
+            // Línea del centro
             ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
+            ctx.moveTo(x1 - lineW1/2, y1);
+            ctx.lineTo(x2 - lineW2/2, y2);
             ctx.lineTo(x2 + lineW2/2, y2);
             ctx.lineTo(x1 + lineW1/2, y1);
             ctx.closePath();
@@ -110,6 +109,15 @@ function drawRoad() {
 function drawPlayer() {
     ctx.fillStyle = '#ffc800'; // Color del coche
     ctx.fillRect(player.x - player.width / 2, player.y - player.height / 2, player.width, player.height);
+
+    // Dibujar el parabrisas
+    ctx.fillStyle = '#444';
+    ctx.fillRect(player.x - player.width / 2 + 5, player.y - player.height / 2 + 10, player.width - 10, 15);
+    
+    // Dibujar los faros
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(player.x - player.width / 2 + 5, player.y + player.height / 2 - 10, 10, 5);
+    ctx.fillRect(player.x + player.width / 2 - 15, player.y + player.height / 2 - 10, 10, 5);
 }
 
 // Lógica de movimiento
@@ -124,7 +132,6 @@ function movePlayer() {
         player.x += player.speed;
     }
 
-    // Limitar al coche dentro de la pantalla
     player.x = Math.max(player.width / 2, Math.min(gameWidth - player.width / 2, player.x));
 }
 
@@ -134,7 +141,6 @@ function update() {
     drawRoad();
     drawPlayer();
 
-    // Desplazar la pista para simular el avance
     const dx = roadPoints[gameSpeed].x - roadPoints[gameSpeed + 1].x;
     for (let i = 0; i < numSegments; i++) {
         roadPoints[i].z = (roadPoints[i].z - 1) % numSegments;
@@ -144,7 +150,6 @@ function update() {
         roadPoints[i].x += dx;
     }
 
-    // Actualizar la puntuación
     score += 1;
     scoreDisplay.textContent = `SCORE: ${score}`;
 
