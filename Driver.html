@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Juego de Carreras - Pantalla Completa</title>
+    <title>Juego de Carreras - Dificultad Balanceada</title>
     <style>
         * {
             box-sizing: border-box;
@@ -200,6 +200,8 @@
         let score = 0;
         let topScore = localStorage.getItem('topScore') || 0;
         let gameRunning = false;
+        let lastObstacleTime = 0;
+        let obstacleFrequency = 1200; // ms entre generación de autos
         
         topScoreDisplay.textContent = `Mejor Puntuación: ${topScore}`;
         finalScoreDisplay.textContent = `Mejor puntuación: ${topScore}`;
@@ -268,21 +270,60 @@
             }
         }
 
-        // Verificar superposición entre obstáculos
-        function checkObstacleOverlap(newX, newY) {
+        // Verificar si hay espacio en un carril específico
+        function isLaneClear(lane, minDistance) {
+            const laneCenter = lane * (canvas.width / 3) + (canvas.width / 6);
+            const proposedX = laneCenter - obstacleWidth / 2;
+            
             for (const obstacle of obstacles) {
-                if (newX < obstacle.x + obstacleWidth && 
-                    newX + obstacleWidth > obstacle.x &&
-                    newY < obstacle.y + obstacleHeight && 
-                    newY + obstacleHeight > obstacle.y) {
+                // Verificar si hay un obstáculo cerca en el mismo carril
+                if (Math.abs(obstacle.x - proposedX) < obstacleWidth * 0.7 && 
+                    obstacle.y > -obstacleHeight && obstacle.y < minDistance) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Verificar si hay al menos un carril libre
+        function hasClearLane() {
+            for (let lane = 0; lane < 3; lane++) {
+                if (isLaneClear(lane, canvas.height * 0.4)) {
                     return true;
                 }
             }
             return false;
         }
 
+        // Generar un nuevo obstáculo en un carril disponible
+        function generateObstacle() {
+            // Lista de carriles disponibles
+            const availableLanes = [];
+            for (let lane = 0; lane < 3; lane++) {
+                if (isLaneClear(lane, canvas.height * 0.4)) {
+                    availableLanes.push(lane);
+                }
+            }
+            
+            // Si no hay carriles disponibles, no generar obstáculo
+            if (availableLanes.length === 0) return;
+            
+            // Elegir un carril aleatorio de los disponibles
+            const lane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
+            const laneCenter = lane * (canvas.width / 3) + (canvas.width / 6);
+            const newX = laneCenter - obstacleWidth / 2;
+            const newY = -obstacleHeight;
+            
+            // Colores disponibles
+            const colors = ['blue', 'green', 'yellow', 'purple'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Añadir el nuevo obstáculo
+            obstacles.push({ x: newX, y: newY, color: randomColor });
+        }
+
         // Bucle principal del juego
-        function gameLoop() {
+        function gameLoop(timestamp) {
             if (!gameRunning) return;
             
             // Limpiar el canvas
@@ -298,7 +339,7 @@
             // Dibujar coche
             drawCar();
             
-            // Actualizar obstáculos
+            // Actualizar y dibujar obstáculos
             for (let i = 0; i < obstacles.length; i++) {
                 obstacles[i].y += obstacleSpeed;
                 drawObstacle(obstacles[i].x, obstacles[i].y, obstacles[i].color);
@@ -316,32 +357,21 @@
             // Eliminar obstáculos que salieron de la pantalla
             obstacles = obstacles.filter(obstacle => obstacle.y < canvas.height);
 
-            // Generar nuevos obstáculos
-            if (Math.random() < 0.03) {
-                let newX, newY = -obstacleHeight;
-                let attempts = 0;
-                let overlapping = true;
+            // Generar nuevos obstáculos con temporizador
+            if (timestamp - lastObstacleTime > obstacleFrequency && hasClearLane()) {
+                generateObstacle();
+                lastObstacleTime = timestamp;
                 
-                // Buscar posición sin superposición
-                while (overlapping && attempts < 20) {
-                    newX = Math.random() * (canvas.width - obstacleWidth - (canvas.width * 0.1)) + (canvas.width * 0.05);
-                    overlapping = checkObstacleOverlap(newX, newY);
-                    attempts++;
-                }
-                
-                if (!overlapping) {
-                    const colors = ['blue', 'green', 'yellow', 'purple'];
-                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
-                    obstacles.push({ x: newX, y: newY, color: randomColor });
-                }
+                // Reducir gradualmente el tiempo entre obstáculos (aumentar dificultad)
+                obstacleFrequency = Math.max(500, obstacleFrequency - 5);
             }
 
             // Actualizar puntuación
             score++;
             scoreDisplay.textContent = `Puntuación: ${score}`;
 
-            // Aumentar dificultad
-            if (score % 500 === 0 && score > 0) {
+            // Aumentar dificultad gradualmente
+            if (score % 1000 === 0) {
                 obstacleSpeed += 0.2;
             }
 
@@ -371,9 +401,11 @@
             score = 0;
             carX = (canvas.width - carWidth) / 2;
             obstacleSpeed = 2;
+            obstacleFrequency = 1200;
             scoreDisplay.textContent = `Puntuación: ${score}`;
             gameOverScreen.style.display = 'none';
             gameRunning = true;
+            lastObstacleTime = performance.now();
             requestAnimationFrame(gameLoop);
         }
 
