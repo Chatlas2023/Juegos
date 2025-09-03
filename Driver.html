@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Carreras - Corregido</title>
+    <title>Juego de Carreras - Sin Superposición</title>
     <style>
         body {
             display: flex;
@@ -286,13 +286,29 @@
             }
         }
 
+        // Función para verificar superposición entre obstáculos
+        function checkObstacleOverlap(newX, newY) {
+            for (const obstacle of obstacles) {
+                // Verificar si hay superposición horizontal
+                if (newX < obstacle.x + obstacleWidth && 
+                    newX + obstacleWidth > obstacle.x) {
+                    // Verificar si hay superposición vertical (considerando que ambos están cerca del inicio)
+                    if (newY < obstacle.y + obstacleHeight && 
+                        newY + obstacleHeight > obstacle.y) {
+                        return true; // Hay superposición
+                    }
+                }
+            }
+            return false; // No hay superposición
+        }
+
         // Lógica del juego
         function updateObstacles() {
             for (let i = 0; i < obstacles.length; i++) {
                 obstacles[i].y += obstacleSpeed;
                 drawObstacle(obstacles[i].x, obstacles[i].y, obstacles[i].image);
 
-                // Detectar colisión
+                // Detectar colisión con el jugador
                 if (
                     carX < obstacles[i].x + obstacleWidth &&
                     carX + carWidth > obstacles[i].x &&
@@ -306,12 +322,24 @@
 
             obstacles = obstacles.filter(obstacle => obstacle.y < canvas.height);
 
-            // Generar nuevos obstáculos en posiciones más aleatorias
-            if (Math.random() < 0.02) { // Aumentada la frecuencia de obstáculos
-                // Posición totalmente aleatoria
-                const newObstacleX = Math.random() * (canvas.width - obstacleWidth - 40) + 20;
-                const randomImage = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
-                obstacles.push({ x: newObstacleX, y: -obstacleHeight, image: randomImage });
+            // Generar nuevos obstáculos en posiciones aleatorias sin superposición
+            if (Math.random() < 0.02) {
+                let newObstacleX, newObstacleY = -obstacleHeight;
+                let attempts = 0;
+                let overlapping = true;
+                
+                // Intentar encontrar una posición sin superposición
+                while (overlapping && attempts < 20) {
+                    newObstacleX = Math.random() * (canvas.width - obstacleWidth - 40) + 20;
+                    overlapping = checkObstacleOverlap(newObstacleX, newObstacleY);
+                    attempts++;
+                }
+                
+                // Si encontramos una posición sin superposición, añadir el obstáculo
+                if (!overlapping) {
+                    const randomImage = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
+                    obstacles.push({ x: newObstacleX, y: newObstacleY, image: randomImage });
+                }
             }
 
             score++;
