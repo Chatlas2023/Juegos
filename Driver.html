@@ -1,13 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-N4J8MM9R5N');
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Juego de Carreras - Pantalla Completa</title>
@@ -16,6 +9,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            touch-action: manipulation;
         }
         
         body {
@@ -48,7 +42,7 @@
             border-radius: 5px;
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
             width: 100%;
-            max-height: 70vh;
+            max-height: 60vh;
         }
 
         #top-score {
@@ -71,7 +65,7 @@
             display: flex;
             justify-content: center;
             width: 100%;
-            margin-top: 15px;
+            margin-top: 20px;
             gap: 40px;
         }
 
@@ -104,13 +98,13 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.85);
+            background-color: rgba(0, 0, 0, 0.95);
             padding: 25px;
             border-radius: 15px;
             text-align: center;
             display: none;
             border: 2px solid #FFD700;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
             width: 80%;
             max-width: 300px;
             z-index: 10;
@@ -139,7 +133,7 @@
         }
 
         .instructions {
-            margin-top: 10px;
+            margin-top: 15px;
             font-size: 14px;
             color: #AAA;
             text-align: center;
@@ -149,7 +143,7 @@
         
         @media (max-height: 700px) {
             canvas {
-                max-height: 60vh;
+                max-height: 55vh;
             }
             
             .control-button {
@@ -160,7 +154,11 @@
         
         @media (max-height: 600px) {
             canvas {
-                max-height: 55vh;
+                max-height: 50vh;
+            }
+            
+            #controls {
+                margin-top: 15px;
             }
         }
     </style>
@@ -204,13 +202,18 @@
             
             // Mantener una relación de aspecto similar a la original (300x400)
             canvas.width = containerWidth;
-            canvas.height = Math.min(containerWidth * 1.33, window.innerHeight * 0.7);
+            canvas.height = Math.min(containerWidth * 1.33, window.innerHeight * 0.6);
             
             // Reajustar la posición del coche si el juego está en ejecución
             if (gameRunning) {
                 carX = Math.min(carX, canvas.width - carWidth);
             } else {
                 carX = (canvas.width - carWidth) / 2;
+            }
+            
+            // Ajustar dimensiones si el canvas ya estaba inicializado
+            if (imagesLoaded) {
+                adjustSizes();
             }
         }
         
@@ -274,6 +277,8 @@
         let score = 0;
         let topScore = localStorage.getItem('topScore') || 0;
         let gameRunning = false;
+        let imagesLoaded = false;
+        
         topScoreDisplay.textContent = `Mejor Puntuación: ${topScore}`;
         
         // Ajustar dimensiones relativas según el tamaño del canvas
@@ -290,14 +295,6 @@
             // Reajustar la posición del coche
             carX = (canvas.width - carWidth) / 2;
             carY = canvas.height - carHeight - (10 * scale);
-            
-            // Reajustar obstáculos existentes si los hay
-            if (obstacles.length > 0) {
-                obstacles.forEach(obstacle => {
-                    obstacle.x = obstacle.x * scale;
-                    obstacle.y = obstacle.y * scale;
-                });
-            }
         }
         
         // Control de movimiento
@@ -443,8 +440,8 @@
         function resetGame() {
             obstacles = [];
             score = 0;
-            adjustSizes(); // Ajustar tamaños según el canvas actual
             obstacleSpeed = 2;
+            adjustSizes(); // Ajustar tamaños según el canvas actual
             scoreDisplay.textContent = `Puntuación: ${score}`;
             gameOverScreen.style.display = 'none';
             gameRunning = true;
@@ -493,12 +490,13 @@
         startButton.addEventListener('click', resetGame);
 
         // Iniciar el juego cuando se cargan las imágenes
-        let imagesLoaded = 0;
+        let imagesLoadedCount = 0;
         const totalImages = 1 + obstacleImages.length;
 
         function checkImages() {
-            imagesLoaded++;
-            if (imagesLoaded === totalImages) {
+            imagesLoadedCount++;
+            if (imagesLoadedCount === totalImages) {
+                imagesLoaded = true;
                 adjustSizes(); // Ajustar tamaños según el canvas
                 gameOverScreen.style.display = 'block';
                 finalScoreDisplay.textContent = 'Presiona "Jugar de nuevo" para comenzar';
@@ -512,6 +510,7 @@
 
         // En caso de que las imágenes ya estén cargadas
         if (playerCarImage.complete && obstacleImages.every(img => img.complete)) {
+            imagesLoaded = true;
             adjustSizes(); // Ajustar tamaños según el canvas
             gameOverScreen.style.display = 'block';
             finalScoreDisplay.textContent = 'Presiona "Jugar de nuevo" para comenzar';
