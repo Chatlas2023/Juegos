@@ -61,6 +61,236 @@
 {"id": 59, "pregunta": "¿En qué año terminó la Guerra de los Cien Años?", "opciones": ["1415", "1430", "1453", "1500"], "respuestaCorrecta": "1453"},
 {"id": 60, "pregunta": "¿Quién fue el primer papa latinoamericano?", "opciones": ["Juan Pablo II", "Francisco", "Benedicto XVI", "Pío XII"], "respuestaCorrecta": "Francisco"},
 {"id": 61, "pregunta": "¿Qué civilización construyó la ciudad de Petra?", "opciones": ["Egipcios", "Nabateos", "Persas", "Fenicios"], "respuestaCorrecta": "Nabateos"},
-{"id": 62, "pregunta": "¿En qué año comenzó la Guerra de Corea?", "opciones": ["1945", "1950", "1955", "1960"], "respuestaCorrecta": "1950"}
+{"id": 62, "pregunta": "¿En qué año comenzó la Guerra de Corea?", "opciones": ["1945", "1950", "1955", "1960"], "respuestaCorrecta": "1950"},
+      {
+      "id": 63,
+      "pregunta": "¿Qué tratado puso fin a la Guerra de los Treinta Años en 1648?",
+      "opciones": ["Tratado de Westfalia", "Tratado de Utrecht", "Tratado de los Pirineos", "Tratado de Nimega"],
+      "respuestaCorrecta": "Tratado de Westfalia"
+    },
+    {
+      "id": 64,
+      "pregunta": "¿Qué dinastía reinaba en China cuando Marco Polo visitó el imperio?",
+      "opciones": ["Dinastía Ming", "Dinastía Song", "Dinastía Yuan", "Dinastía Tang"],
+      "respuestaCorrecta": "Dinastía Yuan"
+    },
+    {
+      "id": 65,
+      "pregunta": "¿Qué famoso filósofo griego fue tutor de Alejandro Magno?",
+      "opciones": ["Sócrates", "Platón", "Aristóteles", "Pitágoras"],
+      "respuestaCorrecta": "Aristóteles"
+    },
+    {
+      "id": 66,
+      "pregunta": "¿Qué civilización antigua desarrolló el concepto del 'cero' en matemáticas?",
+      "opciones": ["Babilonios", "Griegos", "Mayas", "Indios (de la India)"],
+      "respuestaCorrecta": "Indios (de la India)"
+    },
+    {
+      "id": 67,
+      "pregunta": "¿Quién fue el líder de la Revolución Haitiana que declaró la independencia en 1804?",
+      "opciones": ["Toussaint Louverture", "Jean-Jacques Dessalines", "Henri Christophe", "Alexandre Pétion"],
+      "respuestaCorrecta": "Jean-Jacques Dessalines"
+    },
+    {
+      "id": 68,
+      "pregunta": "¿En qué batalla naval fue derrotada la Armada Invencible española?",
+      "opciones": ["Batalla de Gravelinas", "Batalla de Lepanto", "Batalla de Trafalgar", "Batalla de Jutlandia"],
+      "respuestaCorrecta": "Batalla de Gravelinas"
+    },
+    {
+      "id": 69,
+      "pregunta": "¿Qué emperador bizantino reconquistó gran parte del Mediterráneo occidental durante el siglo VI?",
+      "opciones": ["Justiniano I", "Constantino XI", "Heraclio", "Basilio II"],
+      "respuestaCorrecta": "Justiniano I"
+    },
+    {
+      "id": 70,
+      "pregunta": "¿Qué famoso explorador árabe recorrió más de 120,000 km en el siglo XIV?",
+      "opciones": ["Ibn Battuta", "Al-Idrisi", "Ahmad ibn Fadlan", "Zheng He"],
+      "respuestaCorrecta": "Ibn Battuta"
+    },
+    {
+      "id": 71,
+      "pregunta": "¿Qué civilización precolombina construyó las líneas de Nazca?",
+      "opciones": ["Chavín", "Moche", "Nazca", "Wari"],
+      "respuestaCorrecta": "Nazca"
+    },
+    {
+      "id": 72,
+      "pregunta": "¿Quién fue el primer shogun del shogunato Tokugawa en Japón?",
+      "opciones": ["Tokugawa Ieyasu", "Oda Nobunaga", "Toyotomi Hideyoshi", "Minamoto no Yoritomo"],
+      "respuestaCorrecta": "Tokugawa Ieyasu"
+    },
+    {
+      "id": 73,
+      "pregunta": "¿Qué famoso filósofo de la Ilustración escribió 'El contrato social'?",
+      "opciones": ["Montesquieu", "Voltaire", "Rousseau", "Diderot"],
+      "respuestaCorrecta": "Rousseau"
+    },
+    {
+      "id": 74,
+      "pregunta": "¿En qué año se produjo la Revolución de Octubre en Rusia?",
+      "opciones": ["1917", "1905", "1914", "1922"],
+      "respuestaCorrecta": "1917"
+    },
+    {
+      "id": 75,
+      "pregunta": "¿Qué reina de Egipto alió con Julio César y Marco Antonio?",
+      "opciones": ["Nefertiti", "Hatshepsut", "Cleopatra", "Nefertari"],
+      "respuestaCorrecta": "Cleopatra"
+    },
+    {
+      "id": 76,
+      "pregunta": "¿Qué imperio sudamericano precedió a los incas en la región andina?",
+      "opciones": ["Tiwanaku", "Wari", "Chimú", "Moche"],
+      "respuestaCorrecta": "Wari"
+    },
+    {
+      "id": 77,
+      "pregunta": "¿Quién fue el líder de la revuelta de esclavos en la Roma antigua entre 73-71 a.C.?",
+      "opciones": ["Espartaco", "Crixo", "Oenomaus", "Craso"],
+      "respuestaCorrecta": "Espartaco"
+    },
+    {
+      "id": 78,
+      "pregunta": "¿Qué dinastía musulmana gobernó la península ibérica durante la Edad Media?",
+      "opciones": ["Almohades", "Almorávides", "Omeyas", "Abasíes"],
+      "respuestaCorrecta": "Omeyas"
+    },
+    {
+      "id": 79,
+      "pregunta": "¿En qué batalla Carlomagno detuvo el avance musulmán en Europa en 732?",
+      "opciones": ["Batalla de Tours", "Batalla de Poitiers", "Batalla de Covadonga", "Batalla de Roncesvalles"],
+      "respuestaCorrecta": "Batalla de Tours"
+    },
+    {
+      "id": 80,
+      "pregunta": "¿Qué famoso navegante portugués fue el primero en llegar al cabo de Buena Esperanza?",
+      "opciones": ["Bartolomé Díaz", "Vasco da Gama", "Fernando de Magallanes", "Pedro Álvares Cabral"],
+      "respuestaCorrecta": "Bartolomé Díaz"
+    },
+    {
+      "id": 81,
+      "pregunta": "¿Qué civilización antigua desarrolló el primer sistema de escritura conocido en América?",
+      "opciones": ["Olmeca", "Zapoteca", "Maya", "Tolteca"],
+      "respuestaCorrecta": "Olmeca"
+    },
+    {
+      "id": 82,
+      "pregunta": "¿Quién fue el fundador del Imperio Persa Aqueménida?",
+      "opciones": ["Ciro el Grande", "Darío I", "Jerjes I", "Cambises II"],
+      "respuestaCorrecta": "Ciro el Grande"
+    },
+    {
+      "id": 83,
+      "pregunta": "¿Qué famoso líder militar cartaginés cruzó los Alpes con elefantes?",
+      "opciones": ["Aníbal", "Asdrúbal", "Amílcar", "Magón"],
+      "respuestaCorrecta": "Aníbal"
+    },
+    {
+      "id": 84,
+      "pregunta": "¿En qué año se produjo la Batalla de Stalingrado, punto de inflexión en el frente oriental de la Segunda Guerra Mundial?",
+      "opciones": ["1941-1942", "1942-1943", "1943-1944", "1944-1945"],
+      "respuestaCorrecta": "1942-1943"
+    },
+    {
+      "id": 85,
+      "pregunta": "¿Qué famoso emperador mongol completó la conquista de China?",
+      "opciones": ["Gengis Kan", "Kublai Kan", "Ogodei", "Tamerlán"],
+      "respuestaCorrecta": "Kublai Kan"
+    },
+    {
+      "id": 86,
+      "pregunta": "¿Qué civilización antigua construyó el famoso templo de Angkor Wat?",
+      "opciones": ["Jemer", "Cham", "Srivijaya", "Majapahit"],
+      "respuestaCorrecta": "Jemer"
+    },
+    {
+      "id": 87,
+      "pregunta": "¿Quién fue el primer emperador de Japón según la tradición?",
+      "opciones": ["Emperador Jimmu", "Emperador Sujin", "Emperador Ojin", "Emperador Keitai"],
+      "respuestaCorrecta": "Emperador Jimmu"
+    },
+    {
+      "id": 88,
+      "pregunta": "¿Qué famoso filósofo chino desarrolló las ideas del legalismo?",
+      "opciones": ["Confucio", "Lao-Tse", "Han Feizi", "Mencius"],
+      "respuestaCorrecta": "Han Feizi"
+    },
+    {
+      "id": 89,
+      "pregunta": "¿En qué año se produjo la Revolución Gloriosa en Inglaterra?",
+      "opciones": ["1688", "1642", "1660", "1707"],
+      "respuestaCorrecta": "1688"
+    },
+    {
+      "id": 90,
+      "pregunta": "¿Qué emperador chino ordenó la construcción de la Gran Muralla como la conocemos hoy en día, conectando y ampliando muros existentes?",
+      "opciones":  ["Kublai Kan", "Qin Shi Huang", "Emperador Wu", "Yongle"],
+      "respuestaCorrecta": "Qin Shi Huang"
+    },
+    {
+      "id": 91,
+      "pregunta": "¿Qué imperio africano medieval fue famoso por su riqueza en oro?",
+      "opciones": ["Imperio de Malí", "Imperio de Ghana", "Imperio Songhai", "Reino de Aksum"],
+      "respuestaCorrecta": "Imperio de Malí"
+    },
+    {
+      "id": 92,
+      "pregunta": "¿Quién fue el primer gobernante en unificar la mayor parte de la India bajo un mismo imperio?",
+      "opciones": ["Chandragupta Maurya", "Ashoka", "Samudragupta", "Akbar"],
+      "respuestaCorrecta": "Chandragupta Maurya"
+    },
+    {
+      "id": 93,
+      "pregunta": "¿Qué famoso alquimista y filósofo islámico es considerado padre de la química?",
+      "opciones": ["Avicena", "Averroes", "Al-Kindi", "Jabir ibn Hayyan"],
+      "respuestaCorrecta": "Jabir ibn Hayyan"
+    },
+    {
+      "id": 94,
+      "pregunta": "¿En qué año se produjo la Batalla de Waterloo que terminó con el gobierno de Napoleón?",
+      "opciones": ["1814", "1815", "1816", "1821"],
+      "respuestaCorrecta": "1815"
+    },
+    {
+      "id": 95,
+      "pregunta": "¿Qué civilización antigua desarrolló el primer sistema de alcantarillado cubierto?",
+      "opciones": ["Indus", "Mesopotamia", "Egipcia", "Minoica"],
+      "respuestaCorrecta": "Indus"
+    },
+    {
+      "id": 96,
+      "pregunta": "¿Quién fue el primer europeo en llegar a Japón?",
+      "opciones": ["Marco Polo", "Fernão Mendes Pinto", "Francisco Xavier", "Cristóbal Colón"],
+      "respuestaCorrecta": "Fernão Mendes Pinto"
+    },
+    {
+      "id": 97,
+      "pregunta": "¿Qué famoso líder zulú resistió la expansión británica en Sudáfrica?",
+      "opciones": ["Shaka Zulú", "Cetshwayo", "Dingane", "Mzilikazi"],
+      "respuestaCorrecta": "Cetshwayo"
+    },
+    {
+      "id": 98,
+      "pregunta": "¿En qué año se firmó la Carta Magna en Inglaterra?",
+      "opciones": ["1215", "1066", "1295", "1415"],
+      "respuestaCorrecta": "1215"
+    },
+    {
+      "id": 99,
+      "pregunta": "¿Qué famoso científico griego calculó la circunferencia de la Tierra con notable precisión?",
+      "opciones": ["Eratóstenes", "Aristarco", "Arquímedes", "Hiparco"],
+      "respuestaCorrecta": "Eratóstenes"
+    },
+    {
+      "id": 100,
+      "pregunta": "¿Qué imperio prehispánico controlaba el valle de México a la llegada de los españoles?",
+      "opciones": ["Tolteca", "Azteca", "Purepecha", "Texcoco"],
+      "respuestaCorrecta": "Azteca"
+    }
+  ]
+}
   ]
 }
