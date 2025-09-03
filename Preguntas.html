@@ -440,61 +440,6 @@
 
         // Cargar preguntas desde archivo externo
         function loadQuestions() {
-            // Para desarrollo local, podemos simular la carga de preguntas
-            // En producción, esto cargaría desde un archivo JSON real
-            try {
-                // Simulamos datos de preguntas (en un caso real, esto vendría de fetch)
-                const questionsData = {
-                    "preguntas": [
-                        {
-                            "id": 1,
-                            "pregunta": "¿En qué año terminó la Segunda Guerra Mundial?",
-                            "opciones": ["1943", "1945", "1950", "1939"],
-                            "respuestaCorrecta": "1945"
-                        },
-                        {
-                            "id": 2,
-                            "pregunta": "¿Quién fue el primer Presidente de los Estados Unidos?",
-                            "opciones": ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"],
-                            "respuestaCorrecta": "George Washington"
-                        },
-                        {
-                            "id": 3,
-                            "pregunta": "¿Qué civilización antigua construyó las pirámides de Giza?",
-                            "opciones": ["Romanos", "Griegos", "Egipcios", "Mesopotámicos"],
-                            "respuestaCorrecta": "Egipcios"
-                        },
-                        {
-                            "id": 4,
-                            "pregunta": "¿En qué país comenzó el período del Renacimiento?",
-                            "opciones": ["Francia", "Inglaterra", "Italia", "Alemania"],
-                            "respuestaCorrecta": "Italia"
-                        },
-                        {
-                            "id": 5,
-                            "pregunta": "¿En qué año cayó el Muro de Berlín?",
-                            "opciones": ["1987", "1989", "1991", "1985"],
-                            "respuestaCorrecta": "1989"
-                        }
-                    ]
-                };
-                
-                // Transformar los datos al formato que espera nuestra aplicación
-                questions = questionsData.preguntas.map(q => ({
-                    id: q.id,
-                    question: q.pregunta,
-                    options: q.opciones,
-                    correctAnswer: q.respuestaCorrecta
-                }));
-                
-                // Continuar con el quiz después de un breve retraso para simular carga
-                setTimeout(continueQuiz, 500);
-            } catch (error) {
-                showError("Error al cargar las preguntas: " + error.message);
-            }
-            
-            /* 
-            // CÓDIGO PARA CARGAR DESDE UN ARCHIVO JSON EXTERNO:
             fetch('preguntas.json')
                 .then(response => {
                     if (!response.ok) {
@@ -503,18 +448,23 @@
                     return response.json();
                 })
                 .then(data => {
+                    // Validar que el formato del JSON sea correcto
+                    if (!data.preguntas || !Array.isArray(data.preguntas) || data.preguntas.length === 0) {
+                        throw new Error('El formato del archivo de preguntas es incorrecto');
+                    }
+                    
                     questions = data.preguntas.map(q => ({
                         id: q.id,
                         question: q.pregunta,
                         options: q.opciones,
                         correctAnswer: q.respuestaCorrecta
                     }));
+                    
                     continueQuiz();
                 })
                 .catch(error => {
                     showError("Error al cargar el archivo de preguntas: " + error.message);
                 });
-            */
         }
 
         // Continuar con el quiz después de cargar las preguntas
