@@ -201,7 +201,8 @@
         let topScore = localStorage.getItem('topScore') || 0;
         let gameRunning = false;
         let lastObstacleTime = 0;
-        let obstacleFrequency = 1200; // ms entre generación de autos
+        let obstacleFrequency = 1000; // ms entre generación de autos
+        let minObstacleDistance = 80; // Distancia mínima entre autos
         
         topScoreDisplay.textContent = `Mejor Puntuación: ${topScore}`;
         finalScoreDisplay.textContent = `Mejor puntuación: ${topScore}`;
@@ -270,56 +271,38 @@
             }
         }
 
-        // Verificar si hay espacio en un carril específico
-        function isLaneClear(lane, minDistance) {
-            const laneCenter = lane * (canvas.width / 3) + (canvas.width / 6);
-            const proposedX = laneCenter - obstacleWidth / 2;
-            
+        // Verificar si hay espacio para un nuevo obstáculo
+        function canPlaceObstacle(newX, newY) {
             for (const obstacle of obstacles) {
-                // Verificar si hay un obstáculo cerca en el mismo carril
-                if (Math.abs(obstacle.x - proposedX) < obstacleWidth * 0.7 && 
-                    obstacle.y > -obstacleHeight && obstacle.y < minDistance) {
+                // Calcular distancia entre obstáculos
+                const distanceX = Math.abs(obstacle.x - newX);
+                const distanceY = Math.abs(obstacle.y - newY);
+                
+                // Si hay otro obstáculo demasiado cerca, no colocar
+                if (distanceX < obstacleWidth + 10 && distanceY < minObstacleDistance) {
                     return false;
                 }
             }
             return true;
         }
 
-        // Verificar si hay al menos un carril libre
-        function hasClearLane() {
-            for (let lane = 0; lane < 3; lane++) {
-                if (isLaneClear(lane, canvas.height * 0.4)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // Generar un nuevo obstáculo en un carril disponible
+        // Generar un nuevo obstáculo en posición aleatoria
         function generateObstacle() {
-            // Lista de carriles disponibles
-            const availableLanes = [];
-            for (let lane = 0; lane < 3; lane++) {
-                if (isLaneClear(lane, canvas.height * 0.4)) {
-                    availableLanes.push(lane);
-                }
-            }
-            
-            // Si no hay carriles disponibles, no generar obstáculo
-            if (availableLanes.length === 0) return;
-            
-            // Elegir un carril aleatorio de los disponibles
-            const lane = availableLanes[Math.floor(Math.random() * availableLanes.length)];
-            const laneCenter = lane * (canvas.width / 3) + (canvas.width / 6);
-            const newX = laneCenter - obstacleWidth / 2;
+            const margin = canvas.width * 0.05;
+            const newX = margin + Math.random() * (canvas.width - obstacleWidth - 2 * margin);
             const newY = -obstacleHeight;
             
-            // Colores disponibles
-            const colors = ['blue', 'green', 'yellow', 'purple'];
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            
-            // Añadir el nuevo obstáculo
-            obstacles.push({ x: newX, y: newY, color: randomColor });
+            // Verificar si se puede colocar el obstáculo
+            if (canPlaceObstacle(newX, newY)) {
+                // Colores disponibles
+                const colors = ['blue', 'green', 'yellow', 'purple'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // Añadir el nuevo obstáculo
+                obstacles.push({ x: newX, y: newY, color: randomColor });
+                return true;
+            }
+            return false;
         }
 
         // Bucle principal del juego
@@ -358,20 +341,24 @@
             obstacles = obstacles.filter(obstacle => obstacle.y < canvas.height);
 
             // Generar nuevos obstáculos con temporizador
-            if (timestamp - lastObstacleTime > obstacleFrequency && hasClearLane()) {
+            if (timestamp - lastObstacleTime > obstacleFrequency) {
+                // Intentar generar obstáculo (puede fallar si no hay espacio)
                 generateObstacle();
                 lastObstacleTime = timestamp;
                 
                 // Reducir gradualmente el tiempo entre obstáculos (aumentar dificultad)
-                obstacleFrequency = Math.max(500, obstacleFrequency - 5);
+                obstacleFrequency = Math.max(500, obstacleFrequency - 2);
+                
+                // Reducir distancia mínima entre obstáculos para aumentar dificultad
+                minObstacleDistance = Math.max(40, minObstacleDistance - 0.5);
             }
 
             // Actualizar puntuación
             score++;
             scoreDisplay.textContent = `Puntuación: ${score}`;
 
-            // Aumentar dificultad gradualmente
-            if (score % 1000 === 0) {
+            // Aumentar velocidad gradualmente
+            if (score % 500 === 0) {
                 obstacleSpeed += 0.2;
             }
 
@@ -401,7 +388,8 @@
             score = 0;
             carX = (canvas.width - carWidth) / 2;
             obstacleSpeed = 2;
-            obstacleFrequency = 1200;
+            obstacleFrequency = 1000;
+            minObstacleDistance = 80;
             scoreDisplay.textContent = `Puntuación: ${score}`;
             gameOverScreen.style.display = 'none';
             gameRunning = true;
