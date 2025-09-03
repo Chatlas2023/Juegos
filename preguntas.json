@@ -1,46 +1,66 @@
 {
-  "preguntas": [
-    {
-      "id": 1,
-      "pregunta": "¿En qué año terminó la Segunda Guerra Mundial?",
-      "opciones": ["1943", "1945", "1950", "1939"],
-      "respuestaCorrecta": "1945"
-    },
-    {
-      "id": 2,
-      "pregunta": "¿Quién fue el primer Presidente de los Estados Unidos?",
-      "opciones": ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"],
-      "respuestaCorrecta": "George Washington"
-    },
-    {
-      "id": 3,
-      "pregunta": "¿Qué civilización antigua construyó las pirámides de Giza?",
-      "opciones": ["Romanos", "Griegos", "Egipcios", "Mesopotámicos"],
-      "respuestaCorrecta": "Egipcios"
-    },
-    {
-      "id": 4,
-      "pregunta": "¿En qué país comenzó el período del Renacimiento?",
-      "opciones": ["Francia", "Inglaterra", "Italia", "Alemania"],
-      "respuestaCorrecta": "Italia"
-    },
-    {
-      "id": 5,
-      "pregunta": "¿En qué año cayó el Muro de Berlín?",
-      "opciones": ["1987", "1989", "1991", "1985"],
-      "respuestaCorrecta": "1989"
-    },
-    {
-      "id": 6,
-      "pregunta": "¿Quién pintó la Mona Lisa?",
-      "opciones": ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michelangelo"],
-      "respuestaCorrecta": "Leonardo da Vinci"
-    },
-    {
-      "id": 7,
-      "pregunta": "¿En qué año llegó Cristóbal Colón a América?",
-      "opciones": ["1492", "1501", "1485", "1520"],
-      "respuestaCorrecta": "1492"
-    }
+"preguntas": [
+{"id": 1, "pregunta": "¿En qué año terminó la Segunda Guerra Mundial?", "opciones": ["1943", "1945", "1950", "1939"], "respuestaCorrecta": "1945"},
+{"id": 2, "pregunta": "¿Quién fue el primer Presidente de los Estados Unidos?", "opciones": ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"], "respuestaCorrecta": "George Washington"},
+{"id": 3, "pregunta": "¿Qué civilización antigua construyó las pirámides de Giza?", "opciones": ["Romanos", "Griegos", "Egipcios", "Mesopotámicos"], "respuestaCorrecta": "Egipcios"},
+{"id": 4, "pregunta": "¿En qué país comenzó el período del Renacimiento?", "opciones": ["Francia", "Inglaterra", "Italia", "Alemania"], "respuestaCorrecta": "Italia"},
+{"id": 5, "pregunta": "¿En qué año cayó el Muro de Berlín?", "opciones": ["1987", "1989", "1991", "1985"], "respuestaCorrecta": "1989"},
+{"id": 6, "pregunta": "¿Quién pintó la Mona Lisa?", "opciones": ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michelangelo"], "respuestaCorrecta": "Leonardo da Vinci"},
+{"id": 7, "pregunta": "¿En qué año llegó Cristóbal Colón a América?", "opciones": ["1492", "1501", "1485", "1520"], "respuestaCorrecta": "1492"},
+{"id": 8, "pregunta": "¿Quién fue el último emperador romano de Occidente?", "opciones": ["Julio César", "Rómulo Augústulo", "Constantino", "Nerón"], "respuestaCorrecta": "Rómulo Augústulo"},
+{"id": 9, "pregunta": "¿Qué conflicto enfrentó a Esparta y Atenas en la Antigua Grecia?", "opciones": ["Guerras Médicas", "Guerra del Peloponeso", "Guerras Púnicas", "Guerras Góticas"], "respuestaCorrecta": "Guerra del Peloponeso"},
+{"id": 10, "pregunta": "¿En qué año comenzó la Revolución Francesa?", "opciones": ["1789", "1776", "1804", "1799"], "respuestaCorrecta": "1789"},
+{"id": 11, "pregunta": "¿Quién escribió 'El Príncipe'?", "opciones": ["Maquiavelo", "Rousseau", "Voltaire", "Platón"], "respuestaCorrecta": "Maquiavelo"},
+{"id": 12, "pregunta": "¿En qué año comenzó la Primera Guerra Mundial?", "opciones": ["1912", "1914", "1916", "1918"], "respuestaCorrecta": "1914"},
+{"id": 13, "pregunta": "¿Quién fue el líder de la Revolución Rusa de 1917?", "opciones": ["Stalin", "Lenin", "Trotsky", "Kerensky"], "respuestaCorrecta": "Lenin"},
+{"id": 14, "pregunta": "¿En qué año cayó el Imperio Romano de Occidente?", "opciones": ["395", "410", "476", "500"], "respuestaCorrecta": "476"},
+{"id": 15, "pregunta": "¿Qué civilización inventó la escritura cuneiforme?", "opciones": ["Egipcia", "Mesopotámica", "China", "Maya"], "respuestaCorrecta": "Mesopotámica"},
+{"id": 16, "pregunta": "¿Quién fue el primer emperador romano?", "opciones": ["Nerón", "Julio César", "Augusto", "Trajano"], "respuestaCorrecta": "Augusto"},
+{"id": 17, "pregunta": "¿En qué año comenzó la independencia de Estados Unidos?", "opciones": ["1776", "1789", "1800", "1812"], "respuestaCorrecta": "1776"},
+{"id": 18, "pregunta": "¿Quién fue el conquistador del Imperio Azteca?", "opciones": ["Francisco Pizarro", "Hernán Cortés", "Cristóbal Colón", "Pedro de Valdivia"], "respuestaCorrecta": "Hernán Cortés"},
+{"id": 19, "pregunta": "¿En qué año terminó la Guerra Fría simbólicamente?", "opciones": ["1989", "1991", "1985", "1995"], "respuestaCorrecta": "1991"},
+{"id": 20, "pregunta": "¿Qué faraón ordenó construir la Gran Pirámide de Giza?", "opciones": ["Tutankamón", "Keops", "Ramsés II", "Amenofis"], "respuestaCorrecta": "Keops"},
+{"id": 21, "pregunta": "¿Quién fue el líder de la independencia de la India?", "opciones": ["Jawaharlal Nehru", "Mahatma Gandhi", "Indira Gandhi", "Subhas Chandra Bose"], "respuestaCorrecta": "Mahatma Gandhi"},
+{"id": 22, "pregunta": "¿En qué año comenzó la Revolución Industrial en Inglaterra?", "opciones": ["1760", "1789", "1800", "1820"], "respuestaCorrecta": "1760"},
+{"id": 23, "pregunta": "¿Qué tratado puso fin a la Primera Guerra Mundial?", "opciones": ["Tratado de Versalles", "Tratado de Tordesillas", "Tratado de París", "Tratado de Viena"], "respuestaCorrecta": "Tratado de Versalles"},
+{"id": 24, "pregunta": "¿Quién fue el líder del Imperio Mongol?", "opciones": ["Atila", "Gengis Kan", "Kublai Kan", "Timur"], "respuestaCorrecta": "Gengis Kan"},
+{"id": 25, "pregunta": "¿En qué país se originó el fascismo?", "opciones": ["Alemania", "Italia", "España", "Rusia"], "respuestaCorrecta": "Italia"},
+{"id": 26, "pregunta": "¿Qué emperador romano legalizó el cristianismo?", "opciones": ["Constantino", "Nerón", "Trajano", "Marco Aurelio"], "respuestaCorrecta": "Constantino"},
+{"id": 27, "pregunta": "¿Qué civilización inventó el calendario de 365 días?", "opciones": ["Babilonios", "Mayas", "Egipcios", "Chinos"], "respuestaCorrecta": "Egipcios"},
+{"id": 28, "pregunta": "¿En qué año se fundó la ONU?", "opciones": ["1940", "1945", "1950", "1939"], "respuestaCorrecta": "1945"},
+{"id": 29, "pregunta": "¿Quién fue el primer emperador de China?", "opciones": ["Qin Shi Huang", "Confucio", "Han Wudi", "Sun Tzu"], "respuestaCorrecta": "Qin Shi Huang"},
+{"id": 30, "pregunta": "¿Qué cultura desarrolló Machu Picchu?", "opciones": ["Maya", "Azteca", "Inca", "Olmeca"], "respuestaCorrecta": "Inca"},
+{"id": 31, "pregunta": "¿Qué reina británica fue conocida como la 'Reina Virgen'?", "opciones": ["Victoria", "Isabel I", "Isabel II", "Ana"], "respuestaCorrecta": "Isabel I"},
+{"id": 32, "pregunta": "¿En qué año cayó Constantinopla en manos de los otomanos?", "opciones": ["1453", "1492", "1415", "1500"], "respuestaCorrecta": "1453"},
+{"id": 33, "pregunta": "¿Quién fue el primer hombre en viajar al espacio?", "opciones": ["Neil Armstrong", "Yuri Gagarin", "Buzz Aldrin", "Laika"], "respuestaCorrecta": "Yuri Gagarin"},
+{"id": 34, "pregunta": "¿En qué año se firmó la Declaración de Independencia de los Estados Unidos?", "opciones": ["1776", "1789", "1804", "1812"], "respuestaCorrecta": "1776"},
+{"id": 35, "pregunta": "¿Quién fue el emperador francés que se coronó a sí mismo en 1804?", "opciones": ["Luis XIV", "Napoleón Bonaparte", "Carlos X", "Luis XVI"], "respuestaCorrecta": "Napoleón Bonaparte"},
+{"id": 36, "pregunta": "¿Qué guerra se libró entre el Norte y el Sur de Estados Unidos?", "opciones": ["Guerra de Secesión", "Guerra Civil Española", "Guerra de Independencia", "Guerra de los Siete Años"], "respuestaCorrecta": "Guerra de Secesión"},
+{"id": 37, "pregunta": "¿Quién escribió 'La Ilíada' y 'La Odisea'?", "opciones": ["Virgilio", "Homero", "Sófocles", "Esquilo"], "respuestaCorrecta": "Homero"},
+{"id": 38, "pregunta": "¿En qué año se proclamó la independencia de México?", "opciones": ["1810", "1821", "1825", "1804"], "respuestaCorrecta": "1810"},
+{"id": 39, "pregunta": "¿Qué líder sudafricano luchó contra el apartheid y fue presidente en 1994?", "opciones": ["Desmond Tutu", "Nelson Mandela", "Frederik de Klerk", "Steve Biko"], "respuestaCorrecta": "Nelson Mandela"},
+{"id": 40, "pregunta": "¿En qué año llegó el hombre a la Luna?", "opciones": ["1965", "1969", "1972", "1975"], "respuestaCorrecta": "1969"},
+{"id": 41, "pregunta": "¿Qué rey francés fue ejecutado durante la Revolución Francesa?", "opciones": ["Luis XIV", "Luis XV", "Luis XVI", "Carlos X"], "respuestaCorrecta": "Luis XVI"},
+{"id": 42, "pregunta": "¿Qué civilización mesoamericana desarrolló un sistema numérico con el cero?", "opciones": ["Mayas", "Aztecas", "Incas", "Olmecas"], "respuestaCorrecta": "Mayas"},
+{"id": 43, "pregunta": "¿En qué año cayó el Imperio Bizantino?", "opciones": ["1453", "1204", "1492", "1300"], "respuestaCorrecta": "1453"},
+{"id": 44, "pregunta": "¿Quién fue el primer ministro británico durante la Segunda Guerra Mundial?", "opciones": ["Neville Chamberlain", "Winston Churchill", "Clement Attlee", "Margaret Thatcher"], "respuestaCorrecta": "Winston Churchill"},
+{"id": 45, "pregunta": "¿Qué tratado dividió América entre España y Portugal en 1494?", "opciones": ["Tratado de Versalles", "Tratado de Tordesillas", "Tratado de París", "Tratado de Viena"], "respuestaCorrecta": "Tratado de Tordesillas"},
+{"id": 46, "pregunta": "¿Quién fue el líder militar cartaginés en las Guerras Púnicas?", "opciones": ["Escipión", "Aníbal", "Ciro", "Julio César"], "respuestaCorrecta": "Aníbal"},
+{"id": 47, "pregunta": "¿Qué evento histórico inició en 1929 y afectó a la economía mundial?", "opciones": ["La Gran Depresión", "La Guerra Fría", "La Revolución Rusa", "La Primera Guerra Mundial"], "respuestaCorrecta": "La Gran Depresión"},
+{"id": 48, "pregunta": "¿En qué año comenzó la Guerra de Vietnam?", "opciones": ["1955", "1960", "1965", "1970"], "respuestaCorrecta": "1955"},
+{"id": 49, "pregunta": "¿Quién fue la primera mujer en ganar un Premio Nobel?", "opciones": ["Marie Curie", "Rosalind Franklin", "Ada Lovelace", "Hipatia"], "respuestaCorrecta": "Marie Curie"},
+{"id": 50, "pregunta": "¿Qué cultura mesoamericana construyó Teotihuacán?", "opciones": ["Aztecas", "Mayas", "Toltecas", "Teotihuacanos"], "respuestaCorrecta": "Teotihuacanos"},
+{"id": 51, "pregunta": "¿En qué año se produjo la independencia de Brasil?", "opciones": ["1822", "1810", "1825", "1830"], "respuestaCorrecta": "1822"},
+{"id": 52, "pregunta": "¿Qué explorador portugués llegó a la India bordeando África?", "opciones": ["Bartolomé Díaz", "Vasco da Gama", "Magallanes", "Cabral"], "respuestaCorrecta": "Vasco da Gama"},
+{"id": 53, "pregunta": "¿Quién fue el último zar de Rusia?", "opciones": ["Nicolás II", "Alejandro II", "Pedro el Grande", "Iván el Terrible"], "respuestaCorrecta": "Nicolás II"},
+{"id": 54, "pregunta": "¿Qué ciudad fue destruida por la erupción del Vesubio en el año 79?", "opciones": ["Pompeya", "Roma", "Atenas", "Cartago"], "respuestaCorrecta": "Pompeya"},
+{"id": 55, "pregunta": "¿Quién fue el presidente de Estados Unidos durante la Guerra de Secesión?", "opciones": ["Thomas Jefferson", "Abraham Lincoln", "Andrew Johnson", "George Washington"], "respuestaCorrecta": "Abraham Lincoln"},
+{"id": 56, "pregunta": "¿En qué año se proclamó la República en Francia tras la caída de la monarquía?", "opciones": ["1792", "1789", "1804", "1815"], "respuestaCorrecta": "1792"},
+{"id": 57, "pregunta": "¿Quién fue el líder religioso que inició la Reforma Protestante en 1517?", "opciones": ["Martín Lutero", "Calvino", "Zwinglio", "Erasmo"], "respuestaCorrecta": "Martín Lutero"},
+{"id": 58, "pregunta": "¿Qué imperio construyó la ciudad de Tenochtitlán?", "opciones": ["Maya", "Inca", "Azteca", "Olmeca"], "respuestaCorrecta": "Azteca"},
+{"id": 59, "pregunta": "¿En qué año terminó la Guerra de los Cien Años?", "opciones": ["1415", "1430", "1453", "1500"], "respuestaCorrecta": "1453"},
+{"id": 60, "pregunta": "¿Quién fue el primer papa latinoamericano?", "opciones": ["Juan Pablo II", "Francisco", "Benedicto XVI", "Pío XII"], "respuestaCorrecta": "Francisco"},
+{"id": 61, "pregunta": "¿Qué civilización construyó la ciudad de Petra?", "opciones": ["Egipcios", "Nabateos", "Persas", "Fenicios"], "respuestaCorrecta": "Nabateos"},
+{"id": 62, "pregunta": "¿En qué año comenzó la Guerra de Corea?", "opciones": ["1945", "1950", "1955", "1960"], "respuestaCorrecta": "1950"}
   ]
 }
