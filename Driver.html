@@ -2,15 +2,15 @@
 <html lang="es">
 <head>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-N4J8MM9R5N');
-</script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-N4J8MM9R5N');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Carreras - Sin Superposición</title>
+    <title>Juego de Carreras - Pista Ampliada</title>
     <style>
         body {
             display: flex;
@@ -278,12 +278,11 @@
             const lineGap = 50;
             const lineLength = 20;
             const lineThickness = 5;
-            const roadMargin = canvas.width * 0.15;
-
-            // Líneas de los bordes
+            
+            // Líneas de los bordes (ahora en los extremos del canvas)
             for (let i = 0; i < canvas.height; i += lineGap) {
-                ctx.fillRect(roadMargin, i + (score % lineGap), lineThickness, lineLength);
-                ctx.fillRect(canvas.width - roadMargin - lineThickness, i + (score % lineGap), lineThickness, lineLength);
+                ctx.fillRect(0, i + (score % lineGap), lineThickness, lineLength);
+                ctx.fillRect(canvas.width - lineThickness, i + (score % lineGap), lineThickness, lineLength);
             }
             
             // Líneas discontinuas centrales (se mueven como las de los bordes)
@@ -337,7 +336,8 @@
                 
                 // Intentar encontrar una posición sin superposición
                 while (overlapping && attempts < 20) {
-                    newObstacleX = Math.random() * (canvas.width - obstacleWidth - 40) + 20;
+                    // Ahora los obstáculos pueden aparecer en todo el ancho del canvas
+                    newObstacleX = Math.random() * (canvas.width - obstacleWidth);
                     overlapping = checkObstacleOverlap(newObstacleX, newObstacleY);
                     attempts++;
                 }
