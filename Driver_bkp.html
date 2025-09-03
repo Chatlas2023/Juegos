@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juego de Carreras - Controles Mejorados</title>
+    <title>Juego de Carreras - Sin Superposición</title>
     <style>
         body {
             display: flex;
@@ -48,7 +48,7 @@
             display: flex;
             justify-content: space-between;
             width: 300px;
-            margin-top: 20px;
+            margin-top: 15px;
         }
 
         .control-button {
@@ -122,7 +122,7 @@
         }
 
         .instructions {
-            margin-top: 15px;
+            margin-top: 10px;
             font-size: 14px;
             color: #AAA;
             text-align: center;
@@ -133,7 +133,7 @@
 <body>
     <div class="game-container">
         <div id="top-score">Mejor Puntuación: 0</div>
-        <canvas id="gameCanvas" width="300" height="500"></canvas>
+        <canvas id="gameCanvas" width="300" height="400"></canvas>
         <div id="score">Puntuación: 0</div>
         
         <div class="instructions">
@@ -170,34 +170,24 @@
             offscreen.height = size * 1.7;
             const octx = offscreen.getContext('2d');
             
-            // Cuerpo principal del coche
+            // Cuerpo principal del coche (sólido, no transparente)
             octx.fillStyle = color;
-            octx.fillRect(5, 0, size - 10, size * 1.7 - 10);
+            octx.fillRect(0, 0, size, size * 1.7);
             
-            // Techo redondeado
-            octx.beginPath();
-            octx.moveTo(5, 0);
-            octx.lineTo(size - 5, 0);
-            octx.quadraticCurveTo(size, 0, size, 10);
-            octx.lineTo(size, size * 1.7 - 20);
-            octx.quadraticCurveTo(size, size * 1.7 - 10, size - 5, size * 1.7 - 10);
-            octx.lineTo(5, size * 1.7 - 10);
-            octx.quadraticCurveTo(0, size * 1.7 - 10, 0, size * 1.7 - 20);
-            octx.lineTo(0, 10);
-            octx.quadraticCurveTo(0, 0, 5, 0);
-            octx.fill();
-            
-            // Ventanas
-            octx.fillStyle = '#87CEEB';
-            octx.fillRect(8, 5, size - 16, 15);
-            octx.fillRect(8, size * 0.7, size - 16, 20);
+            // Detalles del coche
+            octx.fillStyle = '#333'; // Color oscuro para detalles
+            // Ventana frontal
+            octx.fillRect(5, 5, size - 10, 10);
+            // Ventana lateral
+            octx.fillRect(5, 25, size - 10, 15);
+            // Ventana trasera
+            octx.fillRect(5, size * 1.7 - 20, size - 10, 10);
             
             // Ruedas
-            octx.fillStyle = '#333';
-            octx.fillRect(0, 8, 5, 12);
-            octx.fillRect(size - 5, 8, 5, 12);
-            octx.fillRect(0, size * 1.7 - 20, 5, 12);
-            octx.fillRect(size - 5, size * 1.7 - 20, 5, 12);
+            octx.fillRect(0, 10, 5, 10);
+            octx.fillRect(size - 5, 10, 5, 10);
+            octx.fillRect(0, size * 1.7 - 20, 5, 10);
+            octx.fillRect(size - 5, size * 1.7 - 20, 5, 10);
             
             const img = new Image();
             img.src = offscreen.toDataURL();
@@ -218,7 +208,7 @@
         const carHeight = 50;
         let carX = (canvas.width - carWidth) / 2;
         const carY = canvas.height - carHeight - 10;
-        let carSpeed = 3; // Velocidad base ajustada
+        let carSpeed = 6; // Velocidad aumentada significativamente
 
         // Configuración de obstáculos
         const obstacleWidth = 30;
@@ -230,11 +220,9 @@
         let gameRunning = false;
         topScoreDisplay.textContent = `Mejor Puntuación: ${topScore}`;
         
-        // Control de movimiento suavizado
+        // Control de movimiento - eliminado el delay para mayor respuesta
         let isMovingLeft = false;
         let isMovingRight = false;
-        let lastMoveTime = 0;
-        const moveDelay = 80; // Milisegundos entre movimientos (mayor = menos sensible)
         
         // Bucle del juego
         function gameLoop() {
@@ -243,24 +231,20 @@
             // Borrar el lienzo
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Movimiento del coche con control de sensibilidad
-            const currentTime = Date.now();
+            // Dibujar primero las líneas de la carretera
+            drawRoadLines();
             
-            if (isMovingLeft && currentTime - lastMoveTime > moveDelay) {
+            // Movimiento del coche - respuesta inmediata
+            if (isMovingLeft) {
                 carX = Math.max(0, carX - carSpeed);
-                lastMoveTime = currentTime;
             }
-            if (isMovingRight && currentTime - lastMoveTime > moveDelay) {
+            if (isMovingRight) {
                 carX = Math.min(canvas.width - carWidth, carX + carSpeed);
-                lastMoveTime = currentTime;
             }
 
-            // Dibujar el coche y los obstáculos
+            // Dibujar el coche y los obstáculos (encima de las líneas)
             drawCar();
             updateObstacles();
-
-            // Dibujar línea de la carretera
-            drawRoadLines();
 
             // Actualizar puntuación
             scoreDisplay.textContent = `Puntuación: ${score}`;
@@ -289,20 +273,33 @@
             const lineThickness = 5;
             const roadMargin = canvas.width * 0.15;
 
+            // Líneas de los bordes
             for (let i = 0; i < canvas.height; i += lineGap) {
                 ctx.fillRect(roadMargin, i + (score % lineGap), lineThickness, lineLength);
                 ctx.fillRect(canvas.width - roadMargin - lineThickness, i + (score % lineGap), lineThickness, lineLength);
             }
             
-            // Dibujar división central
-            ctx.setLineDash([10, 20]);
-            ctx.beginPath();
-            ctx.moveTo(canvas.width / 2, 0);
-            ctx.lineTo(canvas.width / 2, canvas.height);
-            ctx.strokeStyle = 'yellow';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.setLineDash([]);
+            // Líneas discontinuas centrales (se mueven como las de los bordes)
+            ctx.fillStyle = 'yellow';
+            for (let i = 0; i < canvas.height; i += lineGap * 2) {
+                ctx.fillRect(canvas.width / 2 - lineThickness/2, i + (score % (lineGap * 2)), lineThickness, lineLength);
+            }
+        }
+
+        // Función para verificar superposición entre obstáculos
+        function checkObstacleOverlap(newX, newY) {
+            for (const obstacle of obstacles) {
+                // Verificar si hay superposición horizontal
+                if (newX < obstacle.x + obstacleWidth && 
+                    newX + obstacleWidth > obstacle.x) {
+                    // Verificar si hay superposición vertical (considerando que ambos están cerca del inicio)
+                    if (newY < obstacle.y + obstacleHeight && 
+                        newY + obstacleHeight > obstacle.y) {
+                        return true; // Hay superposición
+                    }
+                }
+            }
+            return false; // No hay superposición
         }
 
         // Lógica del juego
@@ -311,7 +308,7 @@
                 obstacles[i].y += obstacleSpeed;
                 drawObstacle(obstacles[i].x, obstacles[i].y, obstacles[i].image);
 
-                // Detectar colisión
+                // Detectar colisión con el jugador
                 if (
                     carX < obstacles[i].x + obstacleWidth &&
                     carX + carWidth > obstacles[i].x &&
@@ -325,12 +322,24 @@
 
             obstacles = obstacles.filter(obstacle => obstacle.y < canvas.height);
 
-            // Generar nuevos obstáculos con menor frecuencia
-            if (Math.random() < 0.015) {
-                const laneWidth = (canvas.width - obstacleWidth) / 3;
-                const newObstacleX = Math.floor(Math.random() * 3) * laneWidth + (laneWidth / 2) - (obstacleWidth / 2);
-                const randomImage = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
-                obstacles.push({ x: newObstacleX, y: -obstacleHeight, image: randomImage });
+            // Generar nuevos obstáculos en posiciones aleatorias sin superposición
+            if (Math.random() < 0.02) {
+                let newObstacleX, newObstacleY = -obstacleHeight;
+                let attempts = 0;
+                let overlapping = true;
+                
+                // Intentar encontrar una posición sin superposición
+                while (overlapping && attempts < 20) {
+                    newObstacleX = Math.random() * (canvas.width - obstacleWidth - 40) + 20;
+                    overlapping = checkObstacleOverlap(newObstacleX, newObstacleY);
+                    attempts++;
+                }
+                
+                // Si encontramos una posición sin superposición, añadir el obstáculo
+                if (!overlapping) {
+                    const randomImage = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
+                    obstacles.push({ x: newObstacleX, y: newObstacleY, image: randomImage });
+                }
             }
 
             score++;
@@ -362,7 +371,7 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Manejar botones táctiles con menor sensibilidad
+        // Manejar botones táctiles - respuesta inmediata
         const leftButton = document.getElementById('leftButton');
         const rightButton = document.getElementById('rightButton');
 
@@ -380,7 +389,7 @@
         rightButton.addEventListener('touchend', () => { isMovingRight = false; });
         rightButton.addEventListener('touchcancel', () => { isMovingRight = false; });
 
-        // Eventos de mouse
+        // Eventos de mouse - respuesta inmediata
         leftButton.addEventListener('mousedown', () => { isMovingLeft = true; });
         leftButton.addEventListener('mouseup', () => { isMovingLeft = false; });
         leftButton.addEventListener('mouseleave', () => { isMovingLeft = false; });
@@ -389,21 +398,10 @@
         rightButton.addEventListener('mouseup', () => { isMovingRight = false; });
         rightButton.addEventListener('mouseleave', () => { isMovingRight = false; });
 
-        // Soporte para teclado con menor sensibilidad
-        let keyCooldown = false;
+        // Soporte para teclado - respuesta inmediata
         document.addEventListener('keydown', (e) => {
-            if (keyCooldown) return;
-            
-            if (e.key === 'ArrowLeft') {
-                isMovingLeft = true;
-                keyCooldown = true;
-                setTimeout(() => { keyCooldown = false; }, moveDelay);
-            }
-            if (e.key === 'ArrowRight') {
-                isMovingRight = true;
-                keyCooldown = true;
-                setTimeout(() => { keyCooldown = false; }, moveDelay);
-            }
+            if (e.key === 'ArrowLeft') isMovingLeft = true;
+            if (e.key === 'ArrowRight') isMovingRight = true;
         });
 
         document.addEventListener('keyup', (e) => {
