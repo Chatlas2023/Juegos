@@ -33,7 +33,7 @@
 {"id": 31, "pregunta": "¿Qué reina británica fue conocida como la 'Reina Virgen'?", "opciones": ["Victoria", "Isabel I", "Isabel II", "Ana"], "respuestaCorrecta": "Isabel I"},
 {"id": 32, "pregunta": "¿En qué año cayó Constantinopla en manos de los otomanos?", "opciones": ["1453", "1492", "1415", "1500"], "respuestaCorrecta": "1453"},
 {"id": 33, "pregunta": "¿Quién fue el primer hombre en viajar al espacio?", "opciones": ["Neil Armstrong", "Yuri Gagarin", "Buzz Aldrin", "Laika"], "respuestaCorrecta": "Yuri Gagarin"},
-{"id": 34, "pregunta": "¿En qué año se firmó la Declaración de Independencia de los Estados Unidos?", "opciones": ["1776", "1789", "1804", "1812"], "respuestaCorrecta": "1776"},
+{"id": 34, "pregunta": "¿Qué imperio construyó el Coliseo de Roma?", "opciones": ["Griego", "Romano", "Egipcio", "Persa"],  "respuestaCorrecta": "Romano"},
 {"id": 35, "pregunta": "¿Quién fue el emperador francés que se coronó a sí mismo en 1804?", "opciones": ["Luis XIV", "Napoleón Bonaparte", "Carlos X", "Luis XVI"], "respuestaCorrecta": "Napoleón Bonaparte"},
 {"id": 36, "pregunta": "¿Qué guerra se libró entre el Norte y el Sur de Estados Unidos?", "opciones": ["Guerra de Secesión", "Guerra Civil Española", "Guerra de Independencia", "Guerra de los Siete Años"], "respuestaCorrecta": "Guerra de Secesión"},
 {"id": 37, "pregunta": "¿Quién escribió 'La Ilíada' y 'La Odisea'?", "opciones": ["Virgilio", "Homero", "Sófocles", "Esquilo"], "respuestaCorrecta": "Homero"},
