@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Historia Mundial</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #4e54c8, #8f94fb);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card {
+            width: 100%;
+            padding: 20px;
+        }
+        
+        .card-header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .card-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .card-content {
+            padding: 20px 0;
+        }
+        
+        .welcome-screen, .quiz-screen, .results-screen, .loading-screen {
+            transition: opacity 0.3s;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            margin: 10px 0 20px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-field:focus {
+            border-color: #4e54c8;
+            outline: none;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #4e54c8;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3f44b5;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #4e54c8;
+            color: #4e54c8;
+        }
+        
+        .btn-outline:hover {
+            background: #4e54c8;
+            color: white;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: #4e54c8;
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        
+        .question-text {
+            font-size: 1.4rem;
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+            line-height: 1.4;
+        }
+        
+        .options-container {
+            display: grid;
+            grid-gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .option-btn {
+            text-align: left;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .option-btn:hover {
+            border-color: #4e54c8;
+            background: #f8f9fa;
+        }
+        
+        .option-btn.correct {
+            border-color: #28a745;
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .option-btn.incorrect {
+            border-color: #dc3545;
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .option-letter {
+            font-weight: bold;
+            margin-right: 10px;
+            min-width: 24px;
+        }
+        
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .feedback.correct {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .feedback.incorrect {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .icon {
+            margin-right: 8px;
+        }
+        
+        .score-display {
+            font-size: 3rem;
+            text-align: center;
+            font-weight: bold;
+            color: #4e54c8;
+            margin: 20px 0;
+        }
+        
+        .result-message {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.2rem;
+            color: #555;
+        }
+        
+        .trophy-icon {
+            font-size: 4rem;
+            color: #ffc107;
+            margin-bottom: 20px;
+        }
+        
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4e54c8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        @media (max-width: 480px) {
+            .card-title {
+                font-size: 1.5rem;
+            }
+            
+            .question-text {
+                font-size: 1.2rem;
+            }
+            
+            .btn {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <!-- Pantalla de bienvenida -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="card-header">
+                    <h1 class="card-title">Quiz de Historia Mundial</h1>
+                </div>
+                <div class="card-content">
+                    <p class="text-center">¡Pon a prueba tus conocimientos de historia mundial!</p>
+                    <div class="input-container" style="margin: 25px 0;">
+                        <label for="userName">Ingresa tu nombre para comenzar:</label>
+                        <input type="text" id="userName" class="input-field" placeholder="Tu nombre">
+                    </div>
+                    <button class="btn btn-primary" id="startButton">Comenzar Quiz</button>
+                </div>
+            </div>
+            
+            <!-- Pantalla de carga -->
+            <div class="loading-screen hidden" id="loadingScreen">
+                <div class="card-content">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                    </div>
+                    <p class="text-center">Cargando preguntas...</p>
+                </div>
+            </div>
+            
+            <!-- Pantalla de quiz -->
+            <div class="quiz-screen hidden" id="quizScreen">
+                <div class="card-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2 class="card-title" style="font-size: 1.5rem;">Historia Mundial</h2>
+                            <p id="userGreeting" style="color: #666;">Hola, jugador</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 1.2rem; font-weight: bold;">Puntuación: <span id="scoreDisplay">0</span></div>
+                            <div style="color: #666;">Pregunta <span id="questionCounter">1</span> de <span id="totalQuestions">5</span></div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" id="progressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="card-content">
+                    <h3 class="question-text" id="questionText">¿En qué año terminó la Segunda Guerra Mundial?</h3>
+                    
+                    <div class="options-container" id="optionsContainer">
+                        <!-- Las opciones se generarán con JavaScript -->
+                    </div>
+                    
+                    <div class="feedback hidden" id="feedback">
+                        <!-- El feedback se mostrará aquí -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pantalla de resultados -->
+            <div class="results-screen hidden" id="resultsScreen">
+                <div class="card-header">
+                    <h1 class="card-title">Quiz Completado</h1>
+                </div>
+                <div class="card-content" style="text-align: center;">
+                    <div class="trophy-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <h2 style="margin-bottom: 15px;">¡Felicidades, <span id="resultUserName">Jugador</span>!</h2>
+                    <div class="score-display" id="finalScore">0/5</div>
+                    <p class="result-message" id="resultMessage">¡Buen trabajo! Sabes bastante de historia.</p>
+                    <button class="btn btn-primary" id="restartButton">
+                        <i class="fas fa-redo icon"></i>Reiniciar Quiz
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Pantalla de error -->
+            <div class="results-screen hidden" id="errorScreen">
+                <div class="card-content" style="text-align: center;">
+                    <div style="font-size: 4rem; color: #dc3545; margin-bottom: 20px;">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <h2 style="margin-bottom: 15px;">Error al cargar las preguntas</h2>
+                    <div class="error-message" id="errorMessage">
+                        No se pudieron cargar las preguntas. Por favor, intenta nuevamente.
+                    </div>
+                    <button class="btn btn-primary" id="retryButton" style="margin-top: 20px;">
+                        <i class="fas fa-redo icon"></i>Reintentar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables de estado
+        let userName = "";
+        let currentQuestionIndex = 0;
+        let selectedAnswer = null;
+        let score = 0;
+        let showResult = false;
+        let questions = [];
+
+        // Elementos DOM
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const loadingScreen = document.getElementById('loadingScreen');
+        const quizScreen = document.getElementById('quizScreen');
+        const resultsScreen = document.getElementById('resultsScreen');
+        const errorScreen = document.getElementById('errorScreen');
+        const userNameInput = document.getElementById('userName');
+        const startButton = document.getElementById('startButton');
+        const userGreeting = document.getElementById('userGreeting');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const questionCounter = document.getElementById('questionCounter');
+        const totalQuestions = document.getElementById('totalQuestions');
+        const progressBar = document.getElementById('progressBar');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const feedback = document.getElementById('feedback');
+        const resultUserName = document.getElementById('resultUserName');
+        const finalScore = document.getElementById('finalScore');
+        const resultMessage = document.getElementById('resultMessage');
+        const restartButton = document.getElementById('restartButton');
+        const errorMessage = document.getElementById('errorMessage');
+        const retryButton = document.getElementById('retryButton');
+
+        // Inicializar la aplicación
+        function init() {
+            startButton.addEventListener('click', startQuiz);
+            restartButton.addEventListener('click', restartQuiz);
+            retryButton.addEventListener('click', startQuiz);
+            userNameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    startQuiz();
+                }
+            });
+        }
+
+        // Comenzar el quiz
+        function startQuiz() {
+            userName = userNameInput.value.trim();
+            if (!userName) {
+                alert('Por favor ingresa tu nombre');
+                return;
+            }
+            
+            welcomeScreen.classList.add('hidden');
+            loadingScreen.classList.remove('hidden');
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            errorScreen.classList.add('hidden');
+            
+            // Cargar preguntas desde el archivo externo
+            loadQuestions();
+        }
+
+        // Cargar preguntas desde archivo externo
+        function loadQuestions() {
+            // En un entorno real, aquí cargarías las preguntas desde un archivo JSON
+            // Por ejemplo: fetch('preguntas.json').then(...).catch(...)
+            
+            // Simulamos una carga con retraso para demostrar el funcionamiento
+            setTimeout(() => {
+                try {
+                    // En un caso real, esto vendría de una respuesta fetch
+                    const questionsData = {
+                        "preguntas": [
+                            {
+                                "id": 1,
+                                "pregunta": "¿En qué año terminó la Segunda Guerra Mundial?",
+                                "opciones": ["1943", "1945", "1950", "1939"],
+                                "respuestaCorrecta": "1945"
+                            },
+                            {
+                                "id": 2,
+                                "pregunta": "¿Quién fue el primer Presidente de los Estados Unidos?",
+                                "opciones": ["Thomas Jefferson", "Abraham Lincoln", "George Washington", "John Adams"],
+                                "respuestaCorrecta": "George Washington"
+                            },
+                            {
+                                "id": 3,
+                                "pregunta": "¿Qué civilización antigua construyó las pirámides de Giza?",
+                                "opciones": ["Romanos", "Griegos", "Egipcios", "Mesopotámicos"],
+                                "respuestaCorrecta": "Egipcios"
+                            },
+                            {
+                                "id": 4,
+                                "pregunta": "¿En qué país comenzó el período del Renacimiento?",
+                                "opciones": ["Francia", "Inglaterra", "Italia", "Alemania"],
+                                "respuestaCorrecta": "Italia"
+                            },
+                            {
+                                "id": 5,
+                                "pregunta": "¿En qué año cayó el Muro de Berlín?",
+                                "opciones": ["1987", "1989", "1991", "1985"],
+                                "respuestaCorrecta": "1989"
+                            },
+                            {
+                                "id": 6,
+                                "pregunta": "¿Quién pintó la Mona Lisa?",
+                                "opciones": ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michelangelo"],
+                                "respuestaCorrecta": "Leonardo da Vinci"
+                            }
+                        ]
+                    };
+                    
+                    // Transformar los datos al formato que espera nuestra aplicación
+                    questions = questionsData.preguntas.map(q => ({
+                        id: q.id,
+                        question: q.pregunta,
+                        options: q.opciones,
+                        correctAnswer: q.respuestaCorrecta
+                    }));
+                    
+                    // Continuar con el quiz
+                    continueQuiz();
+                } catch (error) {
+                    showError("Error al cargar las preguntas: " + error.message);
+                }
+            }, 1500); // Simulamos un retraso de 1.5 segundos en la carga
+        }
+
+        // Continuar con el quiz después de cargar las preguntas
+        function continueQuiz() {
+            loadingScreen.classList.add('hidden');
+            
+            if (questions.length === 0) {
+                showError("No se encontraron preguntas para el quiz.");
+                return;
+            }
+            
+            userGreeting.textContent = `Hola, ${userName}`;
+            totalQuestions.textContent = questions.length;
+            quizScreen.classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        // Mostrar error
+        function showError(message) {
+            loadingScreen.classList.add('hidden');
+            errorScreen.classList.remove('hidden');
+            errorMessage.textContent = message;
+        }
+
+        // Cargar pregunta actual
+        function loadQuestion() {
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // Actualizar contadores
+            questionCounter.textContent = currentQuestionIndex + 1;
+            scoreDisplay.textContent = score;
+            progressBar.style.width = `${((currentQuestionIndex) / questions.length) * 100}%`;
+            
+            // Establecer texto de la pregunta
+            questionText.textContent = currentQuestion.question;
+            
+            // Limpiar opciones anteriores
+            optionsContainer.innerHTML = '';
+            
+            // Agregar opciones
+            currentQuestion.options.forEach((option, index) => {
+                const optionButton = document.createElement('button');
+                optionButton.className = 'option-btn';
+                optionButton.innerHTML = `
+                    <span class="option-letter">${String.fromCharCode(65 + index)}</span>
+                    <span class="option-text">${option}</span>
+                `;
+                
+                optionButton.addEventListener('click', () => handleAnswerSelect(option));
+                optionsContainer.appendChild(optionButton);
+            });
+            
+            // Ocultar feedback
+            feedback.classList.add('hidden');
+        }
+
+        // Manejar selección de respuesta
+        function handleAnswerSelect(answer) {
+            if (selectedAnswer) return; // Prevenir cambios después de la selección
+            
+            selectedAnswer = answer;
+            const currentQuestion = questions[currentQuestionIndex];
+            const isCorrect = answer === currentQuestion.correctAnswer;
+            
+            // Mostrar retroalimentación
+            feedback.classList.remove('hidden');
+            if (isCorrect) {
+                feedback.textContent = '¡Correcto!';
+                feedback.className = 'feedback correct';
+                score++;
+                scoreDisplay.textContent = score;
+            } else {
+                feedback.textContent = `Incorrecto. La respuesta correcta es: ${currentQuestion.correctAnswer}`;
+                feedback.className = 'feedback incorrect';
+            }
+            
+            // Resaltar la respuesta correcta e incorrecta
+            const optionButtons = optionsContainer.querySelectorAll('.option-btn');
+            optionButtons.forEach(button => {
+                const optionText = button.querySelector('.option-text').textContent;
+                if (optionText === currentQuestion.correctAnswer) {
+                    button.classList.add('correct');
+                } else if (optionText === answer && !isCorrect) {
+                    button.classList.add('incorrect');
+                }
+                button.style.pointerEvents = 'none'; // Desactivar clics adicionales
+            });
+            
+            // Pasar a la siguiente pregunta después de un retraso
+            setTimeout(() => {
+                if (currentQuestionIndex < questions.length - 1) {
+                    currentQuestionIndex++;
+                    selectedAnswer = null;
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }, 2000);
+        }
+
+        // Mostrar resultados
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            
+            resultUserName.textContent = userName;
+            finalScore.textContent = `${score}/${questions.length}`;
+            
+            if (score === questions.length) {
+                resultMessage.textContent = "¡Puntuación perfecta! Eres un experto en historia.";
+            } else if (score >= questions.length / 2) {
+                resultMessage.textContent = "¡Buen trabajo! Conoces bien la historia.";
+            } else {
+                resultMessage.textContent = "¡Sigue aprendiendo! La historia está llena de historias fascinantes.";
+            }
+        }
+
+        // Reiniciar quiz
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            selectedAnswer = null;
+            score = 0;
+            showResult = false;
+            
+            resultsScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            
+            loadQuestion();
+        }
+
+        // Iniciar la aplicación cuando se carga la página
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
