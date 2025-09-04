@@ -59,7 +59,7 @@
             padding: 20px 0;
         }
         
-        .welcome-screen, .quiz-screen, .results-screen, .loading-screen {
+        .welcome-screen, .quiz-screen, .results-screen, .loading-screen, .resume-screen {
             transition: opacity 0.3s;
         }
         
@@ -526,6 +526,11 @@
             // Limpiar estado anterior
             clearProgress();
             
+            // Ocultar todas las pantallas y mostrar loading
+            welcomeScreen.classList.add('hidden');
+            resumeScreen.classList.add('hidden');
+            loadingScreen.classList.remove('hidden');
+            
             // Cargar preguntas
             loadQuestions();
         }
@@ -772,6 +777,7 @@
         // Limpiar progreso guardado
         function clearProgress() {
             localStorage.removeItem(GAME_STATE_KEY);
+            localStorage.removeItem(USER_NAME_KEY);
             score = 0;
             answeredQuestions = [];
             currentQuestionIndex = 0;
