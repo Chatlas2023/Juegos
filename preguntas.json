@@ -401,3 +401,4 @@
 {"id": 399, "pregunta": "¿Cuál es el ave nacional de los Estados Unidos?", "opciones": ["Águila real", "Águila calva", "Colibrí", "Gavilán"], "respuestaCorrecta": "Águila calva"},
 {"id": 400, "pregunta": "¿En qué año se produjo la Batalla de la Pampa de Ayacucho que selló la independencia del Perú?", "opciones": ["1821", "1822", "1824", "1826"], "respuestaCorrecta": "1824"}
 ]
+}
