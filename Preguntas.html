@@ -363,7 +363,7 @@
                 </div>
                 
                 <div class="card-content">
-                    <h3 class="question-text" id="questionText">¿En qué año terminó la Segunda Guerra Mundial?</h3>
+                    <h3 class="question-text" id="questionText"></h3>
                     
                     <div class="options-container" id="optionsContainer">
                         </div>
@@ -416,11 +416,8 @@
         let currentQuestionIndex = 0;
         let selectedAnswer = null;
         let score = 0;
-        let questions = [];
-        let allQuestions = [];
-        let answeredQuestions = [];
-        
-        const NUM_QUESTIONS = 5;
+        let questions = []; // Array que contendrá las preguntas para la partida actual
+        let allQuestions = []; // Array con TODAS las preguntas cargadas
 
         // Elementos DOM
         const welcomeScreen = document.getElementById('welcomeScreen');
@@ -472,7 +469,6 @@
                 }
             });
             
-            // Cargar todas las preguntas al inicio
             loadAllQuestions();
         }
         
@@ -486,8 +482,8 @@
                     return response.json();
                 })
                 .then(data => {
-                    if (!data.preguntas || !Array.isArray(data.preguntas) || data.preguntas.length < NUM_QUESTIONS) {
-                        throw new Error('El archivo de preguntas es inválido o no tiene suficientes preguntas.');
+                    if (!data.preguntas || !Array.isArray(data.preguntas) || data.preguntas.length === 0) {
+                        throw new Error('El archivo de preguntas es inválido o está vacío.');
                     }
                     
                     allQuestions = data.preguntas.map(q => ({
@@ -497,13 +493,11 @@
                         correctAnswer: q.respuestaCorrecta
                     }));
                     
-                    // Almacenar todas las preguntas en localStorage para el modo sin conexión
                     localStorage.setItem(ALL_QUESTIONS_KEY, JSON.stringify(allQuestions));
                     
                     checkSavedGame();
                 })
                 .catch(error => {
-                    // Intentar cargar desde localStorage si falla el fetch
                     const savedAllQuestions = localStorage.getItem(ALL_QUESTIONS_KEY);
                     if (savedAllQuestions) {
                         allQuestions = JSON.parse(savedAllQuestions);
@@ -515,12 +509,6 @@
                 });
         }
         
-        // Seleccionar N preguntas al azar
-        function getRandomQuestions(n) {
-            const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
-            return shuffled.slice(0, n);
-        }
-
         // Comprobar si hay un juego guardado
         function checkSavedGame() {
             const savedGameState = localStorage.getItem(GAME_STATE_KEY);
@@ -529,9 +517,9 @@
             if (savedGameState && savedUserName) {
                 try {
                     const gameState = JSON.parse(savedGameState);
-                    if (gameState.questions && gameState.questions.length > 0 && gameState.answeredCount < gameState.questions.length) {
+                    if (gameState.questions && gameState.questions.length > 0 && gameState.currentQuestionIndex < gameState.questions.length) {
                         resumeUserName.textContent = savedUserName;
-                        resumeProgress.textContent = gameState.answeredCount;
+                        resumeProgress.textContent = gameState.currentQuestionIndex;
                         resumeTotalQuestions.textContent = gameState.questions.length;
                         resumeScore.textContent = gameState.score || 0;
                         
@@ -561,11 +549,10 @@
             
             localStorage.setItem(USER_NAME_KEY, userName);
             
-            // Reiniciar y preparar un nuevo juego
-            questions = getRandomQuestions(NUM_QUESTIONS);
+            // Usar todas las preguntas y barajarlas
+            questions = [...allQuestions].sort(() => 0.5 - Math.random());
             score = 0;
             currentQuestionIndex = 0;
-            answeredQuestions = [];
             
             saveGameState();
             
@@ -587,7 +574,6 @@
                 userName = localStorage.getItem(USER_NAME_KEY);
                 questions = gameState.questions;
                 score = gameState.score;
-                answeredQuestions = gameState.answeredQuestions;
                 currentQuestionIndex = gameState.currentQuestionIndex;
             }
             
@@ -602,7 +588,6 @@
 
         // Cargar pregunta actual
         function loadQuestion() {
-            // Verificar si el juego ha terminado
             if (currentQuestionIndex >= questions.length) {
                 showResults();
                 return;
@@ -646,12 +631,6 @@
                 scoreDisplay.textContent = score;
             }
             
-            answeredQuestions.push({
-                questionId: currentQuestion.id,
-                answer: answer,
-                isCorrect: isCorrect
-            });
-            
             const optionButtons = optionsContainer.querySelectorAll('.option-btn');
             optionButtons.forEach(button => {
                 const optionText = button.querySelector('.option-text').textContent;
@@ -676,7 +655,6 @@
         function saveGameState() {
             const gameState = {
                 score: score,
-                answeredCount: answeredQuestions.length,
                 questions: questions,
                 currentQuestionIndex: currentQuestionIndex
             };
@@ -694,7 +672,7 @@
             
             if (score === questions.length) {
                 resultMessage.textContent = "¡Puntuación perfecta! Eres un experto en historia.";
-            } else if (score >= questions.length / 2) {
+            } else if (questions.length > 0 && score >= questions.length / 2) {
                 resultMessage.textContent = "¡Buen trabajo! Conoces bien la historia.";
             } else {
                 resultMessage.textContent = "¡Sigue aprendiendo! La historia está llena de historias fascinantes.";
@@ -714,7 +692,6 @@
             localStorage.removeItem(GAME_STATE_KEY);
             localStorage.removeItem(USER_NAME_KEY);
             score = 0;
-            answeredQuestions = [];
             currentQuestionIndex = 0;
             
             if (!resultsScreen.classList.contains('hidden')) {
@@ -728,7 +705,7 @@
             welcomeScreen.classList.remove('hidden');
             userNameInput.value = '';
         }
-
+        
         // Iniciar la aplicación cuando se carga la página
         window.addEventListener('load', init);
     </script>
