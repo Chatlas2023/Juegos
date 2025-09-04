@@ -566,48 +566,14 @@
 
         // Cargar preguntas desde archivo externo
         function loadQuestions() {
-            // Para este ejemplo, usaré preguntas de prueba ya que no tengo acceso al archivo preguntas.json
-            // En un entorno real, deberías reemplazar esto con tu fetch al archivo JSON
-            const sampleQuestions = {
-                preguntas: [
-                    {
-                        id: 1,
-                        pregunta: "¿En qué año terminó la Segunda Guerra Mundial?",
-                        opciones: ["1943", "1945", "1947", "1950"],
-                        respuestaCorrecta: "1945"
-                    },
-                    {
-                        id: 2,
-                        pregunta: "¿Quién fue el primer presidente de los Estados Unidos?",
-                        opciones: ["Thomas Jefferson", "John Adams", "George Washington", "Benjamin Franklin"],
-                        respuestaCorrecta: "George Washington"
-                    },
-                    {
-                        id: 3,
-                        pregunta: "¿En qué año cayó el Muro de Berlín?",
-                        opciones: ["1987", "1989", "1991", "1985"],
-                        respuestaCorrecta: "1989"
-                    },
-                    {
-                        id: 4,
-                        pregunta: "¿Qué civilización construyó las pirámides de Giza?",
-                        opciones: ["Los romanos", "Los griegos", "Los egipcios", "Los mayas"],
-                        respuestaCorrecta: "Los egipcios"
-                    },
-                    {
-                        id: 5,
-                        pregunta: "¿Quién pintó la Mona Lisa?",
-                        opciones: ["Pablo Picasso", "Vincent van Gogh", "Leonardo da Vinci", "Michelangelo"],
-                        respuestaCorrecta: "Leonardo da Vinci"
+            fetch('preguntas.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('No se pudo cargar el archivo de preguntas');
                     }
-                ]
-            };
-            
-            // Simular una carga asíncrona
-            setTimeout(() => {
-                try {
-                    const data = sampleQuestions;
-                    
+                    return response.json();
+                })
+                .then(data => {
                     // Validar que el formato del JSON sea correcto
                     if (!data.preguntas || !Array.isArray(data.preguntas) || data.preguntas.length === 0) {
                         throw new Error('El formato del archivo de preguntas es incorrecto');
@@ -643,10 +609,10 @@
                     }
                     
                     continueQuiz();
-                } catch (error) {
-                    showError("Error al cargar las preguntas: " + error.message);
-                }
-            }, 1000);
+                })
+                .catch(error => {
+                    showError("Error al cargar el archivo de preguntas: " + error.message);
+                });
         }
 
         // Continuar con el quiz después de cargar las preguntas
