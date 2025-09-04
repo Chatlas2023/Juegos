@@ -303,7 +303,6 @@
 <body>
     <div class="container">
         <div class="card">
-            <!-- Pantalla de bienvenida -->
             <div class="welcome-screen" id="welcomeScreen">
                 <div class="card-header">
                     <h1 class="card-title">Quiz de Historia Mundial</h1>
@@ -318,7 +317,6 @@
                 </div>
             </div>
             
-            <!-- Pantalla de reanudar -->
             <div class="resume-screen hidden" id="resumeScreen">
                 <div class="card-header">
                     <h1 class="card-title">¿Continuar quiz anterior?</h1>
@@ -338,7 +336,6 @@
                 </div>
             </div>
             
-            <!-- Pantalla de carga -->
             <div class="loading-screen hidden" id="loadingScreen">
                 <div class="card-content">
                     <div class="loading-spinner">
@@ -348,7 +345,6 @@
                 </div>
             </div>
             
-            <!-- Pantalla de quiz -->
             <div class="quiz-screen hidden" id="quizScreen">
                 <div class="card-header">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -370,16 +366,13 @@
                     <h3 class="question-text" id="questionText">¿En qué año terminó la Segunda Guerra Mundial?</h3>
                     
                     <div class="options-container" id="optionsContainer">
-                        <!-- Las opciones se generarán con JavaScript -->
-                    </div>
+                        </div>
                     
                     <div class="feedback hidden" id="feedback">
-                        <!-- El feedback se mostrará aquí -->
-                    </div>
+                        </div>
                 </div>
             </div>
             
-            <!-- Pantalla de resultados -->
             <div class="results-screen hidden" id="resultsScreen">
                 <div class="card-header">
                     <h1 class="card-title">Quiz Completado</h1>
@@ -400,7 +393,6 @@
                 </div>
             </div>
             
-            <!-- Pantalla de error -->
             <div class="results-screen hidden" id="errorScreen">
                 <div class="card-content" style="text-align: center;">
                     <div style="font-size: 4rem; color: #dc3545; margin-bottom: 20px;">
@@ -649,9 +641,9 @@
             const currentQuestion = questions[currentQuestionIndex];
             
             // Actualizar contadores
-            questionCounter.textContent = currentQuestionIndex + 1;
+            questionCounter.textContent = answeredQuestions.length + 1;
             scoreDisplay.textContent = score;
-            progressBar.style.width = `${((answeredQuestions.length) / questions.length) * 100}%`;
+            progressBar.style.width = `${(answeredQuestions.length / questions.length) * 100}%`;
             
             // Establecer texto de la pregunta
             questionText.textContent = currentQuestion.question;
@@ -691,19 +683,10 @@
                 isCorrect: isCorrect
             });
             
-            // Guardar el estado del juego
-            saveGameState();
-            
-            // Mostrar retroalimentación
-            feedback.classList.remove('hidden');
+            // Si es correcta, aumentar la puntuación
             if (isCorrect) {
-                feedback.textContent = '¡Correcto!';
-                feedback.className = 'feedback correct';
                 score++;
                 scoreDisplay.textContent = score;
-            } else {
-                feedback.textContent = `Incorrecto. La respuesta correcta es: ${currentQuestion.correctAnswer}`;
-                feedback.className = 'feedback incorrect';
             }
             
             // Resaltar la respuesta correcta e incorrecta
@@ -717,6 +700,9 @@
                 }
                 button.style.pointerEvents = 'none'; // Desactivar clics adicionales
             });
+            
+            // Guardar el estado del juego
+            saveGameState();
             
             // Pasar a la siguiente pregunta después de un retraso
             setTimeout(() => {
@@ -783,9 +769,7 @@
             answeredQuestions = [];
             
             resultsScreen.classList.add('hidden');
-            quizScreen.classList.remove('hidden');
-            
-            loadQuestion();
+            welcomeScreen.classList.remove('hidden');
         }
 
         // Limpiar solo los datos de progreso (no el nombre de usuario)
@@ -815,6 +799,8 @@
                 resumeScreen.classList.add('hidden');
                 welcomeScreen.classList.remove('hidden');
             }
+            
+            userNameInput.value = ''; // Limpiar el campo de nombre
         }
 
         // Iniciar la aplicación cuando se carga la página
