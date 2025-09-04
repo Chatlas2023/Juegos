@@ -2,12 +2,12 @@
 <html lang="es">
 <head>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-N4J8MM9R5N');
-</script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-N4J8MM9R5N');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz de Historia Mundial</title>
@@ -273,6 +273,18 @@
             text-align: center;
         }
         
+        .resume-screen {
+            text-align: center;
+        }
+        
+        .resume-info {
+            background: #e9f7fe;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            color: #0c5460;
+        }
+        
         @media (max-width: 480px) {
             .card-title {
                 font-size: 1.5rem;
@@ -303,6 +315,26 @@
                         <input type="text" id="userName" class="input-field" placeholder="Tu nombre">
                     </div>
                     <button class="btn btn-primary" id="startButton">Comenzar Quiz</button>
+                </div>
+            </div>
+            
+            <!-- Pantalla de reanudar -->
+            <div class="resume-screen hidden" id="resumeScreen">
+                <div class="card-header">
+                    <h1 class="card-title">¿Continuar quiz anterior?</h1>
+                </div>
+                <div class="card-content">
+                    <div class="resume-info">
+                        <p><strong>Jugador:</strong> <span id="resumeUserName"></span></p>
+                        <p><strong>Progreso:</strong> <span id="resumeProgress"></span> de <span id="resumeTotalQuestions"></span> preguntas</p>
+                        <p><strong>Puntuación actual:</strong> <span id="resumeScore"></span></p>
+                    </div>
+                    <button class="btn btn-primary" id="resumeButton">
+                        <i class="fas fa-play icon"></i>Continuar donde quedé
+                    </button>
+                    <button class="btn btn-outline" id="newGameButton" style="margin-top: 10px;">
+                        <i class="fas fa-plus icon"></i>Comenzar nuevo juego
+                    </button>
                 </div>
             </div>
             
@@ -362,6 +394,9 @@
                     <button class="btn btn-primary" id="restartButton">
                         <i class="fas fa-redo icon"></i>Reiniciar Quiz
                     </button>
+                    <button class="btn btn-outline" id="clearProgressButton" style="margin-top: 10px;">
+                        <i class="fas fa-trash icon"></i>Eliminar mi progreso
+                    </button>
                 </div>
             </div>
             
@@ -391,15 +426,20 @@
         let score = 0;
         let showResult = false;
         let questions = [];
+        let answeredQuestions = [];
+        let gameState = null;
 
         // Elementos DOM
         const welcomeScreen = document.getElementById('welcomeScreen');
+        const resumeScreen = document.getElementById('resumeScreen');
         const loadingScreen = document.getElementById('loadingScreen');
         const quizScreen = document.getElementById('quizScreen');
         const resultsScreen = document.getElementById('resultsScreen');
         const errorScreen = document.getElementById('errorScreen');
         const userNameInput = document.getElementById('userName');
         const startButton = document.getElementById('startButton');
+        const resumeButton = document.getElementById('resumeButton');
+        const newGameButton = document.getElementById('newGameButton');
         const userGreeting = document.getElementById('userGreeting');
         const scoreDisplay = document.getElementById('scoreDisplay');
         const questionCounter = document.getElementById('questionCounter');
@@ -412,36 +452,96 @@
         const finalScore = document.getElementById('finalScore');
         const resultMessage = document.getElementById('resultMessage');
         const restartButton = document.getElementById('restartButton');
+        const clearProgressButton = document.getElementById('clearProgressButton');
         const errorMessage = document.getElementById('errorMessage');
         const retryButton = document.getElementById('retryButton');
+        const resumeUserName = document.getElementById('resumeUserName');
+        const resumeProgress = document.getElementById('resumeProgress');
+        const resumeTotalQuestions = document.getElementById('resumeTotalQuestions');
+        const resumeScore = document.getElementById('resumeScore');
+
+        // Claves para localStorage
+        const GAME_STATE_KEY = 'historiaQuizGameState';
+        const USER_NAME_KEY = 'historiaQuizUserName';
 
         // Inicializar la aplicación
         function init() {
-            startButton.addEventListener('click', startQuiz);
+            startButton.addEventListener('click', startNewGame);
+            resumeButton.addEventListener('click', resumeGame);
+            newGameButton.addEventListener('click', startNewGame);
             restartButton.addEventListener('click', restartQuiz);
-            retryButton.addEventListener('click', startQuiz);
+            clearProgressButton.addEventListener('click', clearProgress);
+            retryButton.addEventListener('click', loadQuestions);
             userNameInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    startQuiz();
+                    startNewGame();
                 }
             });
+            
+            // Verificar si hay un juego guardado
+            checkSavedGame();
         }
 
-        // Comenzar el quiz
-        function startQuiz() {
+        // Comprobar si hay un juego guardado
+        function checkSavedGame() {
+            const savedGameState = localStorage.getItem(GAME_STATE_KEY);
+            const savedUserName = localStorage.getItem(USER_NAME_KEY);
+            
+            if (savedGameState && savedUserName) {
+                try {
+                    gameState = JSON.parse(savedGameState);
+                    if (gameState.answeredQuestions && gameState.answeredQuestions.length > 0) {
+                        // Mostrar pantalla de reanudar
+                        resumeUserName.textContent = savedUserName;
+                        resumeProgress.textContent = gameState.answeredQuestions.length;
+                        resumeTotalQuestions.textContent = gameState.totalQuestions || '?';
+                        resumeScore.textContent = gameState.score || 0;
+                        
+                        welcomeScreen.classList.add('hidden');
+                        resumeScreen.classList.remove('hidden');
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Error parsing saved game state:', e);
+                    clearProgress();
+                }
+            }
+            
+            // No hay juego guardado, mostrar pantalla de bienvenida normal
+            welcomeScreen.classList.remove('hidden');
+            resumeScreen.classList.add('hidden');
+        }
+
+        // Comenzar un nuevo juego
+        function startNewGame() {
             userName = userNameInput.value.trim();
             if (!userName) {
                 alert('Por favor ingresa tu nombre');
                 return;
             }
             
-            welcomeScreen.classList.add('hidden');
-            loadingScreen.classList.remove('hidden');
-            quizScreen.classList.add('hidden');
-            resultsScreen.classList.add('hidden');
-            errorScreen.classList.add('hidden');
+            // Guardar nombre de usuario
+            localStorage.setItem(USER_NAME_KEY, userName);
             
-            // Cargar preguntas desde el archivo externo
+            // Limpiar estado anterior
+            clearProgress();
+            
+            // Cargar preguntas
+            loadQuestions();
+        }
+
+        // Reanudar juego existente
+        function resumeGame() {
+            userName = localStorage.getItem(USER_NAME_KEY);
+            if (!userName) {
+                startNewGame();
+                return;
+            }
+            
+            resumeScreen.classList.add('hidden');
+            loadingScreen.classList.remove('hidden');
+            
+            // Cargar preguntas
             loadQuestions();
         }
 
@@ -467,6 +567,28 @@
                         correctAnswer: q.respuestaCorrecta
                     }));
                     
+                    // Si hay un juego guardado, restaurar el estado
+                    const savedGameState = localStorage.getItem(GAME_STATE_KEY);
+                    if (savedGameState) {
+                        try {
+                            gameState = JSON.parse(savedGameState);
+                            score = gameState.score || 0;
+                            answeredQuestions = gameState.answeredQuestions || [];
+                            
+                            // Encontrar la primera pregunta no respondida
+                            currentQuestionIndex = 0;
+                            for (let i = 0; i < questions.length; i++) {
+                                if (!answeredQuestions.some(aq => aq.questionId === questions[i].id)) {
+                                    currentQuestionIndex = i;
+                                    break;
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Error parsing saved game state:', e);
+                            clearProgress();
+                        }
+                    }
+                    
                     continueQuiz();
                 })
                 .catch(error => {
@@ -480,6 +602,12 @@
             
             if (questions.length === 0) {
                 showError("No se encontraron preguntas para el quiz.");
+                return;
+            }
+            
+            // Verificar si todas las preguntas han sido respondidas
+            if (answeredQuestions.length >= questions.length) {
+                showResults();
                 return;
             }
             
@@ -504,7 +632,7 @@
             // Actualizar contadores
             questionCounter.textContent = currentQuestionIndex + 1;
             scoreDisplay.textContent = score;
-            progressBar.style.width = `${((currentQuestionIndex) / questions.length) * 100}%`;
+            progressBar.style.width = `${((answeredQuestions.length) / questions.length) * 100}%`;
             
             // Establecer texto de la pregunta
             questionText.textContent = currentQuestion.question;
@@ -537,6 +665,16 @@
             const currentQuestion = questions[currentQuestionIndex];
             const isCorrect = answer === currentQuestion.correctAnswer;
             
+            // Guardar la respuesta
+            answeredQuestions.push({
+                questionId: currentQuestion.id,
+                answer: answer,
+                isCorrect: isCorrect
+            });
+            
+            // Guardar el estado del juego
+            saveGameState();
+            
             // Mostrar retroalimentación
             feedback.classList.remove('hidden');
             if (isCorrect) {
@@ -563,14 +701,35 @@
             
             // Pasar a la siguiente pregunta después de un retraso
             setTimeout(() => {
-                if (currentQuestionIndex < questions.length - 1) {
-                    currentQuestionIndex++;
+                // Encontrar la siguiente pregunta no respondida
+                let nextQuestionIndex = -1;
+                for (let i = 0; i < questions.length; i++) {
+                    if (!answeredQuestions.some(aq => aq.questionId === questions[i].id)) {
+                        nextQuestionIndex = i;
+                        break;
+                    }
+                }
+                
+                if (nextQuestionIndex !== -1) {
+                    currentQuestionIndex = nextQuestionIndex;
                     selectedAnswer = null;
                     loadQuestion();
                 } else {
                     showResults();
                 }
             }, 2000);
+        }
+
+        // Guardar el estado del juego
+        function saveGameState() {
+            const gameState = {
+                score: score,
+                answeredQuestions: answeredQuestions,
+                totalQuestions: questions.length,
+                timestamp: new Date().getTime()
+            };
+            
+            localStorage.setItem(GAME_STATE_KEY, JSON.stringify(gameState));
         }
 
         // Mostrar resultados
@@ -588,19 +747,40 @@
             } else {
                 resultMessage.textContent = "¡Sigue aprendiendo! La historia está llena de historias fascinantes.";
             }
+            
+            // Limpiar el estado guardado ya que el juego ha terminado
+            localStorage.removeItem(GAME_STATE_KEY);
         }
 
         // Reiniciar quiz
         function restartQuiz() {
+            // Limpiar el progreso guardado
+            clearProgress();
+            
+            // Reiniciar variables
             currentQuestionIndex = 0;
             selectedAnswer = null;
             score = 0;
-            showResult = false;
+            answeredQuestions = [];
             
             resultsScreen.classList.add('hidden');
             quizScreen.classList.remove('hidden');
             
             loadQuestion();
+        }
+
+        // Limpiar progreso guardado
+        function clearProgress() {
+            localStorage.removeItem(GAME_STATE_KEY);
+            score = 0;
+            answeredQuestions = [];
+            currentQuestionIndex = 0;
+            
+            // Si estamos en la pantalla de resultados, volver a la bienvenida
+            if (!resultsScreen.classList.contains('hidden')) {
+                resultsScreen.classList.add('hidden');
+                welcomeScreen.classList.remove('hidden');
+            }
         }
 
         // Iniciar la aplicación cuando se carga la página
