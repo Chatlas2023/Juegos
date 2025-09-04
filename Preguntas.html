@@ -416,10 +416,11 @@
         let currentQuestionIndex = 0;
         let selectedAnswer = null;
         let score = 0;
-        let showResult = false;
         let questions = [];
+        let allQuestions = [];
         let answeredQuestions = [];
-        let gameState = null;
+        
+        const NUM_QUESTIONS = 5;
 
         // Elementos DOM
         const welcomeScreen = document.getElementById('welcomeScreen');
@@ -455,6 +456,7 @@
         // Claves para localStorage
         const GAME_STATE_KEY = 'historiaQuizGameState';
         const USER_NAME_KEY = 'historiaQuizUserName';
+        const ALL_QUESTIONS_KEY = 'historiaQuizAllQuestions';
 
         // Inicializar la aplicación
         function init() {
@@ -463,15 +465,60 @@
             newGameButton.addEventListener('click', startNewGame);
             restartButton.addEventListener('click', restartQuiz);
             clearProgressButton.addEventListener('click', clearProgress);
-            retryButton.addEventListener('click', loadQuestions);
+            retryButton.addEventListener('click', loadAllQuestions);
             userNameInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     startNewGame();
                 }
             });
             
-            // Verificar si hay un juego guardado
-            checkSavedGame();
+            // Cargar todas las preguntas al inicio
+            loadAllQuestions();
+        }
+        
+        // Cargar todas las preguntas desde el archivo JSON
+        function loadAllQuestions() {
+            fetch('preguntas.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('No se pudo cargar el archivo de preguntas');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.preguntas || !Array.isArray(data.preguntas) || data.preguntas.length < NUM_QUESTIONS) {
+                        throw new Error('El archivo de preguntas es inválido o no tiene suficientes preguntas.');
+                    }
+                    
+                    allQuestions = data.preguntas.map(q => ({
+                        id: q.id,
+                        question: q.pregunta,
+                        options: q.opciones,
+                        correctAnswer: q.respuestaCorrecta
+                    }));
+                    
+                    // Almacenar todas las preguntas en localStorage para el modo sin conexión
+                    localStorage.setItem(ALL_QUESTIONS_KEY, JSON.stringify(allQuestions));
+                    
+                    checkSavedGame();
+                })
+                .catch(error => {
+                    // Intentar cargar desde localStorage si falla el fetch
+                    const savedAllQuestions = localStorage.getItem(ALL_QUESTIONS_KEY);
+                    if (savedAllQuestions) {
+                        allQuestions = JSON.parse(savedAllQuestions);
+                        console.warn("No se pudo cargar el archivo de preguntas desde la red. Usando datos guardados.");
+                        checkSavedGame();
+                    } else {
+                        showError("Error al cargar las preguntas: " + error.message);
+                    }
+                });
+        }
+        
+        // Seleccionar N preguntas al azar
+        function getRandomQuestions(n) {
+            const shuffled = [...allQuestions].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, n);
         }
 
         // Comprobar si hay un juego guardado
@@ -481,15 +528,15 @@
             
             if (savedGameState && savedUserName) {
                 try {
-                    gameState = JSON.parse(savedGameState);
-                    if (gameState.answeredQuestions && gameState.answeredQuestions.length > 0) {
-                        // Mostrar pantalla de reanudar
+                    const gameState = JSON.parse(savedGameState);
+                    if (gameState.questions && gameState.questions.length > 0 && gameState.answeredCount < gameState.questions.length) {
                         resumeUserName.textContent = savedUserName;
-                        resumeProgress.textContent = gameState.answeredQuestions.length;
-                        resumeTotalQuestions.textContent = gameState.totalQuestions || '?';
+                        resumeProgress.textContent = gameState.answeredCount;
+                        resumeTotalQuestions.textContent = gameState.questions.length;
                         resumeScore.textContent = gameState.score || 0;
                         
                         welcomeScreen.classList.add('hidden');
+                        loadingScreen.classList.add('hidden');
                         resumeScreen.classList.remove('hidden');
                         return;
                     }
@@ -499,8 +546,8 @@
                 }
             }
             
-            // No hay juego guardado, mostrar pantalla de bienvenida normal
             welcomeScreen.classList.remove('hidden');
+            loadingScreen.classList.add('hidden');
             resumeScreen.classList.add('hidden');
         }
 
@@ -512,146 +559,65 @@
                 return;
             }
             
-            // Guardar nombre de usuario
             localStorage.setItem(USER_NAME_KEY, userName);
             
-            // Limpiar estado anterior
-            clearProgressDataOnly();
+            // Reiniciar y preparar un nuevo juego
+            questions = getRandomQuestions(NUM_QUESTIONS);
+            score = 0;
+            currentQuestionIndex = 0;
+            answeredQuestions = [];
             
-            // Ocultar todas las pantallas y mostrar loading
+            saveGameState();
+            
             welcomeScreen.classList.add('hidden');
             resumeScreen.classList.add('hidden');
-            loadingScreen.classList.remove('hidden');
-            
-            // Cargar preguntas
-            loadQuestions();
-        }
-
-        // Reanudar juego existente
-        function resumeGame() {
-            userName = localStorage.getItem(USER_NAME_KEY);
-            if (!userName) {
-                startNewGame();
-                return;
-            }
-            
-            // Cargar el estado guardado
-            const savedGameState = localStorage.getItem(GAME_STATE_KEY);
-            if (savedGameState) {
-                try {
-                    gameState = JSON.parse(savedGameState);
-                    score = gameState.score || 0;
-                    answeredQuestions = gameState.answeredQuestions || [];
-                } catch (e) {
-                    console.error('Error parsing saved game state:', e);
-                    clearProgress();
-                    return;
-                }
-            }
-            
-            resumeScreen.classList.add('hidden');
-            loadingScreen.classList.remove('hidden');
-            
-            // Cargar preguntas
-            loadQuestions();
-        }
-
-        // Cargar preguntas desde archivo externo
-        function loadQuestions() {
-            fetch('preguntas.json')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('No se pudo cargar el archivo de preguntas');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Validar que el formato del JSON sea correcto
-                    if (!data.preguntas || !Array.isArray(data.preguntas) || data.preguntas.length === 0) {
-                        throw new Error('El formato del archivo de preguntas es incorrecto');
-                    }
-                    
-                    questions = data.preguntas.map(q => ({
-                        id: q.id,
-                        question: q.pregunta,
-                        options: q.opciones,
-                        correctAnswer: q.respuestaCorrecta
-                    }));
-                    
-                    // Si hay un juego guardado, restaurar el estado
-                    const savedGameState = localStorage.getItem(GAME_STATE_KEY);
-                    if (savedGameState) {
-                        try {
-                            gameState = JSON.parse(savedGameState);
-                            score = gameState.score || 0;
-                            answeredQuestions = gameState.answeredQuestions || [];
-                            
-                            // Encontrar la primera pregunta no respondida
-                            currentQuestionIndex = 0;
-                            for (let i = 0; i < questions.length; i++) {
-                                if (!answeredQuestions.some(aq => aq.questionId === questions[i].id)) {
-                                    currentQuestionIndex = i;
-                                    break;
-                                }
-                            }
-                        } catch (e) {
-                            console.error('Error parsing saved game state:', e);
-                            clearProgressDataOnly();
-                        }
-                    }
-                    
-                    continueQuiz();
-                })
-                .catch(error => {
-                    showError("Error al cargar el archivo de preguntas: " + error.message);
-                });
-        }
-
-        // Continuar con el quiz después de cargar las preguntas
-        function continueQuiz() {
-            loadingScreen.classList.add('hidden');
-            
-            if (questions.length === 0) {
-                showError("No se encontraron preguntas para el quiz.");
-                return;
-            }
-            
-            // Verificar si todas las preguntas han sido respondidas
-            if (answeredQuestions.length >= questions.length) {
-                showResults();
-                return;
-            }
+            quizScreen.classList.remove('hidden');
             
             userGreeting.textContent = `Hola, ${userName}`;
             totalQuestions.textContent = questions.length;
-            quizScreen.classList.remove('hidden');
             
             loadQuestion();
         }
 
-        // Mostrar error
-        function showError(message) {
-            loadingScreen.classList.add('hidden');
-            errorScreen.classList.remove('hidden');
-            errorMessage.textContent = message;
+        // Reanudar juego existente
+        function resumeGame() {
+            const savedGameState = localStorage.getItem(GAME_STATE_KEY);
+            if (savedGameState) {
+                const gameState = JSON.parse(savedGameState);
+                userName = localStorage.getItem(USER_NAME_KEY);
+                questions = gameState.questions;
+                score = gameState.score;
+                answeredQuestions = gameState.answeredQuestions;
+                currentQuestionIndex = gameState.currentQuestionIndex;
+            }
+            
+            resumeScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            
+            userGreeting.textContent = `Hola, ${userName}`;
+            totalQuestions.textContent = questions.length;
+            
+            loadQuestion();
         }
 
         // Cargar pregunta actual
         function loadQuestion() {
+            // Verificar si el juego ha terminado
+            if (currentQuestionIndex >= questions.length) {
+                showResults();
+                return;
+            }
+            
             const currentQuestion = questions[currentQuestionIndex];
             
-            // Actualizar contadores
-            questionCounter.textContent = answeredQuestions.length + 1;
+            questionCounter.textContent = currentQuestionIndex + 1;
             scoreDisplay.textContent = score;
-            progressBar.style.width = `${(answeredQuestions.length / questions.length) * 100}%`;
+            progressBar.style.width = `${(currentQuestionIndex / questions.length) * 100}%`;
             
-            // Establecer texto de la pregunta
             questionText.textContent = currentQuestion.question;
             
-            // Limpiar opciones anteriores
             optionsContainer.innerHTML = '';
             
-            // Agregar opciones
             currentQuestion.options.forEach((option, index) => {
                 const optionButton = document.createElement('button');
                 optionButton.className = 'option-btn';
@@ -664,32 +630,28 @@
                 optionsContainer.appendChild(optionButton);
             });
             
-            // Ocultar feedback
             feedback.classList.add('hidden');
         }
 
         // Manejar selección de respuesta
         function handleAnswerSelect(answer) {
-            if (selectedAnswer) return; // Prevenir cambios después de la selección
+            if (selectedAnswer) return; 
             
             selectedAnswer = answer;
             const currentQuestion = questions[currentQuestionIndex];
             const isCorrect = answer === currentQuestion.correctAnswer;
             
-            // Guardar la respuesta
+            if (isCorrect) {
+                score++;
+                scoreDisplay.textContent = score;
+            }
+            
             answeredQuestions.push({
                 questionId: currentQuestion.id,
                 answer: answer,
                 isCorrect: isCorrect
             });
             
-            // Si es correcta, aumentar la puntuación
-            if (isCorrect) {
-                score++;
-                scoreDisplay.textContent = score;
-            }
-            
-            // Resaltar la respuesta correcta e incorrecta
             const optionButtons = optionsContainer.querySelectorAll('.option-btn');
             optionButtons.forEach(button => {
                 const optionText = button.querySelector('.option-text').textContent;
@@ -698,30 +660,15 @@
                 } else if (optionText === answer && !isCorrect) {
                     button.classList.add('incorrect');
                 }
-                button.style.pointerEvents = 'none'; // Desactivar clics adicionales
+                button.style.pointerEvents = 'none';
             });
             
-            // Guardar el estado del juego
+            currentQuestionIndex++;
             saveGameState();
             
-            // Pasar a la siguiente pregunta después de un retraso
             setTimeout(() => {
-                // Encontrar la siguiente pregunta no respondida
-                let nextQuestionIndex = -1;
-                for (let i = 0; i < questions.length; i++) {
-                    if (!answeredQuestions.some(aq => aq.questionId === questions[i].id)) {
-                        nextQuestionIndex = i;
-                        break;
-                    }
-                }
-                
-                if (nextQuestionIndex !== -1) {
-                    currentQuestionIndex = nextQuestionIndex;
-                    selectedAnswer = null;
-                    loadQuestion();
-                } else {
-                    showResults();
-                }
+                selectedAnswer = null;
+                loadQuestion();
             }, 2000);
         }
 
@@ -729,9 +676,9 @@
         function saveGameState() {
             const gameState = {
                 score: score,
-                answeredQuestions: answeredQuestions,
-                totalQuestions: questions.length,
-                timestamp: new Date().getTime()
+                answeredCount: answeredQuestions.length,
+                questions: questions,
+                currentQuestionIndex: currentQuestionIndex
             };
             
             localStorage.setItem(GAME_STATE_KEY, JSON.stringify(gameState));
@@ -753,31 +700,13 @@
                 resultMessage.textContent = "¡Sigue aprendiendo! La historia está llena de historias fascinantes.";
             }
             
-            // Limpiar el estado guardado ya que el juego ha terminado
             localStorage.removeItem(GAME_STATE_KEY);
         }
 
         // Reiniciar quiz
         function restartQuiz() {
-            // Limpiar el progreso guardado
             clearProgress();
-            
-            // Reiniciar variables
-            currentQuestionIndex = 0;
-            selectedAnswer = null;
-            score = 0;
-            answeredQuestions = [];
-            
-            resultsScreen.classList.add('hidden');
-            welcomeScreen.classList.remove('hidden');
-        }
-
-        // Limpiar solo los datos de progreso (no el nombre de usuario)
-        function clearProgressDataOnly() {
-            localStorage.removeItem(GAME_STATE_KEY);
-            score = 0;
-            answeredQuestions = [];
-            currentQuestionIndex = 0;
+            window.location.reload();
         }
 
         // Limpiar progreso guardado completamente
@@ -788,19 +717,16 @@
             answeredQuestions = [];
             currentQuestionIndex = 0;
             
-            // Si estamos en la pantalla de resultados, volver a la bienvenida
             if (!resultsScreen.classList.contains('hidden')) {
                 resultsScreen.classList.add('hidden');
-                welcomeScreen.classList.remove('hidden');
             }
             
-            // También ocultar la pantalla de reanudar si está visible
             if (!resumeScreen.classList.contains('hidden')) {
                 resumeScreen.classList.add('hidden');
-                welcomeScreen.classList.remove('hidden');
             }
             
-            userNameInput.value = ''; // Limpiar el campo de nombre
+            welcomeScreen.classList.remove('hidden');
+            userNameInput.value = '';
         }
 
         // Iniciar la aplicación cuando se carga la página
