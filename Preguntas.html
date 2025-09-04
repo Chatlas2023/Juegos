@@ -305,10 +305,10 @@
         <div class="card">
             <div class="welcome-screen" id="welcomeScreen">
                 <div class="card-header">
-                    <h1 class="card-title">Quiz de Historia Mundial</h1>
+                    <h1 class="card-title">Quiz de Cultura General</h1>
                 </div>
                 <div class="card-content">
-                    <p class="text-center">¡Pon a prueba tus conocimientos de historia mundial!</p>
+                    <p class="text-center">¡Pon a prueba tus conocimientos de Cultura General!</p>
                     <div class="input-container" style="margin: 25px 0;">
                         <label for="userName">Ingresa tu nombre para comenzar:</label>
                         <input type="text" id="userName" class="input-field" placeholder="Tu nombre">
@@ -349,7 +349,7 @@
                 <div class="card-header">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h2 class="card-title" style="font-size: 1.5rem;">Historia Mundial</h2>
+                            <h2 class="card-title" style="font-size: 1.5rem;">Cultura General</h2>
                             <p id="userGreeting" style="color: #666;">Hola, jugador</p>
                         </div>
                         <div style="text-align: right;">
@@ -383,7 +383,7 @@
                     </div>
                     <h2 style="margin-bottom: 15px;">¡Felicidades, <span id="resultUserName">Jugador</span>!</h2>
                     <div class="score-display" id="finalScore">0/5</div>
-                    <p class="result-message" id="resultMessage">¡Buen trabajo! Sabes bastante de historia.</p>
+                    <p class="result-message" id="resultMessage">¡Buen trabajo! </p>
                     <button class="btn btn-primary" id="restartButton">
                         <i class="fas fa-redo icon"></i>Reiniciar Quiz
                     </button>
@@ -671,11 +671,11 @@
             finalScore.textContent = `${score}/${questions.length}`;
             
             if (score === questions.length) {
-                resultMessage.textContent = "¡Puntuación perfecta! Eres un experto en historia.";
+                resultMessage.textContent = "¡Puntuación perfecta! Eres un experto.";
             } else if (questions.length > 0 && score >= questions.length / 2) {
-                resultMessage.textContent = "¡Buen trabajo! Conoces bien la historia.";
+                resultMessage.textContent = "¡Buen trabajo!.";
             } else {
-                resultMessage.textContent = "¡Sigue aprendiendo! La historia está llena de historias fascinantes.";
+                resultMessage.textContent = "¡Sigue aprendiendo! El mundo está lleno de historias fascinantes.";
             }
             
             localStorage.removeItem(GAME_STATE_KEY);
