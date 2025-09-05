@@ -2,14 +2,13 @@
 <html lang="es">
 <head>
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-N4J8MM9R5N');
-</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-N4J8MM9R5N"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-N4J8MM9R5N');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Juegos para el Celu</title>
@@ -86,6 +85,13 @@
             font-size: 20px;
             font-weight: bold;
             color: white;
+        }
+        
+        /* Estilo específico solo para el ícono del Juego del 15 */
+        .game-symbol.fifteen img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         
         .game-name {
@@ -206,10 +212,10 @@
                 <div class="game-name">Night Driver</div>
             </a>
             
-            <!-- Juego 9 -->
+            <!-- Juego 9 - MODIFICADO: Ahora usa el archivo 15.ico con clase específica -->
             <a href="juegodel15.html" class="game-icon">
-                <div class="game-symbol" style="background-color: #1E1E1E;font-size: 48px;">
-                    1️⃣5️⃣
+                <div class="game-symbol fifteen" style="background-color: #1E1E1E;">
+                    <img src="15.ico" alt="Juego del 15">
                 </div>
                 <div class="game-name">Juego del 15</div>
             </a>
