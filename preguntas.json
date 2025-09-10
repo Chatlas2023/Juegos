@@ -387,7 +387,7 @@
 {"id": 462, "pregunta": "¿Qué Rey de Inglaterra formuló las Leyes del Movimiento?", "opciones": ["Ninguno, fue Isaac Newton", "Eduardo I", "Jorge III", "Enrique VIII"], "respuestaCorrecta": "Ninguno, fue Isaac Newton"},
 {"id": 464, "pregunta": "¿Qué enfermedad es causada por la deficiencia de vitamina C?", "opciones": ["Raquitismo", "Escorbuto", "Anemia", "BeriBeri"], "respuestaCorrecta": "Escorbuto"},
 {"id": 467, "pregunta": "¿Qué científico propuso que la Tierra era el centro del universo?", "opciones": ["Nicolás Copérnico", "Galileo Galilei", "Ptolomeo", "Johannes Kepler"], "respuestaCorrecta": "Ptolomeo"},
-{"id": 468, "pregunta": "¿Cuál es el hueso más pequeño del cuerpo humano?", "opciones": ["Martillo", ["Yunque", "Estribo", "Lenticular"], "respuestaCorrecta": "Estribo"},
+{"id": 468, "pregunta": "¿Cuál es el hueso más pequeño del cuerpo humano?", "opciones": ["Martillo", "Yunque", "Estribo", "Lenticular"], "respuestaCorrecta": "Estribo"},
 {"id": 469, "pregunta": "¿Qué proceso explica cómo el agua sube por el tallo de una planta?", "opciones": ["Ósmosis", "Capilaridad", "Difusión", "Evaporación"], "respuestaCorrecta": "Capilaridad"},
 {"id": 470, "pregunta": "¿Qué planetas se conocen como 'planetas terrestres' o 'telúricos'?", "opciones": ["Mercurio, Venus, Tierra, Marte", "Júpiter, Saturno, Urano, Neptuno", "Venus, Tierra, Marte, Júpiter", "Mercurio, Tierra, Saturno, Neptuno"], "respuestaCorrecta": "Mercurio, Venus, Tierra, Marte"},
 {"id": 471, "pregunta": "¿Qué proceso permite a los reptiles regular su temperatura corporal?", "opciones": ["Homeotermia", "Termorregulación conductual", "Hibernación", "Estivación"], "respuestaCorrecta": "Termorregulación conductual"},
