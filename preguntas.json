@@ -400,5 +400,5 @@
 {"id": 482, "pregunta": "¿Qué pintor español es conocido por su período 'azul' y 'rosa', y por co-fundar el cubismo?", "opciones": ["Salvador Dalí", "Pablo Picasso", "Joan Miró", "Francisco de Goya"], "respuestaCorrecta": "Pablo Picasso"},
 {"id": 483, "pregunta": "¿Qué movimiento artístico es Vincent van Gogh asociado principalmente?", "opciones": ["Impresionismo", "Expresionismo", "Postimpresionismo", "Surrealismo"], "respuestaCorrecta": "Postimpresionismo"},
 {"id": 484, "pregunta": "¿Cuál es la obra más famosa de Leonardo da Vinci, conocida por la enigmática sonrisa de su personaje?", "opciones": ["La última cena", "La virgen de las rocas", "La Gioconda", "Hombre de Vitruvio"], "respuestaCorrecta": "La Gioconda"}
-  ]
+]
 }
