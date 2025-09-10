@@ -540,35 +540,39 @@
         }
 
         // Comenzar un nuevo juego
-function startNewGame() {
-    userName = userNameInput.value.trim();
-    if (!userName) {
-        alert('Por favor ingresa tu nombre');
-        return;
-    }
-    
-    localStorage.setItem(USER_NAME_KEY, userName);
-    
-    // Usar todas las preguntas y barajarlas
-    questions = [...allQuestions].sort(() => 0.5 - Math.random());
-    score = 0;
-    currentQuestionIndex = 0;
-    
-    // MOVER saveGameState() DESPUÉS de loadQuestion()
-    // saveGameState(); // ← Quitar esta línea de aquí
-    
-    welcomeScreen.classList.add('hidden');
-    resumeScreen.classList.add('hidden');
-    quizScreen.classList.remove('hidden');
-    
-    userGreeting.textContent = `Hola, ${userName}`;
-    totalQuestions.textContent = questions.length;
-    
-    loadQuestion(); // ← Primero cargar la pregunta
-    
-    // Y AHORA guardar el estado
-    saveGameState(); // ← Añadir esta línea después de loadQuestion()
-}
+        function startNewGame() {
+            // Si estamos en la pantalla de reanudación, mostrar la pantalla de bienvenida
+            if (!resumeScreen.classList.contains('hidden')) {
+                resumeScreen.classList.add('hidden');
+                welcomeScreen.classList.remove('hidden');
+                return; // Salir de la función para que el usuario ingrese el nombre
+            }
+            
+            // Si estamos en la pantalla de bienvenida, proceder con el juego
+            userName = userNameInput.value.trim();
+            if (!userName) {
+                alert('Por favor ingresa tu nombre');
+                return;
+            }
+            
+            localStorage.setItem(USER_NAME_KEY, userName);
+            
+            // Usar todas las preguntas y barajarlas
+            questions = [...allQuestions].sort(() => 0.5 - Math.random());
+            score = 0;
+            currentQuestionIndex = 0;
+            
+            welcomeScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            
+            userGreeting.textContent = `Hola, ${userName}`;
+            totalQuestions.textContent = questions.length;
+            
+            loadQuestion();
+            
+            // Guardar el estado después de cargar la pregunta
+            saveGameState();
+        }
 
         // Reanudar juego existente
         function resumeGame() {
