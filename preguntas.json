@@ -395,6 +395,10 @@
 {"id": 473, "pregunta": "¿Qué ley establece que 'La energía no se crea ni se destruye, solo se transforma'?", "opciones": ["Primera Ley de la Termodinámica", "Ley de Conservación de la Masa", "Ley de Coulomb", "Ley de Ohm"], "respuestaCorrecta": "Primera Ley de la Termodinámica"},
 {"id": 474, "pregunta": "¿Qué rama de la física estudia el comportamiento de las partículas a nivel atómico y subatómico?", "opciones": ["Mecánica clásica", "Termodinámica", "Mecánica cuántica", "Electrodinámica"], "respuestaCorrecta": "Mecánica cuántica"},
 {"id": 475, "pregunta": "¿Qué tipo de enlace químico se forma cuando dos átomos comparten electrones?", "opciones": ["Enlace iónico", "Enlace covalente", "Enlace metálico", "Enlace de hidrógeno"], "respuestaCorrecta": "Enlace covalente"},
-{"id": 476, "pregunta": "¿Cuál de estos órganos es parte del sistema linfático y ayuda en la maduración de los linfocitos T?", "opciones": ["Bazo", "Timo", "Hígado", "Páncreas"], "respuestaCorrecta": "Timo"}  
+{"id": 476, "pregunta": "¿Cuál de estos órganos es parte del sistema linfático y ayuda en la maduración de los linfocitos T?", "opciones": ["Bazo", "Timo", "Hígado", "Páncreas"], "respuestaCorrecta": "Timo"},
+{"id": 481, "pregunta": "¿Qué artista pintó el techo de la Capilla Sixtina en el Vaticano?", "opciones": ["Leonardo da Vinci", "Rafael Sanzio", "Donatello", "Miguel Ángel"], "respuestaCorrecta": "Miguel Ángel"},
+{"id": 482, "pregunta": "¿Qué pintor español es conocido por su período 'azul' y 'rosa', y por co-fundar el cubismo?", "opciones": ["Salvador Dalí", "Pablo Picasso", "Joan Miró", "Francisco de Goya"], "respuestaCorrecta": "Pablo Picasso"},
+{"id": 483, "pregunta": "¿Qué movimiento artístico es Vincent van Gogh asociado principalmente?", "opciones": ["Impresionismo", "Expresionismo", "Postimpresionismo", "Surrealismo"], "respuestaCorrecta": "Postimpresionismo"},
+{"id": 484, "pregunta": "¿Cuál es la obra más famosa de Leonardo da Vinci, conocida por la enigmática sonrisa de su personaje?", "opciones": ["La última cena", "La virgen de las rocas", "La Gioconda", "Hombre de Vitruvio"], "respuestaCorrecta": "La Gioconda"}
   ]
 }
