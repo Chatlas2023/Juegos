@@ -540,31 +540,35 @@
         }
 
         // Comenzar un nuevo juego
-        function startNewGame() {
-            userName = userNameInput.value.trim();
-            if (!userName) {
-                alert('Por favor ingresa tu nombre');
-                return;
-            }
-            
-            localStorage.setItem(USER_NAME_KEY, userName);
-            
-            // Usar todas las preguntas y barajarlas
-            questions = [...allQuestions].sort(() => 0.5 - Math.random());
-            score = 0;
-            currentQuestionIndex = 0;
-            
-            saveGameState();
-            
-            welcomeScreen.classList.add('hidden');
-            resumeScreen.classList.add('hidden');
-            quizScreen.classList.remove('hidden');
-            
-            userGreeting.textContent = `Hola, ${userName}`;
-            totalQuestions.textContent = questions.length;
-            
-            loadQuestion();
-        }
+function startNewGame() {
+    userName = userNameInput.value.trim();
+    if (!userName) {
+        alert('Por favor ingresa tu nombre');
+        return;
+    }
+    
+    localStorage.setItem(USER_NAME_KEY, userName);
+    
+    // Usar todas las preguntas y barajarlas
+    questions = [...allQuestions].sort(() => 0.5 - Math.random());
+    score = 0;
+    currentQuestionIndex = 0;
+    
+    // MOVER saveGameState() DESPUÉS de loadQuestion()
+    // saveGameState(); // ← Quitar esta línea de aquí
+    
+    welcomeScreen.classList.add('hidden');
+    resumeScreen.classList.add('hidden');
+    quizScreen.classList.remove('hidden');
+    
+    userGreeting.textContent = `Hola, ${userName}`;
+    totalQuestions.textContent = questions.length;
+    
+    loadQuestion(); // ← Primero cargar la pregunta
+    
+    // Y AHORA guardar el estado
+    saveGameState(); // ← Añadir esta línea después de loadQuestion()
+}
 
         // Reanudar juego existente
         function resumeGame() {
